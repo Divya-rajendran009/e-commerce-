@@ -1,0 +1,10 @@
+import { ArrowRight, Minus, Plus, Trash2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { EmptyState } from '../components/Shared'
+import { useCart } from '../context/CartContext'
+
+export default function Cart() {
+  const { items, setQuantity, remove, subtotal } = useCart()
+  if (!items.length) return <section className="wrap section"><EmptyState title="Your basket is waiting" body="Add a few everyday favourites and they’ll show up here." /></section>
+  return <section className="wrap section cart-page"><div className="section-heading"><div><span className="eyebrow">YOUR SHOPPING</span><h1>Your basket</h1></div><Link className="text-link" to="/products">Continue shopping</Link></div><div className="cart-layout"><div className="cart-items">{items.map((item) => <article className="cart-item" key={item.id}><div className="cart-thumb">🥬</div><div className="cart-item-name"><Link to={`/products/${item.id}`}>{item.name}</Link><small>₹{Number(item.price).toFixed(2)} each</small></div><div className="quantity-control compact"><button aria-label="Decrease quantity" onClick={() => setQuantity(item.id, item.quantity - 1)}><Minus size={14} /></button><span>{item.quantity}</span><button aria-label="Increase quantity" onClick={() => setQuantity(item.id, item.quantity + 1)}><Plus size={14} /></button></div><strong>₹{(Number(item.price) * item.quantity).toFixed(2)}</strong><button className="icon-button" aria-label={`Remove ${item.name}`} onClick={() => remove(item.id)}><Trash2 size={17} /></button></article>)}</div><aside className="summary-card"><h2>Order summary</h2><div><span>Subtotal</span><strong>₹{subtotal.toFixed(2)}</strong></div><div><span>Delivery</span><span>Calculated at checkout</span></div><p>Final price and stock are checked securely when you place the order.</p><div className="summary-total"><span>Estimated total</span><strong>₹{subtotal.toFixed(2)}</strong></div><Link className="button primary full" to="/checkout">Continue to checkout <ArrowRight size={16} /></Link></aside></div></section>
+}

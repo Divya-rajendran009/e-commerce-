@@ -11,9 +11,13 @@ ROLE_MODULES = {
 
 
 def allowed_admin_module(user, module):
-    if user.role in {"admin", "super_admin"}:
+    return role_has_admin_module(user.role, module)
+
+
+def role_has_admin_module(role, module):
+    if role in {"admin", "super_admin"}:
         return True
-    return module in ROLE_MODULES.get(user.role, set())
+    return module in ROLE_MODULES.get(role, set())
 
 
 class IsStoreAdmin(BasePermission):

@@ -11,6 +11,7 @@ export default function AdminStaff() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
+  const [newRole, setNewRole] = useState('product_manager')
   const load = () => api.get('/admin/staff/').then(({ data }) => setStaff(Array.isArray(data) ? data : data.results || [])).catch((e) => setError(errorMessage(e))).finally(() => setLoading(false))
   useEffect(() => { load() }, [])
   const createStaff = async (event) => {
@@ -20,6 +21,7 @@ export default function AdminStaff() {
     setMessage('')
     setBusy(true)
     const payload = Object.fromEntries(new FormData(event.currentTarget))
+    payload.grant_referral_settings = payload.grant_referral_settings === 'true'
     try {
       await api.post('/admin/staff/', payload)
       form.reset()
@@ -50,7 +52,8 @@ export default function AdminStaff() {
       <label className="field"><span>First name</span><input name="first_name" required autoComplete="given-name" /></label>
       <label className="field"><span>Last name</span><input name="last_name" autoComplete="family-name" /></label>
       <label className="field"><span>Phone</span><input name="phone" required type="tel" autoComplete="tel" /></label>
-      <label className="field"><span>Role</span><select name="role" defaultValue="product_manager">{staffRoles.map((role) => <option value={role} key={role}>{role.replaceAll('_', ' ')}</option>)}</select></label>
+      <label className="field"><span>Role</span><select name="role" value={newRole} onChange={(event) => setNewRole(event.target.value)}>{staffRoles.map((role) => <option value={role} key={role}>{role.replaceAll('_', ' ')}</option>)}</select></label>
+      {newRole === 'marketing_manager' && <label className="check-field"><input type="checkbox" name="grant_referral_settings" value="true" /> Allow managing referral settings</label>}
       <label className="field"><span>Temporary password</span><input name="password" type="password" minLength="12" required autoComplete="new-password" /></label>
       <button className="button primary" disabled={busy}>{busy ? 'Creating…' : 'Create staff account'}</button>
     </form>
@@ -59,6 +62,7 @@ export default function AdminStaff() {
       <div className="admin-service-record-main"><h2>{member.full_name || member.email}</h2><p>{member.email} · {member.phone}</p><span className="status">{member.role.replaceAll('_', ' ')}</span></div>
       <div className="admin-service-controls">
         <label className="field"><span>Role</span><select value={member.role} onChange={(event) => updateStaff(member, { role: event.target.value })}>{staffRoles.map((role) => <option key={role} value={role}>{role.replaceAll('_', ' ')}</option>)}</select></label>
+        {member.role === 'marketing_manager' && <label className="check-field"><input type="checkbox" checked={member.can_manage_referral_settings} onChange={(event) => updateStaff(member, { grant_referral_settings: event.target.checked })} /> Allow managing referral settings</label>}
         <button className={`button ${member.is_active ? 'secondary' : 'primary'}`} onClick={() => updateStaff(member, { is_active: !member.is_active })}>{member.is_active ? 'Deactivate' : 'Reactivate'}</button>
       </div>
     </article>)}</div>}

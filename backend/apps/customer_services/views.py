@@ -682,7 +682,7 @@ class AdminReportView(APIView):
 
 
 class CustomerRewardsView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsStoreAdmin]
 
     def get(self, request):
         from apps.referrals.models import ReferralReward, WalletLedger

@@ -1,6 +1,5 @@
 from collections import defaultdict
 from decimal import Decimal
-from uuid import uuid4
 
 from django.db import transaction
 from django.db.models import Count, Q, Sum
@@ -19,7 +18,6 @@ from .serializers import (
     AdminWalletAdjustmentSerializer,
     AdminWalletLedgerSerializer,
     CustomerReferralRewardSerializer,
-    CustomerReferralSerializer,
     ReferralDashboardSerializer,
     ReferralProgramSerializer,
     ReferralSerializer,
@@ -78,6 +76,19 @@ class ReferralAdminPermission(permissions.BasePermission):
         )
 
 
+class ReferralSettingsPermission(ReferralAdminPermission):
+    def has_permission(self, request, view):
+        if not super().has_permission(request, view):
+            return False
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        user = request.user
+        return bool(
+            user.role in {User.Role.ADMIN, User.Role.SUPER_ADMIN}
+            or user.has_perm("referrals.change_referralprogram")
+        )
+
+
 class ReferralValidateView(APIView):
     permission_classes = [permissions.AllowAny]
     throttle_classes = [ScopedRateThrottle]
@@ -103,36 +114,15 @@ class ReferralMeView(APIView):
     serializer_class = ReferralDashboardSerializer
 
     def get(self, request):
-        program = ReferralProgram.current()
-        referrals = Referral.objects.filter(referrer=request.user).order_by("-created_at")
-        level_counts = referral_level_counts(request.user.pk, program.max_depth)
-        downline = referral_level_map(request.user.pk, program.max_depth)
-        rewards = ReferralReward.objects.filter(recipient=request.user).select_related("order").order_by("-created_at")
-        wallet_transactions = WalletLedger.objects.filter(customer=request.user).order_by("-created_at")
-        balance = wallet_transactions.aggregate(balance=Sum("amount"))["balance"] or Decimal("0.00")
         payload = {
             "referral_code": request.user.referral_code,
             "referral_url": f"/register?ref={request.user.referral_code}",
-            "max_depth": program.max_depth,
-            "direct_referrals": level_counts[0]["count"] if level_counts else 0,
-            "total_downline": sum(level["count"] for level in level_counts),
-            "level_counts": level_counts,
-            "pending_rewards": Referral.objects.filter(
-                referred_id__in=downline,
-                status=Referral.Status.PENDING,
-            ).count(),
-            "successful_referrals": referrals.filter(status=Referral.Status.COMPLETED).count(),
-            "pending_referrals": referrals.filter(status=Referral.Status.PENDING).count(),
-            "wallet_balance": balance,
-            "referrals": CustomerReferralSerializer(referrals, many=True).data,
-            "rewards": CustomerReferralRewardSerializer(rewards, many=True).data,
-            "wallet_transactions": WalletLedgerSerializer(wallet_transactions[:50], many=True).data,
         }
         return Response(ReferralDashboardSerializer(payload).data)
 
 
 class ReferralRewardsView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [ReferralAdminPermission]
     serializer_class = CustomerReferralRewardSerializer
 
     def get(self, request):
@@ -141,7 +131,7 @@ class ReferralRewardsView(APIView):
 
 
 class ReferralWalletView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [ReferralAdminPermission]
 
     def get(self, request):
         entries = WalletLedger.objects.filter(customer=request.user).order_by("-created_at")
@@ -407,12 +397,12 @@ class AdminRewardsView(APIView):
 
 
 class AdminReferralProgramView(APIView):
-    permission_classes = [ReferralAdminPermission]
+    permission_classes = [ReferralSettingsPermission]
     serializer_class = ReferralProgramSerializer
 
     def get(self, request):
         program = ReferralProgram.current()
-        return Response(ReferralProgramSerializer(program).data)
+        return Response(self._settings_payload(program, request.user))
 
     @transaction.atomic
     def patch(self, request):
@@ -431,7 +421,16 @@ class AdminReferralProgramView(APIView):
             object_id=str(program.pk),
             changes={"before": before, "after": ReferralProgramSerializer(program).data},
         )
-        return Response(ReferralProgramSerializer(program).data)
+        return Response(self._settings_payload(program, request.user))
+
+    @staticmethod
+    def _settings_payload(program, user):
+        payload = ReferralProgramSerializer(program).data
+        payload["can_manage_settings"] = bool(
+            user.role in {User.Role.ADMIN, User.Role.SUPER_ADMIN}
+            or user.has_perm("referrals.change_referralprogram")
+        )
+        return payload
 
 
 class AdminWalletAdjustmentView(APIView):
@@ -444,7 +443,7 @@ class AdminWalletAdjustmentView(APIView):
         serializer = AdminWalletAdjustmentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         values = serializer.validated_data
-        key = values.get("idempotency_key") or f"admin-adjustment:{uuid4()}"
+        key = values["idempotency_key"]
         customer = User.objects.select_for_update().get(pk=values["customer_id"])
         amount = values["amount"] if values["transaction_type"] == "credit" else -values["amount"]
         entry = WalletLedger.objects.select_for_update().filter(idempotency_key=key).first()

@@ -162,17 +162,6 @@ class CustomerReferralSerializer(serializers.ModelSerializer):
 class ReferralDashboardSerializer(serializers.Serializer):
     referral_code = serializers.CharField()
     referral_url = serializers.CharField()
-    max_depth = serializers.IntegerField()
-    direct_referrals = serializers.IntegerField()
-    total_downline = serializers.IntegerField()
-    level_counts = serializers.ListField(child=serializers.DictField())
-    pending_rewards = serializers.IntegerField()
-    successful_referrals = serializers.IntegerField()
-    pending_referrals = serializers.IntegerField()
-    wallet_balance = serializers.DecimalField(max_digits=12, decimal_places=2)
-    referrals = CustomerReferralSerializer(many=True)
-    rewards = CustomerReferralRewardSerializer(many=True)
-    wallet_transactions = WalletLedgerSerializer(many=True)
 
 
 class AdminWalletAdjustmentSerializer(serializers.Serializer):
@@ -180,7 +169,7 @@ class AdminWalletAdjustmentSerializer(serializers.Serializer):
     amount = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal("0.01"))
     transaction_type = serializers.ChoiceField(choices=["credit", "debit"])
     reason = serializers.CharField(max_length=180)
-    idempotency_key = serializers.CharField(max_length=100, required=False)
+    idempotency_key = serializers.CharField(max_length=100)
 
     def validate_customer_id(self, value):
         if not User.objects.filter(pk=value, role=User.Role.CUSTOMER).exists():

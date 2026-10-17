@@ -21,13 +21,15 @@ import AdminStaff from './pages/AdminStaff'
 import AccountServices from './pages/AccountServices'
 import AdminServices from './pages/AdminServices'
 import { Login, Register } from './pages/AuthPages'
-import { hasAdminAccess } from './utils/adminAccess'
+import { canAccessAdminModule, hasAdminAccess } from './utils/adminAccess'
 
-function Guard({ admin = false, children }) {
+function Guard({ admin = false, adminModule, adminRoles, children }) {
   const { user, ready } = useAuth()
   if (!ready) return <div className="state-card">Loading your account…</div>
   if (!user) return <Navigate to="/login" replace />
   if (admin && !hasAdminAccess(user)) return <Navigate to="/" replace />
+  if (adminModule && !canAccessAdminModule(user, adminModule)) return <Navigate to="/admin" replace />
+  if (adminRoles && !adminRoles.includes(user?.role)) return <Navigate to="/admin" replace />
   return children
 }
 
@@ -51,13 +53,13 @@ export default function App() {
   </Route>
   <Route path="admin" element={<Guard admin><AdminLayout /></Guard>}>
     <Route index element={<Admin />} />
-    <Route path="orders" element={<AdminOrders />} />
-    <Route path="products" element={<AdminProducts />} />
-    <Route path="categories" element={<AdminProducts />} />
-    <Route path="customers" element={<AdminCustomers />} />
-    <Route path="staff" element={<AdminStaff />} />
-    <Route path="referrals" element={<AdminReferrals />} />
-    <Route path="referrals/network/:customerId" element={<AdminReferralNetwork />} />
+    <Route path="orders" element={<Guard adminModule="orders"><AdminOrders /></Guard>} />
+    <Route path="products" element={<Guard adminModule="products"><AdminProducts /></Guard>} />
+    <Route path="categories" element={<Guard adminModule="products"><AdminProducts /></Guard>} />
+    <Route path="customers" element={<Guard adminModule="customers"><AdminCustomers /></Guard>} />
+    <Route path="staff" element={<Guard adminRoles={['admin', 'super_admin']}><AdminStaff /></Guard>} />
+    <Route path="referrals" element={<Guard adminModule="referrals"><AdminReferrals /></Guard>} />
+    <Route path="referrals/network/:customerId" element={<Guard adminModule="referrals"><AdminReferralNetwork /></Guard>} />
     <Route path="services" element={<AdminServices />} />
     <Route path="services/:module" element={<AdminServices />} />
   </Route>

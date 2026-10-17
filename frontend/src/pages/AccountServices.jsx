@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, Navigate, useParams } from 'react-router-dom'
 import { Copy, Trash2 } from 'lucide-react'
 import { EmptyState, ErrorState, Loading } from '../components/Shared'
 import { useCart } from '../context/CartContext'
 import api, { errorMessage } from '../services/api'
 
 const list = (data) => Array.isArray(data) ? data : data?.results || []
-const money = (amount) => `₹${Number(amount || 0).toFixed(2)}`
 
 function useResource(url) {
   const [data, setData] = useState(null)
@@ -59,18 +58,6 @@ function AddressBook() {
       <div className="form-actions"><button className="button primary" disabled={busy}>{busy ? 'Saving…' : editing ? 'Save changes' : 'Add address'}</button>{editing && <button type="button" className="button secondary" onClick={() => { setEditing(null); setForm(blank) }}>Cancel</button>}</div>
     </form>
     {resource.error ? <ErrorState message={resource.error} /> : resource.loading ? <Loading /> : list(resource.data).length ? <div className="service-record-list">{list(resource.data).map((address) => <article className="service-record" key={address.id}><div><h2>{address.recipient_name} {address.is_default && <span className="status status-delivered">Default</span>}</h2><p>{address.mobile_number}<br />{address.address_line1}{address.address_line2 && `, ${address.address_line2}`}<br />{address.locality}, {address.city}, {address.state} {address.pin_code}</p>{address.delivery_instructions && <small>{address.delivery_instructions}</small>}</div><div className="service-record-actions"><button className="button secondary small" onClick={() => edit(address)}>Edit</button><button className="icon-button" aria-label={`Delete address for ${address.recipient_name}`} onClick={() => remove(address.id)}><Trash2 size={17} /></button></div></article>)}</div> : <p className="muted">No saved addresses yet.</p>}
-  </PageFrame>
-}
-
-function Rewards() {
-  const { data, error, loading } = useResource('/account/rewards/')
-  return <PageFrame title="Rewards" intro="Your customer referral wallet activity and available rewards.">
-    {error ? <ErrorState message={error} /> : loading ? <Loading /> : <>
-      <article className="reward-balance"><span>Referral wallet balance</span><strong>{money(data?.wallet_balance)}</strong><p>Rewards are issued only when the existing referral programme criteria are met.</p></article>
-      <h2>Earned referral rewards</h2>
-      {list(data?.referral_rewards).length ? <div className="service-record-list">{list(data.referral_rewards).map((reward) => <article className="service-record" key={reward.id}><div><strong>{reward.recipient_type === 'referrer' ? 'Referrer reward' : 'New customer reward'}</strong><p>{new Date(reward.created_at).toLocaleDateString()} · {reward.reward_type}</p></div><strong>{money(reward.amount)}</strong></article>)}</div> : <p className="muted">No rewards have been earned yet.</p>}
-      <p className="fine-print">No coupons are currently configured for this customer.</p>
-    </>}
   </PageFrame>
 }
 
@@ -206,7 +193,7 @@ export default function AccountServices() {
   if (!section) return <Blogs />
   switch (section) {
     case 'addresses': return <AddressBook />
-    case 'rewards': return <Rewards />
+    case 'rewards': return <Navigate to="/referrals" replace />
     case 'questions': return <Questions />
     case 'requests': return <CasePage />
     case 'support': return <CasePage support />

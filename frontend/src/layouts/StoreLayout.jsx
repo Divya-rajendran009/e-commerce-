@@ -1,6 +1,6 @@
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Leaf, Menu, Search, ShoppingBasket, UserRound, X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import MobileBottomNavigation from '../components/MobileBottomNavigation'
@@ -11,6 +11,8 @@ export default function StoreLayout() {
   const [query, setQuery] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
+  useEffect(() => setMenuOpen(false), [location.key])
   const search = (event) => {
     event.preventDefault()
     navigate(`/products${query.trim() ? `?search=${encodeURIComponent(query.trim())}` : ''}`)
@@ -33,7 +35,7 @@ export default function StoreLayout() {
       </div></nav>
     </header>
     <main><Outlet /></main>
-    <footer className="footer"><div className="wrap footer-grid"><div><Link to="/" className="brand footer-brand"><span className="brand-mark"><Leaf size={22} /></span><span>SUPER MARKET<small>Good food. Good days.</small></span></Link><p>Everyday groceries, thoughtfully picked for your home.</p></div><div><strong>Shop</strong><Link to="/products">All products</Link><Link to="/products">Fresh produce</Link><Link to="/products">Pantry essentials</Link></div><div><strong>Customer care</strong><Link to="/account">My account</Link><Link to="/orders">Track an order</Link><Link to="/referrals">Referral rewards</Link></div><div><strong>Need a hand?</strong><span>Mon–Sat · 9am–6pm</span><a href="mailto:hello@supermarket.example">hello@supermarket.example</a><small>Demo storefront. Sample data only.</small></div></div><div className="wrap footer-bottom">© {new Date().getFullYear()} SUPER MARKET <span>Made for fresh everyday living</span></div></footer>
+    <footer className="footer"><div className="wrap footer-grid"><div><Link to="/" className="brand footer-brand"><span className="brand-mark"><Leaf size={22} /></span><span>SUPER MARKET<small>Good food. Good days.</small></span></Link><p>Everyday groceries, thoughtfully picked for your home.</p></div><div><strong>Shop</strong><Link to="/products">All products</Link><Link to="/products">Fresh produce</Link><Link to="/products">Pantry essentials</Link></div><div><strong>Customer care</strong><Link to="/account">My account</Link><Link to="/orders">Track an order</Link><Link to="/referrals">Invite friends</Link></div><div><strong>Need a hand?</strong><span>Mon–Sat · 9am–6pm</span><a href="mailto:hello@supermarket.example">hello@supermarket.example</a><small>Demo storefront. Sample data only.</small></div></div><div className="wrap footer-bottom">© {new Date().getFullYear()} SUPER MARKET <span>Made for fresh everyday living</span></div></footer>
     <MobileBottomNavigation />
   </>
 }

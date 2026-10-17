@@ -94,7 +94,9 @@ def dashboard(request):
 
     now = timezone.localtime()
     period = request.query_params.get("period", "last_30_days")
-    if period == "today":
+    if period == "all_time":
+        start, end = None, None
+    elif period == "today":
         start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         end = now
     elif period == "last_7_days":
@@ -110,22 +112,23 @@ def dashboard(request):
     else:
         period = "last_30_days"
         start, end = now - timedelta(days=30), now
-    period_orders = Order.objects.filter(created_at__gte=start, created_at__lt=end)
+    period_orders = Order.objects.all() if period == "all_time" else Order.objects.filter(created_at__gte=start, created_at__lt=end)
     active_orders = period_orders.exclude(status=Order.Status.CANCELLED)
     gross_sales = active_orders.aggregate(total=Sum("total"))["total"] or 0
-    product_sales = (
-        OrderItem.objects
-        .filter(order__created_at__gte=start, order__created_at__lt=end)
-        .exclude(order__status=Order.Status.CANCELLED)
-        .values("product_name")
-        .annotate(quantity=Sum("quantity"))
-        .order_by("-quantity")[:5]
+    product_sales = OrderItem.objects.all() if period == "all_time" else OrderItem.objects.filter(
+        order__created_at__gte=start, order__created_at__lt=end,
     )
+    product_sales = product_sales.exclude(order__status=Order.Status.CANCELLED).values("product_name").annotate(
+        quantity=Sum("quantity"),
+    ).order_by("-quantity")[:5]
     top_products = list(product_sales)
     financial_allowed = request.user.role in {"admin", "super_admin", "finance_manager"}
     response = {
         "period": period,
-        "range": {"start": start.isoformat(), "end": end.isoformat()},
+        "range": {
+            "start": start.isoformat() if start else None,
+            "end": end.isoformat() if end else None,
+        },
         "orders": period_orders.count(),
         "awaiting_confirmation": period_orders.filter(status=Order.Status.PENDING).count(),
         "processing_orders": period_orders.filter(status__in=[Order.Status.PROCESSING, Order.Status.PACKED]).count(),
@@ -133,7 +136,11 @@ def dashboard(request):
         "delivered_orders": period_orders.filter(status=Order.Status.DELIVERED).count(),
         "cancelled_orders": period_orders.filter(status=Order.Status.CANCELLED).count(),
         "customers": User.objects.filter(role="customer").count(),
-        "new_customers": User.objects.filter(role="customer", date_joined__gte=start, date_joined__lt=end).count(),
+        "new_customers": (
+            User.objects.filter(role="customer").count()
+            if period == "all_time"
+            else User.objects.filter(role="customer", date_joined__gte=start, date_joined__lt=end).count()
+        ),
         "active_products": Product.objects.filter(is_active=True).count(),
         "low_stock_products": Product.objects.filter(is_active=True, stock__gt=0, stock__lte=F("low_stock_threshold")).count(),
         "out_of_stock_products": Product.objects.filter(is_active=True, stock=0).count(),
@@ -147,15 +154,22 @@ def dashboard(request):
         "financials_available": financial_allowed,
     }
     if financial_allowed:
+        financial_product_sales = OrderItem.objects.all() if period == "all_time" else OrderItem.objects.filter(
+            order__created_at__gte=start, order__created_at__lt=end,
+        )
         top_products = list(
-            OrderItem.objects.filter(order__created_at__gte=start, order__created_at__lt=end).exclude(order__status=Order.Status.CANCELLED)
+            financial_product_sales.exclude(order__status=Order.Status.CANCELLED)
             .values("product_name").annotate(quantity=Sum("quantity"), revenue=Sum("line_total"))
             .order_by("-quantity")[:5]
         )
         response["top_products"] = top_products
         response.update({
             "gross_sales": gross_sales,
-            "refund_total": Refund.objects.filter(created_at__gte=start, created_at__lt=end, status=Refund.Status.RECORDED).aggregate(total=Sum("amount"))["total"] or 0,
+            "refund_total": (
+                Refund.objects.filter(status=Refund.Status.RECORDED).aggregate(total=Sum("amount"))["total"] or 0
+                if period == "all_time"
+                else Refund.objects.filter(created_at__gte=start, created_at__lt=end, status=Refund.Status.RECORDED).aggregate(total=Sum("amount"))["total"] or 0
+            ),
             "average_order_value": active_orders.aggregate(value=Avg("total"))["value"] or 0,
             "pending_commissions": ResellerCommission.objects.filter(status="pending").aggregate(total=Sum("amount"))["total"] or 0,
             "approved_commissions": ResellerCommission.objects.filter(status="approved").aggregate(total=Sum("amount"))["total"] or 0,

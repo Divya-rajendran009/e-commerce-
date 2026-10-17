@@ -103,6 +103,11 @@ def place_order(*, customer, payload):
     if coupon:
         CouponRedemption.objects.create(coupon=coupon, customer=customer, order=order, discount_amount=discount)
     PaymentTransaction.objects.create(order=order, method=PaymentTransaction.Method.COD, status=PaymentTransaction.Status.PENDING, amount=total)
+    from apps.referrals.models import ReferralProgram
+    referral_program = ReferralProgram.objects.filter(pk=1).first()
+    if referral_program and order.status in referral_program.qualifying_order_statuses:
+        from apps.referrals.services import award_referral_for_order
+        award_referral_for_order(order)
     return order
 
 @transaction.atomic

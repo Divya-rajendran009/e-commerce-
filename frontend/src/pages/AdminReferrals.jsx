@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import { ErrorState, Loading } from '../components/Shared'
 import api, { errorMessage } from '../services/api'
 
@@ -36,6 +37,7 @@ function createIdempotencyKey() {
 }
 
 export default function AdminReferrals() {
+  const { user } = useAuth()
   const [settings, setSettings] = useState(null)
   const [stats, setStats] = useState(emptyStats)
   const [customers, setCustomers] = useState(null)
@@ -185,6 +187,7 @@ export default function AdminReferrals() {
     <div className="referral-level-summary">{stats.members_by_level.map(({ level, count }) => <article key={level}><span>Level {level}</span><strong>{count}</strong></article>)}</div>
 
     <form className="account-service-form referral-program-form" onSubmit={save}>
+      <fieldset className="referral-settings-controls" disabled={!settings.can_manage_settings}>
       <div className="section-heading"><div><span className="eyebrow">PROGRAMME RULES</span><h2>Reward configuration</h2></div><label className="check-field"><input type="checkbox" checked={settings.active} onChange={(event) => setSetting('active', event.target.checked)} /> Programme enabled</label></div>
       <div className="service-form-grid">
         <label className="field"><span>Maximum referral depth</span><select value={settings.max_depth} onChange={(event) => setDepth(Number(event.target.value))}>{[1, 2, 3, 4, 5, 6].map((depth) => <option value={depth} key={depth}>{depth} level{depth === 1 ? '' : 's'}</option>)}</select></label>
@@ -210,6 +213,8 @@ export default function AdminReferrals() {
         <label className="field"><span>{rule.reward_type === 'percentage' ? 'Percentage' : 'Amount'}</span><input type="number" min="0" max={rule.reward_type === 'percentage' ? 100 : undefined} step="0.01" value={rule.amount} onChange={(event) => setRule(rule.level, 'amount', event.target.value)} /></label>
       </article>)}</div>
       <button className="button primary">Save referral settings</button>
+      </fieldset>
+      {!settings.can_manage_settings && <p className="form-hint" role="status">Read-only access. An administrator must explicitly grant you permission to change referral settings.</p>}
     </form>
 
     <section className="referral-network-panel">
@@ -242,7 +247,7 @@ export default function AdminReferrals() {
         <strong className={Number(entry.amount) < 0 ? 'wallet-debit' : 'wallet-credit'}>{amount(entry.amount)}</strong>
       </article>)}</div> : <p className="muted">No wallet transactions match this search.</p>}
       <div className="referral-pagination"><span>{ledger?.count || 0} transactions · page {ledgerPage} of {Math.max(1, Math.ceil((ledger?.count || 0) / 25))}</span><div><button className="button secondary small" disabled={!ledger?.previous} onClick={async () => { const next = ledgerPage - 1; setLedgerPage(next); await loadLedger(ledgerSearch, next) }}>Previous</button><button className="button secondary small" disabled={!ledger?.next} onClick={async () => { const next = ledgerPage + 1; setLedgerPage(next); await loadLedger(ledgerSearch, next) }}>Next</button></div></div>
-      <details className="referral-adjustment"><summary>Authorized manual wallet adjustment</summary>
+      {['admin', 'super_admin'].includes(user?.role) && <details className="referral-adjustment"><summary>Authorized manual wallet adjustment</summary>
         <p>Only administrator and super-administrator roles may post signed ledger adjustments. The change is audited and requires an idempotency key.</p>
         <form className="service-form-grid" onSubmit={submitAdjustment}>
           <label className="field"><span>Customer account ID</span><input type="number" min="1" required value={adjustment.customer_id} onChange={(event) => setAdjustment({ ...adjustment, customer_id: event.target.value })} /></label>
@@ -251,7 +256,7 @@ export default function AdminReferrals() {
           <label className="field"><span>Reason</span><input maxLength="180" required value={adjustment.reason} onChange={(event) => setAdjustment({ ...adjustment, reason: event.target.value })} /></label>
           <button className="button primary">Record adjustment</button>
         </form>
-      </details>
+      </details>}
     </section>
   </section>
 }

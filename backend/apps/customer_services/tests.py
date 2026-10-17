@@ -165,6 +165,30 @@ class CustomerServicesApiTests(APITestCase):
         dashboard = self.client.get("/api/v1/admin/dashboard/?period=custom&start=2025-10-02&end=2025-10-01")
         self.assertEqual(dashboard.status_code, 400)
 
+    def test_admin_dashboard_all_time_metrics_include_older_orders(self):
+        historical_order = Order.objects.create(
+            customer=self.customer,
+            customer_name=self.customer.get_full_name(),
+            phone=self.customer.phone,
+            address="12 Market Road",
+            status=Order.Status.DELIVERED,
+            subtotal=Decimal("240.00"),
+            total=Decimal("240.00"),
+        )
+        Order.objects.filter(pk=historical_order.pk).update(created_at=timezone.now() - timedelta(days=60))
+        self.client.force_authenticate(self.admin)
+
+        all_time = self.client.get("/api/v1/admin/dashboard/?period=all_time")
+        today = self.client.get("/api/v1/admin/dashboard/?period=today")
+
+        self.assertEqual(all_time.status_code, 200)
+        self.assertEqual(all_time.data["period"], "all_time")
+        self.assertEqual(all_time.data["range"], {"start": None, "end": None})
+        self.assertEqual(all_time.data["orders"], 1)
+        self.assertEqual(Decimal(all_time.data["gross_sales"]), Decimal("240.00"))
+        self.assertEqual(today.data["orders"], 0)
+        self.assertEqual(Decimal(today.data["gross_sales"]), Decimal("0.00"))
+
     def test_staff_creation_hashes_password_and_prevents_role_escalation(self):
         ordinary_admin = User.objects.create_user(email="staff.admin@example.test", password="TempPassword!817", phone="+911234567896", role=User.Role.ADMIN, is_staff=True)
         self.client.force_authenticate(ordinary_admin)

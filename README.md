@@ -54,6 +54,31 @@ Open the Vite URL (normally http://localhost:5173). The API defaults to http://l
 
 OpenAPI documentation is available at `/api/schema/swagger-ui/` after starting Django.
 
+## Deploy on Vercel
+
+The repository root `vercel.json` configures a `frontend` Vite service and a
+`backend` Django service. The backend receives public `/api/*` requests; all
+other paths route to the frontend, which serves the React application and its
+client-side routes. The frontend uses same-origin `/api/v1` requests in
+production, so no build-time backend URL or service binding is needed.
+
+Before deploying, configure these environment variables in the Vercel project:
+
+- `DJANGO_SECRET_KEY`: a unique, strong production secret.
+- `DJANGO_DEBUG=False`.
+- `DJANGO_ALLOWED_HOSTS`: comma-separated custom domains, if any. Vercel's
+  `VERCEL_URL` and `VERCEL_PROJECT_PRODUCTION_URL` hosts are included
+  automatically.
+- `DB_ENGINE=mysql`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, and
+  `DB_PORT`: credentials for a persistent MySQL service reachable from Vercel
+  Functions.
+
+Do not use the default SQLite database for deployed data: Vercel function
+storage is not persistent. Run database migrations against the configured
+deployment database as a separate deployment operation; they are not run
+automatically during builds. With Vercel CLI 50.38.0 or newer, `vercel dev`
+runs both services locally.
+
 ## Implemented API
 
 - `POST /api/v1/auth/register/`, `/auth/login/`, `/auth/refresh/`, `/auth/logout/`, `/auth/me/`

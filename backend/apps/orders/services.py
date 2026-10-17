@@ -133,9 +133,15 @@ def change_order_status(*, order, new_status):
                 product.stock += movement.quantity
                 product.save(update_fields=["stock"])
                 InventoryMovement.objects.create(order=order, product=product, kind=InventoryMovement.Kind.RESTOCK, quantity=movement.quantity)
-    if new_status == Order.Status.DELIVERED:
+    from apps.referrals.models import ReferralProgram
+    referral_program = ReferralProgram.objects.filter(pk=1).first()
+    if referral_program and new_status in referral_program.qualifying_order_statuses:
         from apps.referrals.services import award_referral_for_order
         award_referral_for_order(order)
+    if referral_program and new_status == Order.Status.CANCELLED and referral_program.reverse_on_cancellation:
+        from apps.referrals.services import reverse_referral_rewards_for_order
+        reverse_referral_rewards_for_order(order, reason="qualifying order cancelled")
+    if new_status == Order.Status.DELIVERED:
         from apps.customer_services.services import issue_reseller_commission
         issue_reseller_commission(order)
     return order

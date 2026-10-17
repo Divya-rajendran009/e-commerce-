@@ -29,7 +29,6 @@ export default function StoreLayout() {
       </div>
       <nav id="primary-navigation" className={`main-nav${menuOpen ? ' is-open' : ''}`}><div className="wrap nav-content">
         <NavLink onClick={() => setMenuOpen(false)} to="/products">Shop all</NavLink><NavLink onClick={() => setMenuOpen(false)} to="/products">Fresh produce</NavLink><NavLink onClick={() => setMenuOpen(false)} to="/products">Pantry</NavLink><NavLink onClick={() => setMenuOpen(false)} to="/products">Dairy & eggs</NavLink><NavLink onClick={() => setMenuOpen(false)} to="/referrals">Refer & earn</NavLink>
-        {user?.role && user.role !== 'customer' && <NavLink onClick={() => setMenuOpen(false)} to="/admin">Admin</NavLink>}
         {user && <button className="nav-logout" onClick={() => logout().finally(() => navigate('/'))}>Sign out</button>}
       </div></nav>
     </header>

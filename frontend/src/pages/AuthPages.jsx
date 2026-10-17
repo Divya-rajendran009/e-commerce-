@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import api, { errorMessage } from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import { hasAdminAccess } from '../utils/adminAccess'
 
 export function Login() {
   const [form, setForm] = useState({ email: '', password: '' })
@@ -12,7 +13,7 @@ export function Login() {
   const navigate = useNavigate()
   const submit = async (event) => {
     event.preventDefault(); setError(''); setBusy(true)
-    try { const { data } = await api.post('/auth/login/', form); acceptSession(data); navigate(data.user.role !== 'customer' ? '/admin' : '/account') }
+    try { const { data } = await api.post('/auth/login/', form); acceptSession(data); navigate(hasAdminAccess(data.user) ? '/admin' : '/account') }
     catch (e) { setError(errorMessage(e)) } finally { setBusy(false) }
   }
   return <AuthFrame title="Welcome back" intro="Sign in to pick up where you left off."><form onSubmit={submit} className="form-stack"><Field label="Email address" type="email" required value={form.email} onChange={(value) => setForm({ ...form, email: value })} /><Field label="Password" type="password" required value={form.password} onChange={(value) => setForm({ ...form, password: value })} />{error && <div className="notice error">{error}</div>}<button className="button primary full" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button></form><p className="auth-switch">New to SUPER MARKET? <Link to="/register">Create an account</Link></p></AuthFrame>

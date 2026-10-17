@@ -100,7 +100,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 12,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    "DEFAULT_THROTTLE_RATES": {"login": "10/minute"},
+    "DEFAULT_THROTTLE_RATES": {"login": "10/minute", "referral_validation": "30/minute"},
 }
 from datetime import timedelta
 SIMPLE_JWT = {"ACCESS_TOKEN_LIFETIME": timedelta(minutes=20), "REFRESH_TOKEN_LIFETIME": timedelta(days=7), "ROTATE_REFRESH_TOKENS": True, "BLACKLIST_AFTER_ROTATION": True}

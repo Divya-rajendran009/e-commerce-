@@ -25,7 +25,7 @@ export function ProductCard({ product, onAdd }) {
       <span className="eyebrow">{product.category_name}</span>
       <Link to={`/products/${product.id}`} className="product-title">{product.name}</Link>
       <p className="product-description">{product.description || 'A quality everyday grocery essential.'}</p>
-      <div className="product-buy"><strong>₹{Number(product.price).toFixed(2)}</strong><button className="button small primary" disabled={unavailable} onClick={() => onAdd(product)}>{unavailable ? 'Sold out' : 'Add'}</button></div>
+      <div className="product-buy"><strong>₹{Number(product.price).toFixed(2)}</strong><button className="button small primary" aria-label={`${unavailable ? 'Sold out' : 'Add'} ${product.name} to bag`} disabled={unavailable} onClick={() => onAdd(product)}>{unavailable ? 'Sold out' : 'Add'}</button></div>
       {unavailable && <span className="stock-note">Currently unavailable</span>}
     </div>
   </article>

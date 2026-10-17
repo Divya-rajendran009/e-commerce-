@@ -3,9 +3,10 @@ import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Check, Copy, Gift, Share2 } from 'lucide-react'
 import {
-  BookOpen, CircleHelp, ClipboardList, Headset, Heart, Info, MapPin,
+  BookOpen, CircleHelp, ClipboardList, Headset, Heart, Info, MapPin, ShieldCheck,
   MessageSquare, Package, Store, TicketPercent,
 } from 'lucide-react'
+import { hasAdminAccess } from '../utils/adminAccess'
 
 const services = [
   [Package, 'My Orders', 'Track orders, see details, and request eligible returns.', '/orders'],
@@ -26,6 +27,9 @@ export default function Account() {
   const [shareMessage, setShareMessage] = useState('')
   const [copied, setCopied] = useState(false)
   const referralLink = `${window.location.origin}/register?ref=${user?.referral_code || ''}`
+  const accountServices = hasAdminAccess(user)
+    ? [...services, [ShieldCheck, 'Admin dashboard', 'Open your authorized store-management workspace.', '/admin']]
+    : services
 
   const copyReferralLink = async () => {
     try {
@@ -66,7 +70,7 @@ export default function Account() {
     <h1>Hello, {user?.first_name || 'there'}.</h1>
     <p>Manage your shopping, support requests, saved details and referral rewards.</p>
     <nav className="account-services-grid" aria-label="Account services">
-      {services.map(([Icon, title, description, to]) => <Link className="account-service-card" key={to} to={to} aria-label={`${title}: ${description}`}>
+      {accountServices.map(([Icon, title, description, to]) => <Link className="account-service-card" key={to} to={to} aria-label={`${title}: ${description}`}>
         <span className="account-service-icon"><Icon size={22} aria-hidden="true" /></span>
         <strong>{title}</strong>
         <span>{description}</span>

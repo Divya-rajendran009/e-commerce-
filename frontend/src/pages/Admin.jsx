@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api, { errorMessage } from '../services/api'
 import { ErrorState, Loading } from '../components/Shared'
+import { canAccessAdminModule } from '../utils/adminAccess'
 
 const periods = [
   ['today', 'Today'],
@@ -38,29 +39,31 @@ export default function Admin() {
     ...(data.financials_available ? [['Gross sales', `₹${Number(data.gross_sales).toFixed(2)}`, ClipboardList], ['Net sales', `₹${Number(data.net_sales).toFixed(2)}`, ClipboardList], ['Recorded refunds', `₹${Number(data.refund_total).toFixed(2)}`, ClipboardList], ['Pending payouts', `₹${Number(data.pending_payouts).toFixed(2)}`, ClipboardList]] : []),
   ]
   const links = [
-    ['/admin/products', 'Products & categories'],
-    ['/admin/orders', 'Orders'],
-    ['/admin/customers', 'Customers'],
-    ['/admin/referrals', 'Referrals & rewards'],
-    ['/admin/services', 'Customer services & resellers'],
-    ['/admin/services/coupons', 'Coupons & promotions'],
-    ['/admin/services/promotions', 'Homepage banners'],
-    ['/admin/services/delivery', 'Delivery & dispatch'],
-    ['/admin/services/payments', 'Payments'],
-    ['/admin/services/refunds', 'Refunds'],
-    ['/admin/services/inventory', 'Inventory'],
-    ['/admin/services/settings', 'Store settings'],
-    ['/admin/services/reports', 'Reports & exports'],
-    ['/admin/services/audit', 'Admin audit log'],
-    ...(user?.role === 'admin' || user?.role === 'super_admin' ? [['/admin/staff', 'Staff & permissions']] : []),
-  ]
+    ['/admin/products', 'Products & categories', 'products'],
+    ['/admin/orders', 'Orders', 'orders'],
+    ['/admin/customers', 'Customers', 'customers'],
+    ['/admin/referrals', 'Referrals & rewards', 'referrals'],
+    ['/admin/services', 'Customer services & resellers', 'customers'],
+    ['/admin/services/coupons', 'Coupons & promotions', 'coupons'],
+    ['/admin/services/promotions', 'Homepage banners', 'promotions'],
+    ['/admin/services/delivery', 'Delivery & dispatch', 'delivery'],
+    ['/admin/services/payments', 'Payments', 'payments'],
+    ['/admin/services/refunds', 'Refunds', 'refunds'],
+    ['/admin/services/inventory', 'Inventory', 'inventory'],
+    ['/admin/services/settings', 'Store settings', 'admin-only'],
+    ['/admin/services/reports', 'Reports & exports', 'reports'],
+    ['/admin/services/audit', 'Admin audit log', 'admin-only'],
+    ['/admin/staff', 'Staff & permissions', 'admin-only'],
+  ].filter(([, , module]) => module === 'admin-only'
+    ? ['admin', 'super_admin'].includes(user?.role)
+    : canAccessAdminModule(user, module))
   return <section className="wrap section admin-page">
     <span className="eyebrow">STORE MANAGEMENT · {data.period.replaceAll('_', ' ')}</span>
     <div className="section-heading"><div><h1>Dashboard</h1><p>Live database metrics for the selected period.</p></div>
       <label className="field admin-period"><span>Reporting period</span><select value={period} onChange={(event) => { setData(null); setPeriod(event.target.value) }}>{periods.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
     </div>
     <div className="admin-metrics">{metrics.map(([label, value, Icon]) => <article key={label}><Icon size={20} /><span>{label}</span><strong>{value}</strong></article>)}</div>
-    <nav className="admin-shortcuts" aria-label="Admin tools">{links.map(([to, label]) => <Link to={to} key={to}>{label} →</Link>)}<a href="http://localhost:8000/django-admin/" target="_blank" rel="noreferrer">Django administration →</a><a href="http://localhost:8000/api/schema/swagger-ui/" target="_blank" rel="noreferrer">API documentation →</a></nav>
+    <nav className="admin-shortcuts" aria-label="Admin tools">{links.map(([to, label]) => <Link to={to} key={to}>{label} →</Link>)}{['admin', 'super_admin'].includes(user?.role) && <><a href="http://localhost:8000/django-admin/" target="_blank" rel="noreferrer">Django administration →</a><a href="http://localhost:8000/api/schema/swagger-ui/" target="_blank" rel="noreferrer">API documentation →</a></>}</nav>
     <h2>Order status</h2><div className="admin-metrics">
       {[
         ['Awaiting confirmation', data.awaiting_confirmation],

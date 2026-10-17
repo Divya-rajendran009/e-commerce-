@@ -1,16 +1,13 @@
-import { House, LayoutGrid, ShieldCheck, ShoppingBag, UserRound } from 'lucide-react'
+import { House, LayoutGrid, ShoppingBag, UserRound } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 
 export default function MobileBottomNavigation() {
-  const { user } = useAuth()
   const { count } = useCart()
   const { pathname } = useLocation()
 
   const accountActive = ['/account', '/orders', '/referrals', '/login', '/register', '/blogs'].some((path) => pathname === path || pathname.startsWith(`${path}/`))
   const bagActive = pathname === '/cart' || pathname === '/checkout'
-  const adminActive = pathname === '/admin' || pathname.startsWith('/admin/')
 
   return (
     <nav className="mobile-bottom-nav" aria-label="Main navigation">
@@ -33,12 +30,6 @@ export default function MobileBottomNavigation() {
         <UserRound size={21} strokeWidth={1.9} />
         <span>Account</span>
       </NavLink>
-      {user?.role && user.role !== 'customer' && (
-        <NavLink to="/admin" className={() => `mobile-bottom-item${adminActive ? ' is-active' : ''}`}>
-          <ShieldCheck size={21} strokeWidth={1.9} />
-          <span>Admin</span>
-        </NavLink>
-      )}
     </nav>
   )
 }

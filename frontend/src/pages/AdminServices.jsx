@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import api, { errorMessage } from '../services/api'
 import { ErrorState, Loading } from '../components/Shared'
 import AdminOperations from './AdminOperations'
+import { canAccessAdminModule } from '../utils/adminAccess'
 
 const modules = {
   questions: { title: 'Customer questions', endpoint: '/admin/customer-questions/', editable: ['answer', 'status'], primary: 'subject', body: 'question', statuses: ['open', 'answered', 'closed'] },
@@ -13,6 +15,46 @@ const modules = {
   commissions: { title: 'Reseller commission ledger', endpoint: '/admin/reseller-commissions/', editable: ['status'], primary: 'order_number', body: 'amount', statuses: ['pending', 'approved', 'paid', 'reversed'] },
   payouts: { title: 'Reseller payout requests', endpoint: '/admin/reseller-payouts/', editable: ['status', 'admin_note'], primary: 'request_number', body: 'amount', statuses: ['pending', 'approved', 'paid', 'rejected'] },
 }
+
+const moduleAccess = {
+  questions: 'support',
+  requests: 'support',
+  support: 'support',
+  returns: 'returns',
+  resellers: 'customers',
+  commissions: 'reseller-finance',
+  payouts: 'reseller-finance',
+  blogs: 'blogs',
+  information: 'blogs',
+  'commission-rules': 'reseller-finance',
+  rewards: 'referrals',
+  coupons: 'coupons',
+  promotions: 'promotions',
+  delivery: 'delivery',
+  payments: 'payments',
+  refunds: 'refunds',
+  inventory: 'inventory',
+  settings: 'admin-only',
+  reports: 'reports',
+  audit: 'admin-only',
+}
+
+const serviceLinks = [
+  ...Object.entries(modules).map(([key, item]) => [key, item.title]),
+  ['blogs', 'Blog management'],
+  ['information', 'Store information'],
+  ['commission-rules', 'Commission rules'],
+  ['rewards', 'Rewards overview'],
+  ['coupons', 'Coupons'],
+  ['promotions', 'Homepage banners'],
+  ['delivery', 'Delivery'],
+  ['payments', 'Payments'],
+  ['refunds', 'Refunds'],
+  ['inventory', 'Inventory'],
+  ['settings', 'Store settings'],
+  ['reports', 'Reports'],
+  ['audit', 'Audit log'],
+]
 
 function AdminModule({ module }) {
   const config = modules[module]
@@ -35,16 +77,22 @@ function AdminModule({ module }) {
 
 export default function AdminServices() {
   const { module } = useParams()
+  const { user } = useAuth()
   const [info, setInfo] = useState(null)
   const [rule, setRule] = useState(null)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [rewards, setRewards] = useState(null)
+  const requiredModule = module && Object.hasOwn(moduleAccess, module) ? moduleAccess[module] : null
+  const moduleAllowed = !module || (requiredModule === 'admin-only'
+    ? ['admin', 'super_admin'].includes(user?.role)
+    : Boolean(requiredModule && canAccessAdminModule(user, requiredModule)))
   useEffect(() => {
+    if (!moduleAllowed) return
     if (module === 'information') api.get('/admin/store-information/').then(({ data }) => setInfo(data)).catch((e) => setError(errorMessage(e)))
     if (module === 'commission-rules') api.get('/admin/reseller-commission-rule/').then(({ data }) => setRule(data)).catch((e) => setError(errorMessage(e)))
     if (module === 'rewards') api.get('/admin/reward-overview/').then(({ data }) => setRewards(data)).catch((e) => setError(errorMessage(e)))
-  }, [module])
+  }, [module, moduleAllowed])
   const saveJson = async (event) => {
     event.preventDefault(); setError(''); setMessage('')
     try {
@@ -59,9 +107,17 @@ export default function AdminServices() {
     event.preventDefault(); setError(''); setMessage('')
     try { const form = new FormData(event.currentTarget); const payload = Object.fromEntries(['commission_percent','fixed_commission','minimum_order_amount','minimum_payout'].map((key) => [key, form.get(key)])); const { data } = await api.patch('/admin/reseller-commission-rule/', payload); setRule(data); setMessage('Commission rules saved.') } catch (e) { setError(errorMessage(e)) }
   }
-  return <section className="wrap section admin-page"><Link to="/admin" className="text-link">← Admin dashboard</Link><span className="eyebrow">STORE OPERATIONS</span><h1>Administration workbench</h1><nav className="admin-service-nav" aria-label="Store administration">{Object.entries(modules).map(([key, item]) => <Link key={key} to={`/admin/services/${key}`}>{item.title}</Link>)}{['blogs','information','commission-rules','rewards','coupons','promotions','delivery','payments','refunds','inventory','settings','reports','audit'].map((key) => <Link key={key} to={`/admin/services/${key}`}>{({blogs:'Blog management',information:'Store information','commission-rules':'Commission rules',rewards:'Rewards overview',coupons:'Coupons',promotions:'Homepage banners',delivery:'Delivery',payments:'Payments',refunds:'Refunds',inventory:'Inventory',settings:'Store settings',reports:'Reports',audit:'Audit log'})[key]}</Link>)}</nav>
+  if (!moduleAllowed) return <section className="wrap section admin-page"><ErrorState message="Your staff role does not have access to this administration module." /></section>
+  const visibleServiceLinks = serviceLinks.filter(([key]) => {
+    const required = moduleAccess[key]
+    return required === 'admin-only'
+      ? ['admin', 'super_admin'].includes(user?.role)
+      : canAccessAdminModule(user, required)
+  })
+
+  return <section className="wrap section admin-page"><Link to="/admin" className="text-link">← Admin dashboard</Link><span className="eyebrow">STORE OPERATIONS</span><h1>Administration workbench</h1><nav className="admin-service-nav" aria-label="Store administration">{visibleServiceLinks.map(([key, label]) => <Link key={key} to={`/admin/services/${key}`}>{label}</Link>)}</nav>
     {!module && <p>Select a module to review submissions, respond to customers, manage reseller activity, or configure published store details. Published blog content and reseller commissions are based on database records.</p>}
-    {module in modules && <AdminModule key={module} module={module} />}
+    {Object.hasOwn(modules, module) && <AdminModule key={module} module={module} />}
     {module === 'information' && <><h2>Configure store details and policies</h2>{info && <form className="account-service-form" onSubmit={saveJson}><label className="field"><span>Public store details (JSON object)</span><textarea name="details" rows="9" defaultValue={JSON.stringify(info.details, null, 2)} /></label><label className="field"><span>Policies (JSON object)</span><textarea name="policies" rows="12" defaultValue={JSON.stringify(info.policies, null, 2)} /></label><button className="button primary">Save information</button></form>}</>}
     {module === 'commission-rules' && <>{rule && <form className="account-service-form service-form-grid" onSubmit={saveRule}>{[['commission_percent','Commission percent'],['fixed_commission','Fixed amount per eligible order'],['minimum_order_amount','Minimum order amount'],['minimum_payout','Minimum payout threshold']].map(([name,label]) => <label className="field" key={name}><span>{label}</span><input name={name} type="number" min="0" step="0.01" defaultValue={rule[name]} /></label>)}<p>Rules apply at order delivery time. Changes do not recalculate previously issued commissions.</p><button className="button primary">Save commission rules</button></form>}</>}
     {module === 'rewards' && <>{rewards && <><h2>Referral reward records</h2><div className="service-record-list">{(rewards.referral_rewards || []).length ? rewards.referral_rewards.map((reward) => <article className="service-record" key={reward.id}><span>Customer {reward.recipient} · {reward.recipient_type} · {reward.created_at && new Date(reward.created_at).toLocaleDateString()}</span><strong>₹{Number(reward.amount).toFixed(2)}</strong></article>) : <p>No referral rewards have been issued.</p>}</div></>}</>}

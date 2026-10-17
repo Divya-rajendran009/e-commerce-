@@ -9,6 +9,7 @@ export default function Products() {
   const [params, setParams] = useSearchParams()
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const { add } = useCart()
@@ -16,7 +17,11 @@ export default function Products() {
   useEffect(() => {
     setLoading(true)
     api.get('/products/', { params: Object.fromEntries(params.entries()) })
-      .then(({ data }) => setProducts(data.results || data))
+      .then(({ data }) => {
+        const results = data.results || data
+        setProducts(results)
+        setTotal(data.count ?? results.length)
+      })
       .catch((e) => setError(errorMessage(e)))
       .finally(() => setLoading(false))
   }, [params])
@@ -27,7 +32,11 @@ export default function Products() {
     setParams(next)
   }
   return <section className="wrap section catalogue">
-    <div className="catalogue-title"><div><span className="eyebrow">THE EVERYDAY MARKET</span><h1>Shop groceries</h1><p>Find your household favourites, all in one place.</p></div><div className="catalog-count"><SlidersHorizontal size={17} /> {products.length} items</div></div>
+    <div className="catalogue-title"><div><span className="eyebrow">THE EVERYDAY MARKET</span><h1>Shop groceries</h1><p>Find your household favourites, all in one place.</p></div><div className="catalog-count"><SlidersHorizontal size={17} /> {total} items</div></div>
+    <nav className="category-shortcuts" aria-label="Shop by category">
+      <button type="button" className={!params.get('category') ? 'is-active' : ''} onClick={() => setParam('category', '')}>All aisles</button>
+      {categories.map((category) => <button type="button" className={params.get('category') === String(category.id) ? 'is-active' : ''} key={category.id} onClick={() => setParam('category', String(category.id))}>{category.name}</button>)}
+    </nav>
     <div className="filters">
       <label>Category<select value={params.get('category') || ''} onChange={(e) => setParam('category', e.target.value)}><option value="">All aisles</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
       <label>Sort by<select value={params.get('ordering') || ''} onChange={(e) => setParam('ordering', e.target.value)}><option value="">Recommended</option><option value="price">Price: low to high</option><option value="-price">Price: high to low</option><option value="name">Name: A to Z</option></select></label>

@@ -542,6 +542,11 @@ class AdminRefundViewSet(viewsets.ModelViewSet):
             if recorded_total >= refund.order.total and refund.order.payment_status == Order.PaymentStatus.PAID:
                 refund.order.payment_status = Order.PaymentStatus.REFUNDED
                 refund.order.save(update_fields=["payment_status", "updated_at"])
+            from apps.referrals.models import ReferralProgram
+            program = ReferralProgram.objects.filter(pk=1).first()
+            if program and program.reverse_on_full_refund and recorded_total >= refund.order.total:
+                from apps.referrals.services import reverse_referral_rewards_for_order
+                reverse_referral_rewards_for_order(refund.order, reason="full refund recorded")
         return Response(self.get_serializer(refund).data)
 
 

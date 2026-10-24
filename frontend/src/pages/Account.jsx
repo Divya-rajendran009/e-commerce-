@@ -49,7 +49,7 @@ export default function Account() {
   const shareReferralLink = async () => {
     try {
       if (navigator.share) {
-        await navigator.share({ title: 'Join SUPER MARKET', text: 'Use my referral link to join the shop.', url: referralLink })
+        await navigator.share({ title: 'Join Pandiyan Store', text: 'Use my referral link to join the shop.', url: referralLink })
         setShareMessage('Invite shared.')
       } else await copyReferralLink()
     } catch (error) {

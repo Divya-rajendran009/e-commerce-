@@ -16,7 +16,7 @@ export function Login() {
     try { const { data } = await api.post('/auth/login/', form); acceptSession(data); navigate(hasAdminAccess(data.user) ? '/admin' : '/account') }
     catch (e) { setError(errorMessage(e)) } finally { setBusy(false) }
   }
-  return <AuthFrame title="Welcome back" intro="Sign in to pick up where you left off."><form onSubmit={submit} className="form-stack"><Field label="Email address" type="email" required value={form.email} onChange={(value) => setForm({ ...form, email: value })} /><Field label="Password" type="password" required value={form.password} onChange={(value) => setForm({ ...form, password: value })} />{error && <div className="notice error">{error}</div>}<button className="button primary full" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button></form><p className="auth-switch">New to SUPER MARKET? <Link to="/register">Create an account</Link></p></AuthFrame>
+  return <AuthFrame title="Welcome back" intro="Sign in to pick up where you left off."><form onSubmit={submit} className="form-stack"><Field label="Email address" type="email" required value={form.email} onChange={(value) => setForm({ ...form, email: value })} /><Field label="Password" type="password" required value={form.password} onChange={(value) => setForm({ ...form, password: value })} />{error && <div className="notice error">{error}</div>}<button className="button primary full" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button></form><p className="auth-switch">New to Pandiyan Store? <Link to="/register">Create an account</Link></p></AuthFrame>
 }
 
 export function Register() {
@@ -39,5 +39,5 @@ function Field({ label, onChange, ...props }) {
 }
 
 function AuthFrame({ title, intro, children }) {
-  return <section className="auth-page"><div className="auth-card"><Link to="/" className="auth-brand"><span className="brand-mark"><Leaf size={21} /></span> SUPER MARKET</Link><span className="eyebrow">FRESHNESS, EVERY DAY</span><h1>{title}</h1><p>{intro}</p>{children}<Link to="/" className="text-link auth-back"><ArrowLeft size={15} /> Back to home</Link></div></section>
+  return <section className="auth-page"><div className="auth-card"><Link to="/" className="auth-brand"><span className="brand-mark"><Leaf size={21} /></span> Pandiyan Store</Link><span className="eyebrow">FRESHNESS, EVERY DAY</span><h1>{title}</h1><p>{intro}</p>{children}<Link to="/" className="text-link auth-back"><ArrowLeft size={15} /> Back to home</Link></div></section>
 }

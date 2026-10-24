@@ -3,7 +3,7 @@ from .models import Referral, ReferralLevelRule, ReferralProgram, ReferralReward
 
 @admin.register(ReferralProgram)
 class ReferralProgramAdmin(admin.ModelAdmin):
-    list_display = ["active", "max_depth", "reward_type", "referrer_reward", "customer_reward", "minimum_order_amount", "configuration_version"]
+    list_display = ["active", "max_depth", "reward_type", "customer_reward", "qualification_threshold", "configuration_version"]
     readonly_fields = ["configuration_version", "updated_at"]
 
 

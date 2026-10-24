@@ -13,7 +13,8 @@ from rest_framework.views import APIView
 from apps.accounts.models import User
 from apps.catalog.permissions import IsStoreAdmin, allowed_admin_module
 from apps.customer_services.models import AdminAuditEntry
-from .models import Referral, ReferralProgram, ReferralReward, WalletLedger
+from .models import Referral, ReferralLevelRule, ReferralProgram, ReferralReward, WalletLedger
+from .services import qualifying_self_purchase_total
 from .serializers import (
     AdminWalletAdjustmentSerializer,
     AdminWalletLedgerSerializer,
@@ -114,15 +115,45 @@ class ReferralMeView(APIView):
     serializer_class = ReferralDashboardSerializer
 
     def get(self, request):
+        program = ReferralProgram.current()
+        self_purchase_total = qualifying_self_purchase_total(request.user, program)
+        threshold = program.qualification_threshold
+        referral_levels = referral_level_counts(request.user.pk, min(program.max_depth, 5))
+        wallet_entries = WalletLedger.objects.filter(customer=request.user).order_by("-created_at")[:100]
+        wallet_balance = WalletLedger.objects.filter(customer=request.user).aggregate(balance=Sum("amount"))["balance"] or Decimal("0.00")
         payload = {
             "referral_code": request.user.referral_code,
             "referral_url": f"/register?ref={request.user.referral_code}",
+            "qualification_threshold": threshold,
+            "qualifying_self_purchase_total": self_purchase_total,
+            "qualification_progress_percent": min(
+                100,
+                int(self_purchase_total * Decimal("100") / threshold) if threshold > 0 else 100,
+            ),
+            "is_qualified": self_purchase_total >= threshold,
+            "commission_category_scope": program.category_scope,
+            "commission_rates": [
+                {
+                    "level": rule.level,
+                    "reward_type": rule.reward_type,
+                    "amount": rule.amount,
+                    "category_id": rule.category_id,
+                    "category_name": rule.category.name if rule.category_id else None,
+                }
+                for rule in ReferralLevelRule.objects.filter(
+                    program=program, active=True, level__lte=min(program.max_depth, 5),
+                ).select_related("category").order_by("level", "category_id")
+            ],
+            "network_levels": referral_levels,
+            "wallet_balance": wallet_balance,
+            "wallet_transactions": wallet_entries,
+            "rewards": ReferralReward.objects.filter(recipient=request.user).select_related("order").order_by("-created_at")[:100],
         }
         return Response(ReferralDashboardSerializer(payload).data)
 
 
 class ReferralRewardsView(APIView):
-    permission_classes = [ReferralAdminPermission]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = CustomerReferralRewardSerializer
 
     def get(self, request):
@@ -131,7 +162,7 @@ class ReferralRewardsView(APIView):
 
 
 class ReferralWalletView(APIView):
-    permission_classes = [ReferralAdminPermission]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         entries = WalletLedger.objects.filter(customer=request.user).order_by("-created_at")
@@ -223,14 +254,15 @@ class AdminReferralNetworkView(APIView):
                 return Response({"detail": "ancestor_id must be a valid customer ID."}, status=status.HTTP_400_BAD_REQUEST)
             if not User.objects.filter(pk=ancestor_id, role=User.Role.CUSTOMER).exists():
                 raise NotFound("Customer not found.")
-            level_map = referral_level_map(ancestor_id, program.max_depth)
+            max_depth = min(program.max_depth, 5)
+            level_map = referral_level_map(ancestor_id, max_depth)
             customers = customers.filter(pk__in=level_map)
             if selected_level:
                 try:
                     selected_level = int(selected_level)
                 except (TypeError, ValueError):
                     return Response({"detail": "level must be an integer between 1 and 6."}, status=status.HTTP_400_BAD_REQUEST)
-                if selected_level < 1 or selected_level > program.max_depth:
+                if selected_level < 1 or selected_level > max_depth:
                     return Response({"detail": "level is outside the configured referral depth."}, status=status.HTTP_400_BAD_REQUEST)
                 ids = [customer_id for customer_id, level in level_map.items() if level == selected_level]
                 customers = customers.filter(pk__in=ids)
@@ -283,7 +315,7 @@ class AdminReferralNetworkDetailView(APIView):
         program = ReferralProgram.current()
         attribution = Referral.objects.filter(referred=customer).select_related("referrer").first()
         direct_referrals = Referral.objects.filter(referrer=customer).select_related("referred").order_by("-created_at")
-        level_counts = referral_level_counts(customer.pk, program.max_depth)
+        level_counts = referral_level_counts(customer.pk, min(program.max_depth, 5))
         rewards = ReferralReward.objects.filter(
             Q(recipient=customer) | Q(referral__referred=customer)
         ).select_related("recipient", "order").order_by("-created_at")[:100]
@@ -339,11 +371,12 @@ class AdminReferralStatsView(APIView):
         referrals = list(Referral.objects.values_list("referrer_id", "referred_id", "status"))
         parent = {referred_id: referrer_id for referrer_id, referred_id, _ in referrals}
         level_counts = defaultdict(int)
+        max_depth = min(program.max_depth, 5)
         for _, referred_id, _ in referrals:
             ancestor_id = parent.get(referred_id)
             level = 1
             seen = {referred_id}
-            while ancestor_id and ancestor_id not in seen and level <= program.max_depth:
+            while ancestor_id and ancestor_id not in seen and level <= max_depth:
                 level_counts[level] += 1
                 seen.add(ancestor_id)
                 ancestor_id = parent.get(ancestor_id)
@@ -362,7 +395,7 @@ class AdminReferralStatsView(APIView):
             "customers_with_referrer": Referral.objects.values("referred_id").distinct().count(),
             "total_direct_referrals": len(referrals),
             "total_downline_members": sum(level_counts.values()),
-            "members_by_level": [{"level": level, "count": level_counts[level]} for level in range(1, program.max_depth + 1)],
+            "members_by_level": [{"level": level, "count": level_counts[level]} for level in range(1, min(program.max_depth, 5) + 1)],
             "active_referrals": active_referrals,
             "inactive_referrals": inactive_referrals,
             "pending_rewards": reward_counts.get(ReferralReward.Status.PENDING, 0) + Referral.objects.filter(status=Referral.Status.PENDING).count(),

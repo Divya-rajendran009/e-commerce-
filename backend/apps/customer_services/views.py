@@ -151,6 +151,16 @@ class AdminReturnRequestViewSet(AdminCustomerViewSet):
     queryset = ReturnRequest.objects.select_related("customer", "order")
     serializer_class = AdminReturnRequestSerializer
 
+    def perform_update(self, serializer):
+        previous_status = serializer.instance.status
+        return_request = serializer.save()
+        if previous_status != ReturnRequest.Status.COMPLETED and return_request.status == ReturnRequest.Status.COMPLETED:
+            from apps.referrals.models import ReferralProgram
+            from apps.referrals.services import reverse_referral_rewards_for_order
+            program = ReferralProgram.objects.filter(pk=1).first()
+            if program:
+                reverse_referral_rewards_for_order(return_request.order, reason="returned order completed")
+
 
 class BlogCategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = BlogCategory.objects.all()
@@ -382,10 +392,16 @@ class PublicOperationalSettingsView(APIView):
         settings = SystemSettings.current()
         return Response({
             "store_name": settings.store_name,
+            "store_location": settings.store_location,
+            "contact_phone": settings.contact_phone,
+            "business_hours": settings.business_hours,
+            "delivery_timeline": settings.delivery_timeline,
+            "delivery_pin_codes": settings.delivery_pin_codes,
             "currency": settings.currency,
             "delivery_fee": settings.delivery_fee,
             "free_delivery_threshold": settings.free_delivery_threshold,
             "minimum_order_value": settings.minimum_order_value,
+            "free_delivery_operator": "greater_than",
         })
 
 
@@ -544,7 +560,7 @@ class AdminRefundViewSet(viewsets.ModelViewSet):
                 refund.order.save(update_fields=["payment_status", "updated_at"])
             from apps.referrals.models import ReferralProgram
             program = ReferralProgram.objects.filter(pk=1).first()
-            if program and program.reverse_on_full_refund and recorded_total >= refund.order.total:
+            if program and recorded_total >= refund.order.total:
                 from apps.referrals.services import reverse_referral_rewards_for_order
                 reverse_referral_rewards_for_order(refund.order, reason="full refund recorded")
         return Response(self.get_serializer(refund).data)
@@ -682,7 +698,7 @@ class AdminReportView(APIView):
 
 
 class CustomerRewardsView(APIView):
-    permission_classes = [IsStoreAdmin]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         from apps.referrals.models import ReferralReward, WalletLedger

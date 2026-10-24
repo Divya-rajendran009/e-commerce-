@@ -11,7 +11,9 @@ ROLE_MODULES = {
 
 
 def allowed_admin_module(user, module):
-    return role_has_admin_module(user.role, module)
+    if user.role in {"admin", "super_admin"}:
+        return True
+    return module in (user.admin_modules or [])
 
 
 def role_has_admin_module(role, module):
@@ -27,7 +29,7 @@ class IsStoreAdmin(BasePermission):
             return False
         path = request.path.lower()
         if "/dashboard/" in path:
-            return user.role in {"admin", "super_admin", "product_manager", "order_manager", "inventory_manager", "customer_support", "marketing_manager", "finance_manager"}
+            return user.role in {"admin", "super_admin"}
         if "/admin/products" in path or "/admin/categories" in path:
             module = "inventory" if "inventory" in path else "products"
         elif "/admin/orders" in path:

@@ -8,6 +8,7 @@ class Order(models.Model):
         CONFIRMED = "confirmed", "Confirmed"
         PROCESSING = "processing", "Processing"
         PACKED = "packed", "Packed"
+        PICKED_UP = "picked_up", "Picked up"
         OUT_FOR_DELIVERY = "out_for_delivery", "Out for Delivery"
         DELIVERED = "delivered", "Delivered"
         CANCELLED = "cancelled", "Cancelled"

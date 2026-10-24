@@ -21,7 +21,7 @@ class CreateOrderSerializer(serializers.Serializer):
     instructions = serializers.CharField(required=False, allow_blank=True)
     payment_method = serializers.ChoiceField(choices=["cod"], default="cod")
     coupon_code = serializers.CharField(required=False, allow_blank=True, max_length=40)
-    delivery_pin_code = serializers.RegexField(r"^[1-9][0-9]{5}$", required=False, allow_blank=True)
+    delivery_pin_code = serializers.RegexField(r"^[1-9][0-9]{5}$")
 
     def validate(self, attrs):
         for field in ["customer_name", "phone", "address"]:

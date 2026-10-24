@@ -4,14 +4,6 @@ import { useAuth } from '../context/AuthContext'
 import { ErrorState, Loading } from '../components/Shared'
 import api, { errorMessage } from '../services/api'
 
-const ORDER_STATUSES = [
-  ['confirmed', 'Confirmed'],
-  ['processing', 'Processing'],
-  ['packed', 'Packed'],
-  ['out_for_delivery', 'Out for delivery'],
-  ['delivered', 'Delivered'],
-]
-
 const emptyStats = {
   total_customers: 0,
   customers_with_referrer: 0,
@@ -39,6 +31,7 @@ function createIdempotencyKey() {
 export default function AdminReferrals() {
   const { user } = useAuth()
   const [settings, setSettings] = useState(null)
+  const [categories, setCategories] = useState([])
   const [stats, setStats] = useState(emptyStats)
   const [customers, setCustomers] = useState(null)
   const [ledger, setLedger] = useState(null)
@@ -57,6 +50,7 @@ export default function AdminReferrals() {
     idempotency_key: createIdempotencyKey(),
   })
   const [loading, setLoading] = useState(true)
+  const [categoryBusy, setCategoryBusy] = useState(null)
   const loadNetwork = useCallback(async (params = query, pageNumber = page) => {
     setError('')
     try {
@@ -73,33 +67,74 @@ export default function AdminReferrals() {
       api.get('/admin/referrals/stats/'),
       api.get('/admin/referrals/network/'),
       api.get('/admin/rewards/'),
-    ]).then(([programResponse, statsResponse, networkResponse, ledgerResponse]) => {
+      api.get('/admin/categories/'),
+    ]).then(([programResponse, statsResponse, networkResponse, ledgerResponse, categoryResponse]) => {
       setSettings(programResponse.data)
       setStats(statsResponse.data)
       setCustomers(networkResponse.data)
       setLedger(ledgerResponse.data)
+      setCategories(categoryResponse.data.results || categoryResponse.data)
     }).catch((exception) => setError(errorMessage(exception))).finally(() => setLoading(false))
   }, [])
 
   const setSetting = (name, value) => setSettings((current) => ({ ...current, [name]: value }))
-  const setRule = (level, key, value) => setSettings((current) => ({
+  const setRule = (level, key, value, categoryId = null) => setSettings((current) => ({
     ...current,
-    level_rules: current.level_rules.map((rule) => rule.level === level ? { ...rule, [key]: value } : rule),
+    level_rules: current.level_rules.map((rule) => rule.level === level && String(rule.category ?? '') === String(categoryId ?? '') ? { ...rule, [key]: value } : rule),
   }))
   const setDepth = (depth) => {
     setSettings((current) => {
-      const existing = new Map(current.level_rules.map((rule) => [rule.level, rule]))
+      const existing = new Map(current.level_rules.map((rule) => [`${rule.level}:${rule.category ?? ''}`, rule]))
       return {
         ...current,
         max_depth: depth,
-        level_rules: Array.from({ length: depth }, (_, index) => existing.get(index + 1) || {
-          level: index + 1,
-          reward_type: 'fixed',
-          amount: '0.00',
-          active: false,
-        }),
+        level_rules: Array.from({ length: 5 }, (_, index) => {
+          const level = index + 1
+          return existing.get(`${level}:`) || {
+            level,
+            reward_type: 'percentage',
+            amount: ['1.00', '0.75', '0.50', '0.40', '0.30'][index],
+            active: true,
+            category: null,
+          }
+        }).concat(current.level_rules.filter((rule) => rule.category != null)),
       }
     })
+  }
+  const toggleReferralCategory = (categoryId, selected) => setSettings((current) => {
+    const categoryKey = String(categoryId)
+    if (!selected) {
+      return { ...current, level_rules: current.level_rules.filter((rule) => String(rule.category ?? '') !== categoryKey) }
+    }
+    if (current.level_rules.some((rule) => String(rule.category ?? '') === categoryKey)) return current
+    const defaults = new Map(current.level_rules.filter((rule) => rule.category == null).map((rule) => [rule.level, rule]))
+    const categoryRules = Array.from({ length: 5 }, (_, index) => {
+      const level = index + 1
+      const base = defaults.get(level)
+      return {
+        level,
+        reward_type: 'percentage',
+        amount: base?.amount ?? ['1.00', '0.75', '0.50', '0.40', '0.30'][index],
+        active: base?.active ?? true,
+        category: Number(categoryId),
+      }
+    })
+    return { ...current, level_rules: [...current.level_rules, ...categoryRules] }
+  })
+  const saveCategoryRewardSetting = async (categoryId, value) => {
+    setCategoryBusy(categoryId)
+    setError('')
+    try {
+      const { data } = await api.patch(`/admin/categories/${categoryId}/`, {
+        referral_rewards_enabled: value === 'inherit' ? null : value === 'on',
+      })
+      setCategories((current) => current.map((category) => category.id === categoryId ? data : category))
+      setMessage(`${data.name} referral reward setting updated. Existing rewards are unchanged.`)
+    } catch (exception) {
+      setError(errorMessage(exception))
+    } finally {
+      setCategoryBusy(null)
+    }
   }
   const save = async (event) => {
     event.preventDefault()
@@ -161,7 +196,6 @@ export default function AdminReferrals() {
   if (loading) return <Loading label="Loading referral network…" />
   if (!settings) return <section className="wrap section"><ErrorState message={error || 'Referral programme settings are unavailable.'} /></section>
 
-  const statuses = new Set(settings.qualifying_order_statuses)
   return <section className="wrap section admin-page referral-admin-page">
     <span className="eyebrow">CUSTOMER GROWTH</span>
     <h1>Referral network</h1>
@@ -190,28 +224,62 @@ export default function AdminReferrals() {
       <fieldset className="referral-settings-controls" disabled={!settings.can_manage_settings}>
       <div className="section-heading"><div><span className="eyebrow">PROGRAMME RULES</span><h2>Reward configuration</h2></div><label className="check-field"><input type="checkbox" checked={settings.active} onChange={(event) => setSetting('active', event.target.checked)} /> Programme enabled</label></div>
       <div className="service-form-grid">
-        <label className="field"><span>Maximum referral depth</span><select value={settings.max_depth} onChange={(event) => setDepth(Number(event.target.value))}>{[1, 2, 3, 4, 5, 6].map((depth) => <option value={depth} key={depth}>{depth} level{depth === 1 ? '' : 's'}</option>)}</select></label>
-        <label className="field"><span>Minimum qualifying order (₹)</span><input type="number" min="0" step="0.01" required value={settings.minimum_order_amount} onChange={(event) => setSetting('minimum_order_amount', event.target.value)} /></label>
+        <label className="field"><span>Maximum Referral Levels</span><select value={settings.max_depth} onChange={(event) => setDepth(Number(event.target.value))}>{[1, 2, 3, 4, 5].map((depth) => <option value={depth} key={depth}>{depth} level{depth === 1 ? '' : 's'}</option>)}</select></label>
+        <label className="field"><span>Required own delivered purchases (₹)</span><input type="number" min="0" step="0.01" required value={settings.qualification_threshold} onChange={(event) => setSetting('qualification_threshold', event.target.value)} /></label>
         <label className="field"><span>Maximum reward per recipient (₹, optional)</span><input type="number" min="0" step="0.01" value={settings.max_reward_per_referral || ''} onChange={(event) => setSetting('max_reward_per_referral', event.target.value || null)} /></label>
         <label className="field"><span>New referred-customer bonus (₹)</span><input type="number" min="0" step="0.01" value={settings.customer_reward} onChange={(event) => setSetting('customer_reward', event.target.value)} /></label>
         <label className="check-field"><input type="checkbox" checked={settings.reward_on_first_qualifying_order_only} onChange={(event) => setSetting('reward_on_first_qualifying_order_only', event.target.checked)} /> First qualifying order only</label>
         <label className="check-field"><input type="checkbox" checked={settings.reward_referrer} onChange={(event) => setSetting('reward_referrer', event.target.checked)} /> Reward direct referrer</label>
         <label className="check-field"><input type="checkbox" checked={settings.reward_ancestors} onChange={(event) => setSetting('reward_ancestors', event.target.checked)} /> Reward higher-level ancestors</label>
         <label className="check-field"><input type="checkbox" checked={settings.reward_referred_customer} onChange={(event) => setSetting('reward_referred_customer', event.target.checked)} /> Reward referred customer</label>
-        <label className="check-field"><input type="checkbox" checked={settings.reverse_on_full_refund} onChange={(event) => setSetting('reverse_on_full_refund', event.target.checked)} /> Reverse credits after full refunds</label>
-        <label className="check-field"><input type="checkbox" checked={settings.reverse_on_cancellation} onChange={(event) => setSetting('reverse_on_cancellation', event.target.checked)} /> Reverse credits after cancellations</label>
         <label className="check-field"><input type="checkbox" checked={settings.wallet_spending_enabled} disabled readOnly /> Wallet spending at checkout (not implemented)</label>
         <label className="field"><span>Wallet credit expiry (not implemented)</span><input type="number" min="1" value={settings.wallet_expiry_days || ''} disabled readOnly /></label>
       </div>
       <p className="form-hint">Wallet redemption during checkout and automatic credit expiry are not active. These stored settings do not affect orders.</p>
-      <fieldset className="referral-status-fieldset"><legend>Order statuses that qualify</legend><div>{ORDER_STATUSES.map(([value, label]) => <label className="check-field" key={value}><input type="checkbox" checked={statuses.has(value)} onChange={(event) => setSetting('qualifying_order_statuses', event.target.checked ? [...statuses, value] : [...statuses].filter((item) => item !== value))} />{label}</label>)}</div></fieldset>
-      <h3>Ancestor reward per level</h3>
-      <div className="referral-rule-grid">{settings.level_rules.filter((rule) => rule.level <= settings.max_depth).map((rule) => <article className="referral-rule-card" key={rule.level}>
+      <p className="form-hint">Qualification is cumulative across your own delivered purchases, less recorded refunds and completed returns. Referral purchases do not count toward your own qualification. A referral commission is considered only after the referred order is delivered.</p>
+      <p className="form-hint">Delivered orders are the only eligible order status. COD orders are not credited when placed.</p>
+      <div className="service-form-grid referral-scope-controls">
+        <label className="field"><span>Commission category scope</span><select value={settings.category_scope || 'all'} onChange={(event) => setSetting('category_scope', event.target.value)}><option value="all">All Categories</option><option value="specific">Specific Categories</option></select></label>
+        <label className="check-field"><input type="checkbox" checked={settings.referral_rewards_enabled} onChange={(event) => setSetting('referral_rewards_enabled', event.target.checked)} /> Global referral rewards enabled</label>
+        {settings.category_scope === 'all' && <label className="check-field"><input type="checkbox" checked={Boolean(settings.category_overrides_enabled)} onChange={(event) => setSetting('category_overrides_enabled', event.target.checked)} /> Allow selected category rates to override All Categories rates</label>}
+      </div>
+      <p className="form-hint">{settings.category_scope === 'specific' ? 'Only the selected categories below earn commissions. Other categories have no commission fallback.' : settings.category_overrides_enabled ? 'All Categories rates are the fallback; selected category rates override them for matching items.' : 'All Categories rates apply to every category. Category rates are stored but will not override until this option is enabled.'}</p>
+      <h3>All Categories rates</h3>
+      <div className="referral-rule-grid">{settings.level_rules.filter((rule) => rule.category == null && rule.level <= settings.max_depth).map((rule) => <article className="referral-rule-card" key={`all-${rule.level}`}>
         <strong>Level {rule.level}</strong>
         <label className="check-field"><input type="checkbox" checked={rule.active} onChange={(event) => setRule(rule.level, 'active', event.target.checked)} /> Active</label>
-        <label className="field"><span>Reward type</span><select value={rule.reward_type} onChange={(event) => setRule(rule.level, 'reward_type', event.target.value)}><option value="fixed">Fixed credit (₹)</option><option value="percentage">Percent of order (%)</option></select></label>
-        <label className="field"><span>{rule.reward_type === 'percentage' ? 'Percentage' : 'Amount'}</span><input type="number" min="0" max={rule.reward_type === 'percentage' ? 100 : undefined} step="0.01" value={rule.amount} onChange={(event) => setRule(rule.level, 'amount', event.target.value)} /></label>
+        <label className="field"><span>Percentage of eligible item amount</span><input type="number" min="0" max="100" step="0.01" value={rule.amount} onChange={(event) => { setRule(rule.level, 'reward_type', 'percentage'); setRule(rule.level, 'amount', event.target.value) }} /></label>
       </article>)}</div>
+      <h3>Specific category rates</h3>
+      <p className="form-hint">Category rates are saved separately per referral level. Existing orders and ledger snapshots are not recalculated when rules change.</p>
+      <div className="referral-category-rates">
+        <h4>Category reward eligibility</h4>
+        <p className="form-hint">Each category can inherit the global setting or explicitly enable or disable referral rewards. Disabled categories are excluded from commissions at every level.</p>
+        {categories.map((category) => {
+          const setting = category.referral_rewards_enabled == null ? 'inherit' : category.referral_rewards_enabled ? 'on' : 'off'
+          const effective = category.referral_rewards_enabled == null ? settings.referral_rewards_enabled : category.referral_rewards_enabled
+          return <label className="field" key={`eligibility-${category.id}`}>
+            <span>{category.name} · {effective ? 'Rewards enabled' : 'Rewards disabled'}</span>
+            <select aria-label={`Referral rewards for ${category.name}`} value={setting} disabled={categoryBusy === category.id || !settings.can_manage_settings} onChange={(event) => saveCategoryRewardSetting(category.id, event.target.value)}>
+              <option value="inherit">Use global default</option>
+              <option value="on">Enabled for this category</option>
+              <option value="off">Disabled for this category</option>
+            </select>
+          </label>
+        })}
+      </div>
+      <div className="referral-category-select">{categories.map((category) => {
+        const selected = settings.level_rules.some((rule) => String(rule.category ?? '') === String(category.id))
+        return <label className="check-field" key={category.id}><input type="checkbox" checked={selected} onChange={(event) => toggleReferralCategory(category.id, event.target.checked)} /> {category.name}{category.is_active ? '' : ' (inactive)'}</label>
+      })}</div>
+      {categories.filter((category) => settings.level_rules.some((rule) => String(rule.category ?? '') === String(category.id))).map((category) => <section className="referral-category-rates" key={category.id}>
+        <h4>{category.name}</h4>
+        <div className="referral-rule-grid">{settings.level_rules.filter((rule) => String(rule.category ?? '') === String(category.id) && rule.level <= settings.max_depth).map((rule) => <article className="referral-rule-card" key={`${category.id}-${rule.level}`}>
+          <strong>Level {rule.level}</strong>
+          <label className="check-field"><input type="checkbox" checked={rule.active} onChange={(event) => setRule(rule.level, 'active', event.target.checked, category.id)} /> Active</label>
+          <label className="field"><span>Percentage for {category.name}</span><input type="number" min="0" max="100" step="0.01" value={rule.amount} onChange={(event) => { setRule(rule.level, 'reward_type', 'percentage', category.id); setRule(rule.level, 'amount', event.target.value, category.id) }} /></label>
+        </article>)}</div>
+      </section>)}
       <button className="button primary">Save referral settings</button>
       </fieldset>
       {!settings.can_manage_settings && <p className="form-hint" role="status">Read-only access. An administrator must explicitly grant you permission to change referral settings.</p>}

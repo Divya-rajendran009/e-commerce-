@@ -3,6 +3,7 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { Copy, Trash2 } from 'lucide-react'
 import { EmptyState, ErrorState, Loading } from '../components/Shared'
 import { useCart } from '../context/CartContext'
+import PolicyLink from '../components/PolicyLink'
 import api, { errorMessage } from '../services/api'
 
 const list = (data) => Array.isArray(data) ? data : data?.results || []
@@ -178,12 +179,11 @@ function Reseller() {
 function Information() {
   const { data, error, loading } = useResource('/store-information/')
   const details = data?.details || {}
-  const policies = data?.policies || {}
-  return <PageFrame title="Store Information" intro="Store details and policies published by the administrator.">
+  return <PageFrame title="Store Information" intro="Store details and links to the published policy pages.">
     {error ? <ErrorState message={error} /> : loading ? <Loading /> : <div className="information-accordion">
       <details open><summary>About the store</summary><p>{details.about || 'Store information has not been provided yet.'}</p></details>
       <details><summary>Contact details</summary>{details.email && <p>Email: <a href={`mailto:${details.email}`}>{details.email}</a></p>}{details.phone && <p>Phone: <a href={`tel:${details.phone}`}>{details.phone}</a></p>}{details.address && <p>{details.address}</p>}{details.delivery_information && <p>{details.delivery_information}</p>}{!details.email && !details.phone && !details.address && <p>Contact details have not been configured.</p>}</details>
-      {['shipping_policy', 'return_policy', 'refund_policy', 'privacy_policy', 'terms', 'faq'].map((key) => <details key={key}><summary>{key.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())}</summary><p>{policies[key] || 'This information has not been provided by the store.'}</p></details>)}
+      <details><summary>Policies</summary><nav className="policy-navigation" aria-label="Store policies"><PolicyLink policy="terms">Terms &amp; Conditions</PolicyLink><PolicyLink policy="privacy">Privacy Policy</PolicyLink><PolicyLink policy="delivery">Delivery Policy</PolicyLink><PolicyLink policy="returns">Return &amp; Refund Policy</PolicyLink><PolicyLink policy="ugc">User-Generated Content Policy</PolicyLink></nav></details>
     </div>}
   </PageFrame>
 }

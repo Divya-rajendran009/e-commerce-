@@ -3,21 +3,34 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
 from datetime import datetime, time, timedelta
-from django.db.models import Sum, Avg, F
+from django.db.models import Avg, Exists, F, OuterRef, Sum
 from django.utils import timezone
 from django.utils.dateparse import parse_date
+from rest_framework.exceptions import PermissionDenied
 from .models import Category, Product
 from .permissions import IsStoreAdmin
-from .serializers import AdminProductSerializer, CategorySerializer, ProductSerializer
+from .serializers import AdminProductSerializer, CategorySerializer, ProductSerializer, PublicCategorySerializer
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Category.objects.filter(is_active=True)
-    serializer_class = CategorySerializer
+    queryset = Category.objects.filter(
+        is_active=True,
+    ).filter(
+        Exists(Product.objects.filter(
+            category_id=OuterRef("pk"),
+            is_active=True,
+            stock__gt=0,
+        ))
+    )
+    serializer_class = PublicCategorySerializer
     permission_classes = [permissions.AllowAny]
     pagination_class = None
 
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Product.objects.filter(is_active=True, category__is_active=True).select_related("category")
+    queryset = Product.objects.filter(
+        is_active=True,
+        category__is_active=True,
+        stock__gt=0,
+    ).select_related("category")
     serializer_class = ProductSerializer
     permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
@@ -56,15 +69,32 @@ class AdminCategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     permission_classes = [IsStoreAdmin]
 
+    def _validate_referral_eligibility_permission(self, serializer):
+        if "referral_rewards_enabled" not in serializer.validated_data:
+            return
+        user = self.request.user
+        if user.role not in {"admin", "super_admin"} and not user.has_perm("referrals.change_referralprogram"):
+            raise PermissionDenied("You are not allowed to change category referral eligibility.")
+
     def perform_create(self, serializer):
+        self._validate_referral_eligibility_permission(serializer)
         category = serializer.save()
         from apps.customer_services.views import audit_admin_change
         audit_admin_change(self.request, category, "create", {"name": category.name})
 
     def perform_update(self, serializer):
+        self._validate_referral_eligibility_permission(serializer)
         category = serializer.save()
         from apps.customer_services.views import audit_admin_change
-        audit_admin_change(self.request, category, "update", {"name": category.name})
+        audit_admin_change(
+            self.request,
+            category,
+            "update",
+            {
+                key: str(value.pk) if hasattr(value, "pk") else str(value)
+                for key, value in serializer.validated_data.items()
+            },
+        )
 
 @extend_schema(responses={
     "200": {
@@ -131,7 +161,8 @@ def dashboard(request):
         },
         "orders": period_orders.count(),
         "awaiting_confirmation": period_orders.filter(status=Order.Status.PENDING).count(),
-        "processing_orders": period_orders.filter(status__in=[Order.Status.PROCESSING, Order.Status.PACKED]).count(),
+        "confirmed_orders": period_orders.filter(status=Order.Status.CONFIRMED).count(),
+        "processing_orders": period_orders.filter(status__in=[Order.Status.PROCESSING, Order.Status.PACKED, Order.Status.PICKED_UP]).count(),
         "out_for_delivery": period_orders.filter(status=Order.Status.OUT_FOR_DELIVERY).count(),
         "delivered_orders": period_orders.filter(status=Order.Status.DELIVERED).count(),
         "cancelled_orders": period_orders.filter(status=Order.Status.CANCELLED).count(),

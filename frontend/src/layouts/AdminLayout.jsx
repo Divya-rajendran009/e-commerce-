@@ -53,9 +53,11 @@ export default function AdminLayout() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [pendingOrders, setPendingOrders] = useState(null)
   const [notificationError, setNotificationError] = useState(false)
+  const isSeniorAdmin = ['admin', 'super_admin'].includes(user?.role)
   const links = navigation.filter(([, , , module, overview, roles]) => {
     if (roles) return roles.includes(user?.role)
-    return overview || canAccessAdminModule(user, module)
+    if (overview) return isSeniorAdmin
+    return canAccessAdminModule(user, module)
   })
   const extras = links.filter(([, , to]) => !primaryLinks.has(to))
 
@@ -65,23 +67,28 @@ export default function AdminLayout() {
   }, [location.pathname])
 
   useEffect(() => {
+    if (!isSeniorAdmin) {
+      setPendingOrders(null)
+      setNotificationError(false)
+      return
+    }
     api.get('/admin/dashboard/?period=all_time')
       .then(({ data }) => {
-        setPendingOrders((data.awaiting_confirmation || 0) + (data.processing_orders || 0) + (data.out_for_delivery || 0))
+        setPendingOrders((data.awaiting_confirmation || 0) + (data.confirmed_orders || 0) + (data.processing_orders || 0) + (data.out_for_delivery || 0))
         setNotificationError(false)
       })
       .catch(() => {
         setPendingOrders(null)
         setNotificationError(true)
       })
-  }, [location.pathname])
+  }, [location.pathname, isSeniorAdmin])
 
   const signOut = () => logout().finally(() => navigate('/login'))
   const title = pageTitle(location.pathname)
 
   return <div className="admin-shell">
     <aside className="admin-shell-sidebar">
-      <Link to="/admin" className="admin-shell-brand"><span className="admin-shell-mark"><Store size={21} /></span><span>SUPER MARKET<small>Store administration</small></span></Link>
+      <Link to="/admin" className="admin-shell-brand"><span className="admin-shell-mark"><Store size={21} /></span><span>Pandiyan Store<small>Store administration</small></span></Link>
       <span className="admin-shell-label">WORKSPACE</span>
       <nav className="admin-shell-nav" aria-label="Administration">
         {links.map(([Icon, label, to, , overview]) => <NavLink end={overview} to={to} key={to} className={({ isActive }) => `admin-shell-link${isActive ? ' is-active' : ''}`}><Icon size={17} /><span>{label}</span></NavLink>)}
@@ -90,13 +97,13 @@ export default function AdminLayout() {
     </aside>
     <div className="admin-shell-workspace">
       <header className="admin-shell-header">
-        <div className="admin-header-title"><span>SUPER MARKET</span><strong>{title}</strong></div>
+        <div className="admin-header-title"><span>PANDIYAN STORE</span><strong>{title}</strong></div>
         <div className="admin-header-actions">
-          <Link to="/admin/orders" className={`admin-notifications${notificationError ? ' has-error' : ''}`} aria-label={notificationError ? 'Notifications unavailable' : `${pendingOrders ?? 0} pending orders`} title={notificationError ? 'Notifications unavailable' : `${pendingOrders ?? 0} pending orders`}>
+          {isSeniorAdmin && <Link to="/admin/orders" className={`admin-notifications${notificationError ? ' has-error' : ''}`} aria-label={notificationError ? 'Notifications unavailable' : `${pendingOrders ?? 0} pending orders`} title={notificationError ? 'Notifications unavailable' : `${pendingOrders ?? 0} pending orders`}>
             <Bell size={19} />
             {pendingOrders > 0 && <span className="admin-notification-count">{pendingOrders > 99 ? '99+' : pendingOrders}</span>}
             {notificationError && <span className="admin-notification-error" />}
-          </Link>
+          </Link>}
           <Link to="/" className="admin-store-link"><ArrowUpRight size={16} /><span>Storefront</span></Link>
           <div className="admin-profile">
             <button className="admin-profile-button" type="button" aria-expanded={profileOpen} onClick={() => setProfileOpen((open) => !open)}>
@@ -112,7 +119,7 @@ export default function AdminLayout() {
     </div>
     {moreOpen && <div className="admin-more-overlay" onClick={() => setMoreOpen(false)}>
       <section className="admin-more-sheet" role="dialog" aria-modal="true" aria-label="More administration" onClick={(event) => event.stopPropagation()}>
-        <div className="admin-more-heading"><span><small>SUPER MARKET</small><strong>More tools</strong></span><button type="button" aria-label="Close more menu" onClick={() => setMoreOpen(false)}><X size={20} /></button></div>
+        <div className="admin-more-heading"><span><small>PANDIYAN STORE</small><strong>More tools</strong></span><button type="button" aria-label="Close more menu" onClick={() => setMoreOpen(false)}><X size={20} /></button></div>
         <nav className="admin-more-grid" aria-label="More administration tools">
           {extras.map(([Icon, label, to]) => <Link to={to} key={to}><span><Icon size={19} /></span><strong>{label}</strong><ChevronRight size={16} /></Link>)}
         </nav>

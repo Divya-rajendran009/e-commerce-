@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
 import { useAuth } from './context/AuthContext'
 import StoreLayout from './layouts/StoreLayout'
 import AdminLayout from './layouts/AdminLayout'
@@ -23,6 +24,8 @@ import AdminServices from './pages/AdminServices'
 import { Login, Register } from './pages/AuthPages'
 import { canAccessAdminModule, hasAdminAccess } from './utils/adminAccess'
 
+const PolicyPage = lazy(() => import('./pages/PolicyPage'))
+
 function Guard({ admin = false, adminModule, adminRoles, children }) {
   const { user, ready } = useAuth()
   if (!ready) return <div className="state-card">Loading your account…</div>
@@ -39,6 +42,12 @@ export default function App() {
     <Route path="products" element={<Products />} />
     <Route path="products/:id" element={<ProductDetail />} />
     <Route path="cart" element={<Cart />} />
+    <Route path="delivery-info" element={<Navigate to="/delivery-policy" replace />} />
+    <Route path="terms-and-conditions" element={<Suspense fallback={<div className="state-card">Loading policy…</div>}><PolicyPage policy="terms" /></Suspense>} />
+    <Route path="privacy-policy" element={<Suspense fallback={<div className="state-card">Loading policy…</div>}><PolicyPage policy="privacy" /></Suspense>} />
+    <Route path="delivery-policy" element={<Suspense fallback={<div className="state-card">Loading policy…</div>}><PolicyPage policy="delivery" /></Suspense>} />
+    <Route path="return-refund-policy" element={<Suspense fallback={<div className="state-card">Loading policy…</div>}><PolicyPage policy="returns" /></Suspense>} />
+    <Route path="ugc-policy" element={<Suspense fallback={<div className="state-card">Loading policy…</div>}><PolicyPage policy="ugc" /></Suspense>} />
     <Route path="checkout" element={<Guard><Checkout /></Guard>} />
     <Route path="login" element={<Login />} />
     <Route path="register" element={<Register />} />

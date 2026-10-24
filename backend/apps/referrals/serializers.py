@@ -3,13 +3,21 @@ from decimal import Decimal
 from rest_framework import serializers
 
 from apps.accounts.models import User
+from apps.catalog.models import Category
 from .models import Referral, ReferralLevelRule, ReferralProgram, ReferralReward, WalletLedger
 
 
 class ReferralLevelRuleSerializer(serializers.ModelSerializer):
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(),
+        allow_null=True,
+        required=False,
+    )
+    category_name = serializers.CharField(source="category.name", read_only=True, allow_null=True)
+
     class Meta:
         model = ReferralLevelRule
-        fields = ["level", "reward_type", "amount", "active"]
+        fields = ["level", "reward_type", "amount", "active", "category", "category_name"]
 
     def validate(self, attrs):
         reward_type = attrs.get("reward_type", getattr(self.instance, "reward_type", None))
@@ -25,69 +33,117 @@ class ReferralProgramSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReferralProgram
         fields = [
-            "active", "reward_type", "referrer_reward", "customer_reward",
-            "minimum_order_amount", "max_reward_per_referral", "max_depth",
+            "active", "reward_type", "customer_reward",
+            "qualification_threshold", "max_reward_per_referral", "max_depth",
+            "category_scope", "category_overrides_enabled",
+            "referral_rewards_enabled",
             "qualifying_order_statuses", "reward_on_first_qualifying_order_only",
             "reward_referrer", "reward_ancestors", "reward_referred_customer",
-            "reverse_on_full_refund", "reverse_on_cancellation",
             "wallet_spending_enabled", "wallet_expiry_days",
             "configuration_version", "level_rules", "updated_at",
         ]
         read_only_fields = ["configuration_version", "updated_at"]
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["max_depth"] = min(data["max_depth"], 5)
+        data["qualifying_order_statuses"] = ["delivered"]
+        data["level_rules"] = [
+            rule for rule in data["level_rules"] if rule["level"] <= 5
+        ]
+        return data
+
     def validate_max_depth(self, value):
-        if value < 1 or value > 6:
-            raise serializers.ValidationError("Referral depth must be between 1 and 6.")
+        if value < 1 or value > 5:
+            raise serializers.ValidationError("Referral depth must be between 1 and 5.")
         return value
 
     def validate_qualifying_order_statuses(self, value):
-        supported = {"pending", "confirmed", "processing", "packed", "out_for_delivery", "delivered"}
-        if not isinstance(value, list) or not value or any(item not in supported for item in value):
-            raise serializers.ValidationError("Choose one or more supported order statuses.")
-        return list(dict.fromkeys(value))
+        if value != ["delivered"]:
+            raise serializers.ValidationError("Referral commissions are earned only after an order is delivered.")
+        return value
 
     def validate(self, attrs):
-        max_depth = attrs.get("max_depth", getattr(self.instance, "max_depth", 1))
+        max_depth = attrs.get("max_depth", getattr(self.instance, "max_depth", 5))
         rules = attrs.get("level_rules")
         if rules is not None:
-            levels = [rule["level"] for rule in rules]
-            if len(levels) != len(set(levels)):
-                raise serializers.ValidationError({"level_rules": "Each referral level can only have one reward rule."})
-            if any(level > max_depth for level in levels):
+            keys = [
+                (rule["level"], rule.get("category").pk if rule.get("category") else None)
+                for rule in rules
+            ]
+            if len(keys) != len(set(keys)):
+                raise serializers.ValidationError({"level_rules": "Each level and category can only have one reward rule."})
+            if any(level > 5 for level, _ in keys):
                 raise serializers.ValidationError({"level_rules": "A reward rule cannot be configured beyond the maximum referral depth."})
             for rule in rules:
+                if rule["reward_type"] != ReferralLevelRule.RewardType.PERCENTAGE:
+                    raise serializers.ValidationError({"level_rules": "Referral commission rules must use percentages."})
                 if rule["reward_type"] == ReferralLevelRule.RewardType.PERCENTAGE and rule["amount"] > Decimal("100"):
                     raise serializers.ValidationError({"level_rules": "Percentage rewards cannot exceed 100%."})
+        resulting_keys = set()
+        if self.instance:
+            existing_rules = self.instance.level_rules.values_list("level", "category_id")
+            if rules is None:
+                resulting_keys.update(existing_rules)
+            else:
+                resulting_keys.update((level, category_id) for level, category_id in existing_rules if category_id is None)
+                resulting_keys.update(keys)
+        elif rules is not None:
+            resulting_keys.update(keys)
+
+        missing_global_levels = set(range(1, max_depth + 1)) - {
+            level for level, category_id in resulting_keys if category_id is None
+        }
+        if missing_global_levels:
+            raise serializers.ValidationError({
+                "level_rules": f"Configure a global percentage rate for every enabled referral level; missing levels: {', '.join(map(str, sorted(missing_global_levels)))}."
+            })
+
+        selected_scope = attrs.get("category_scope", getattr(self.instance, "category_scope", ReferralProgram.CategoryScope.ALL))
+        if selected_scope == ReferralProgram.CategoryScope.SPECIFIC:
+            selected_category_ids = {category_id for _, category_id in resulting_keys if category_id is not None}
+            if not selected_category_ids:
+                raise serializers.ValidationError({"level_rules": "Select at least one category and configure its referral rates."})
+        else:
+            selected_category_ids = {category_id for _, category_id in resulting_keys if category_id is not None}
+
+        for category_id in selected_category_ids:
+            configured_levels = {
+                level for level, configured_category_id in resulting_keys
+                if configured_category_id == category_id
+            }
+            missing_levels = set(range(1, max_depth + 1)) - configured_levels
+            if missing_levels:
+                raise serializers.ValidationError({
+                    "level_rules": f"Configure a percentage rate for every enabled level in category {category_id}; missing levels: {', '.join(map(str, sorted(missing_levels)))}."
+                })
         return attrs
 
     def update(self, instance, validated_data):
         level_rules = validated_data.pop("level_rules", None)
-        legacy_referrer_reward = validated_data.get("referrer_reward")
         instance = super().update(instance, validated_data)
         if level_rules is not None:
-            existing = {rule.level: rule for rule in instance.level_rules.all()}
-            received_levels = set()
+            existing = {
+                (rule.level, rule.category_id): rule
+                for rule in instance.level_rules.select_related("category").all()
+            }
+            received_keys = set()
             for rule_data in level_rules:
                 level = rule_data["level"]
-                received_levels.add(level)
-                rule = existing.get(level)
+                category = rule_data.get("category")
+                category_id = category.pk if category else None
+                key = (level, category_id)
+                received_keys.add(key)
+                rule = existing.get(key)
                 if rule:
                     for field, value in rule_data.items():
                         setattr(rule, field, value)
                     rule.save()
                 else:
                     ReferralLevelRule.objects.create(program=instance, **rule_data)
-            instance.level_rules.exclude(level__in=received_levels).delete()
-        elif legacy_referrer_reward is not None:
-            ReferralLevelRule.objects.update_or_create(
-                program=instance,
-                level=1,
-                defaults={"reward_type": ReferralLevelRule.RewardType.FIXED, "amount": legacy_referrer_reward, "active": True},
-            )
-        level_one = instance.level_rules.filter(level=1).first()
-        if level_rules is not None and level_one and level_one.reward_type == ReferralLevelRule.RewardType.FIXED:
-            instance.referrer_reward = level_one.amount
-            instance.save(update_fields=["referrer_reward"])
+            for key, rule in existing.items():
+                if key[1] is not None and key not in received_keys:
+                    rule.delete()
         return instance
 
 
@@ -162,6 +218,16 @@ class CustomerReferralSerializer(serializers.ModelSerializer):
 class ReferralDashboardSerializer(serializers.Serializer):
     referral_code = serializers.CharField()
     referral_url = serializers.CharField()
+    qualification_threshold = serializers.DecimalField(max_digits=10, decimal_places=2)
+    qualifying_self_purchase_total = serializers.DecimalField(max_digits=10, decimal_places=2)
+    qualification_progress_percent = serializers.IntegerField()
+    is_qualified = serializers.BooleanField()
+    commission_rates = serializers.ListField(child=serializers.DictField())
+    commission_category_scope = serializers.ChoiceField(choices=ReferralProgram.CategoryScope.choices)
+    network_levels = serializers.ListField(child=serializers.DictField())
+    wallet_balance = serializers.DecimalField(max_digits=10, decimal_places=2)
+    wallet_transactions = WalletLedgerSerializer(many=True)
+    rewards = CustomerReferralRewardSerializer(many=True)
 
 
 class AdminWalletAdjustmentSerializer(serializers.Serializer):

@@ -109,6 +109,7 @@ class CustomerServicesApiTests(APITestCase):
         change_order_status(order=order, new_status=Order.Status.CONFIRMED)
         change_order_status(order=order, new_status=Order.Status.PROCESSING)
         change_order_status(order=order, new_status=Order.Status.PACKED)
+        change_order_status(order=order, new_status=Order.Status.PICKED_UP)
         change_order_status(order=order, new_status=Order.Status.OUT_FOR_DELIVERY)
         change_order_status(order=order, new_status=Order.Status.DELIVERED)
         self.assertEqual(ResellerCommission.objects.filter(order=order).count(), 1)
@@ -141,12 +142,13 @@ class CustomerServicesApiTests(APITestCase):
         self.assertEqual(ResellerCommission.objects.get(pk=commission.pk).status, ResellerCommission.Status.APPROVED)
 
     def test_public_store_information_filters_unapproved_data_keys(self):
-        StoreInformation.objects.create(details={"about": "About text", "internal_secret": "must not leak"}, policies={"terms": "Published terms", "bank_token": "must not leak"})
+        StoreInformation.objects.create(details={"about": "About text", "internal_secret": "must not leak"}, policies={"terms": "Published terms", "ugc_policy": "Published UGC policy", "bank_token": "must not leak"})
         response = self.client.get("/api/v1/store-information/")
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("internal_secret", response.data["details"])
         self.assertNotIn("bank_token", response.data["policies"])
         self.assertEqual(response.data["details"]["about"], "About text")
+        self.assertEqual(response.data["policies"]["ugc_policy"], "Published UGC policy")
 
     def test_non_admin_cannot_access_admin_service_endpoints(self):
         self.client.force_authenticate(self.customer)
@@ -154,16 +156,57 @@ class CustomerServicesApiTests(APITestCase):
 
     def test_staff_roles_are_restricted_to_their_api_modules(self):
         product_manager = User.objects.create_user(email="product.manager@example.test", password="TempPassword!815", phone="+911234567893", role=User.Role.PRODUCT_MANAGER, is_staff=True)
+        product_manager.admin_modules = ["products"]
+        product_manager.save(update_fields=["admin_modules"])
         self.client.force_authenticate(product_manager)
         self.assertEqual(self.client.get("/api/v1/admin/products/").status_code, 200)
         self.assertEqual(self.client.get("/api/v1/admin/customers/").status_code, 403)
         order_manager = User.objects.create_user(email="order.manager@example.test", password="TempPassword!816", phone="+911234567894", role=User.Role.ORDER_MANAGER, is_staff=True)
+        order_manager.admin_modules = ["orders"]
+        order_manager.save(update_fields=["admin_modules"])
         self.client.force_authenticate(order_manager)
         self.assertEqual(self.client.get("/api/v1/admin/orders/").status_code, 200)
         self.assertEqual(self.client.get("/api/v1/admin/payments/").status_code, 403)
-        self.assertEqual(self.client.get("/api/v1/admin/dashboard/?period=today").status_code, 200)
+        self.assertEqual(self.client.get("/api/v1/admin/dashboard/?period=today").status_code, 403)
         dashboard = self.client.get("/api/v1/admin/dashboard/?period=custom&start=2025-10-02&end=2025-10-01")
-        self.assertEqual(dashboard.status_code, 400)
+        self.assertEqual(dashboard.status_code, 403)
+
+    def test_manager_permissions_are_empty_until_granted_by_senior_admin(self):
+        manager = User.objects.create_user(
+            email="unassigned.manager@example.test",
+            password="Test-Only-Manager-Pass-5932!",
+            phone="+911234567898",
+            role=User.Role.ORDER_MANAGER,
+            is_staff=True,
+        )
+        self.client.force_authenticate(manager)
+        self.assertEqual(self.client.get("/api/v1/admin/orders/").status_code, 403)
+        self.assertEqual(self.client.get("/api/v1/admin/dashboard/").status_code, 403)
+        self.client.force_authenticate(self.admin)
+        grant = self.client.patch(f"/api/v1/admin/staff/{manager.pk}/", {"admin_modules": ["orders"]}, format="json")
+        self.assertEqual(grant.status_code, 200)
+        manager.refresh_from_db()
+        self.client.force_authenticate(manager)
+        self.assertEqual(self.client.get("/api/v1/admin/orders/").status_code, 200)
+        self.assertEqual(self.client.get("/api/v1/admin/products/").status_code, 403)
+
+    def test_public_business_settings_have_pandiyan_store_defaults_and_pin_validation(self):
+        public = self.client.get("/api/v1/system-settings/public/")
+        self.assertEqual(public.status_code, 200)
+        self.assertEqual(public.data["store_name"], "Pandiyan Store")
+        self.assertEqual(public.data["delivery_pin_codes"], ["625531", "625534"])
+        self.assertEqual(Decimal(public.data["minimum_order_value"]), Decimal("300.00"))
+        self.assertEqual(Decimal(public.data["delivery_fee"]), Decimal("30.00"))
+        self.assertEqual(Decimal(public.data["free_delivery_threshold"]), Decimal("1000.00"))
+        self.assertEqual(public.data["business_hours"], "Every day, 9:00 AM to 9:00 PM")
+        self.assertEqual(public.data["delivery_timeline"], "6–24 hours")
+        self.client.force_authenticate(self.admin)
+        invalid = self.client.patch("/api/v1/admin/system-settings/", {"delivery_pin_codes": ["625532"]}, format="json")
+        self.assertEqual(invalid.status_code, 400)
+        invalid_timeline = self.client.patch("/api/v1/admin/system-settings/", {"delivery_timeline": "24-6 hours"}, format="json")
+        self.assertEqual(invalid_timeline.status_code, 400)
+        negative_fee = self.client.patch("/api/v1/admin/system-settings/", {"delivery_fee": "-1.00"}, format="json")
+        self.assertEqual(negative_fee.status_code, 400)
 
     def test_admin_dashboard_all_time_metrics_include_older_orders(self):
         historical_order = Order.objects.create(
@@ -189,6 +232,33 @@ class CustomerServicesApiTests(APITestCase):
         self.assertEqual(today.data["orders"], 0)
         self.assertEqual(Decimal(today.data["gross_sales"]), Decimal("0.00"))
 
+    def test_admin_dashboard_separates_confirmed_processing_and_open_orders(self):
+        for status in [
+            Order.Status.PENDING,
+            Order.Status.CONFIRMED,
+            Order.Status.PACKED,
+            Order.Status.PICKED_UP,
+            Order.Status.OUT_FOR_DELIVERY,
+        ]:
+            Order.objects.create(
+                customer=self.customer,
+                customer_name=self.customer.get_full_name(),
+                phone=self.customer.phone,
+                address="12 Market Road",
+                status=status,
+                subtotal=Decimal("100.00"),
+                total=Decimal("100.00"),
+            )
+        self.client.force_authenticate(self.admin)
+
+        response = self.client.get("/api/v1/admin/dashboard/?period=all_time")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["awaiting_confirmation"], 1)
+        self.assertEqual(response.data["confirmed_orders"], 1)
+        self.assertEqual(response.data["processing_orders"], 2)
+        self.assertEqual(response.data["out_for_delivery"], 1)
+
     def test_staff_creation_hashes_password_and_prevents_role_escalation(self):
         ordinary_admin = User.objects.create_user(email="staff.admin@example.test", password="TempPassword!817", phone="+911234567896", role=User.Role.ADMIN, is_staff=True)
         self.client.force_authenticate(ordinary_admin)
@@ -198,6 +268,7 @@ class CustomerServicesApiTests(APITestCase):
             "last_name": "Agent",
             "phone": "+911234567895",
             "role": User.Role.CUSTOMER_SUPPORT,
+            "admin_modules": ["support"],
             "password": "TemporaryPass!5932",
         }
         response = self.client.post("/api/v1/admin/staff/", payload, format="json")
@@ -209,6 +280,9 @@ class CustomerServicesApiTests(APITestCase):
         self.assertEqual(self.client.patch(f"/api/v1/admin/staff/{staff.pk}/", {"role": User.Role.SUPER_ADMIN}, format="json").status_code, 400)
 
     def test_checkout_coupon_and_cod_payment_records_are_database_backed(self):
+        store_settings = SystemSettings.current()
+        store_settings.minimum_order_value = Decimal("50.00")
+        store_settings.save(update_fields=["minimum_order_value"])
         coupon = Coupon.objects.create(
             code="SAVE20", discount_type=Coupon.DiscountType.PERCENT, value=Decimal("20"),
             starts_at=timezone.now() - timedelta(days=1), expires_at=timezone.now() + timedelta(days=1),
@@ -217,11 +291,12 @@ class CustomerServicesApiTests(APITestCase):
         self.client.force_authenticate(self.customer)
         order_response = self.client.post("/api/v1/orders/", {
             "customer_name": "Customer", "phone": self.customer.phone, "address": "12 Market Road",
+            "delivery_pin_code": "625531",
             "coupon_code": coupon.code, "items": [{"product_id": self.product.pk, "quantity": 1}],
         }, format="json")
         self.assertEqual(order_response.status_code, 201)
         self.assertEqual(Decimal(order_response.data["discount_amount"]), Decimal("20.00"))
-        self.assertEqual(Decimal(order_response.data["total"]), Decimal("80.00"))
+        self.assertEqual(Decimal(order_response.data["total"]), Decimal("110.00"))
         payment = PaymentTransaction.objects.get(order_id=order_response.data["id"])
         self.assertEqual(payment.status, PaymentTransaction.Status.PENDING)
         self.client.force_authenticate(self.admin)

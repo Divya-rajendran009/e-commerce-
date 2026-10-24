@@ -172,7 +172,7 @@ class StoreInformationSerializer(serializers.ModelSerializer):
 
 class PublicStoreInformationSerializer(StoreInformationSerializer):
     safe_detail_keys = {"about", "email", "phone", "address", "delivery_information"}
-    safe_policy_keys = {"shipping_policy", "return_policy", "refund_policy", "privacy_policy", "terms", "faq"}
+    safe_policy_keys = {"shipping_policy", "return_policy", "refund_policy", "privacy_policy", "terms", "ugc_policy", "faq"}
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -292,8 +292,31 @@ class HomepageBannerSerializer(serializers.ModelSerializer):
 class SystemSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SystemSettings
-        fields = ["store_name", "currency", "delivery_fee", "free_delivery_threshold", "minimum_order_value", "default_low_stock_threshold", "return_window_days", "allow_returns", "updated_at"]
+        fields = ["store_name", "store_location", "contact_phone", "business_hours", "delivery_timeline", "delivery_pin_codes", "currency", "delivery_fee", "free_delivery_threshold", "minimum_order_value", "default_low_stock_threshold", "return_window_days", "allow_returns", "updated_at"]
         read_only_fields = ["updated_at"]
+
+    def validate(self, attrs):
+        for field in ("delivery_fee", "free_delivery_threshold", "minimum_order_value"):
+            value = attrs.get(field, getattr(self.instance, field, None) if self.instance else None)
+            if value is not None and value < 0:
+                raise serializers.ValidationError({field: "This amount cannot be negative."})
+        return attrs
+
+    def validate_delivery_timeline(self, value):
+        match = re.fullmatch(r"(\d+)[–-](\d+)\s+hours", value.strip())
+        if not match or int(match.group(1)) < 1 or int(match.group(2)) < int(match.group(1)):
+            raise serializers.ValidationError("Use a valid delivery window such as 6–24 hours.")
+        return value.strip()
+
+    def validate_delivery_pin_codes(self, value):
+        supported = {"625531", "625534"}
+        if not isinstance(value, list) or not value:
+            raise serializers.ValidationError("At least one delivery PIN code is required.")
+        if len(value) != len(set(value)) or any(not re.fullmatch(r"[1-9][0-9]{5}", pin) for pin in value):
+            raise serializers.ValidationError("Use unique, valid 6-digit Indian PIN codes.")
+        if not set(value).issubset(supported):
+            raise serializers.ValidationError("Only PIN codes 625531 and 625534 are supported.")
+        return value
 
 
 class DeliveryAreaSerializer(serializers.ModelSerializer):

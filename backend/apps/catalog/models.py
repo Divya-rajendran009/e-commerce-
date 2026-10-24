@@ -5,6 +5,7 @@ class Category(models.Model):
     name = models.CharField(max_length=80, unique=True)
     slug = models.SlugField(max_length=90, unique=True)
     is_active = models.BooleanField(default=True)
+    referral_rewards_enabled = models.BooleanField(null=True, blank=True, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -25,6 +26,7 @@ class Product(models.Model):
     stock = models.PositiveIntegerField(default=0)
     low_stock_threshold = models.PositiveIntegerField(default=5)
     image_url = models.URLField(blank=True)
+    image = models.FileField(upload_to="products/", blank=True)
     is_active = models.BooleanField(default=True)
     is_featured = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -127,11 +127,19 @@ function StoreSettings() {
   useEffect(() => { api.get('/admin/system-settings/').then(({ data }) => setSettings(data)).catch((e) => setError(errorMessage(e))) }, [])
   const save = async (event) => {
     event.preventDefault()
-    try { const payload = Object.fromEntries(new FormData(event.currentTarget)); payload.allow_returns = payload.allow_returns === 'on'; const { data } = await api.patch('/admin/system-settings/', payload); setSettings(data); setMessage('Store settings saved.') } catch (e) { setError(errorMessage(e)) }
+    try {
+      const payload = Object.fromEntries(new FormData(event.currentTarget))
+      payload.allow_returns = payload.allow_returns === 'on'
+      payload.delivery_pin_codes = payload.delivery_pin_codes.split(',').map((pin) => pin.trim()).filter(Boolean)
+      const { data } = await api.patch('/admin/system-settings/', payload)
+      setSettings(data)
+      setMessage('Store settings saved.')
+    } catch (e) { setError(errorMessage(e)) }
   }
   if (!settings) return error ? <ErrorState message={error} /> : <Loading />
-  return <><h2>Store and fulfilment settings</h2><form className="account-service-form service-form-grid" onSubmit={save}>
-    {[['store_name','Store name','text'],['currency','Currency code','text'],['delivery_fee','Default delivery fee','number'],['free_delivery_threshold','Free-delivery threshold (blank disables)','number'],['minimum_order_value','Minimum order value','number'],['default_low_stock_threshold','Default low-stock threshold','number'],['return_window_days','Return window (days)','number']].map(([name,label,type]) => <label className="field" key={name}><span>{label}</span><input name={name} type={type} defaultValue={settings[name] ?? ''} min={type === 'number' ? '0' : undefined} step={['delivery_fee','free_delivery_threshold','minimum_order_value'].includes(name) ? '0.01' : type === 'number' ? '1' : undefined} required={!name.includes('threshold')} /></label>)}
+  return <><h2>Store and fulfilment settings</h2><form key={settings.updated_at} className="account-service-form service-form-grid" onSubmit={save}>
+    {[['store_name','Store name','text'],['store_location','Store location','text'],['contact_phone','Contact number','tel'],['business_hours','Business hours','text'],['delivery_timeline','Delivery timeline (for example 6–24 hours)','text'],['currency','Currency code','text'],['delivery_fee','Delivery fee','number'],['free_delivery_threshold','Free-delivery threshold (free only above this amount)','number'],['minimum_order_value','Minimum merchandise subtotal','number'],['default_low_stock_threshold','Default low-stock threshold','number'],['return_window_days','Return window (days)','number']].map(([name,label,type]) => <label className="field" key={name}><span>{label}</span><input name={name} type={type} defaultValue={settings[name] ?? ''} min={type === 'number' ? '0' : undefined} step={['delivery_fee','free_delivery_threshold','minimum_order_value'].includes(name) ? '0.01' : type === 'number' ? '1' : undefined} required={!name.includes('threshold')} /></label>)}
+    <label className="field"><span>Delivery PIN codes (comma-separated)</span><input name="delivery_pin_codes" inputMode="numeric" defaultValue={settings.delivery_pin_codes.join(', ')} /></label>
     <label className="field"><span className="inline-check"><input name="allow_returns" type="checkbox" defaultChecked={settings.allow_returns} /> Accept return requests</span></label><button className="button primary">Save settings</button>
   </form>{message && <p className="notice success">{message}</p>}{error && <ErrorState message={error} />}</>
 }

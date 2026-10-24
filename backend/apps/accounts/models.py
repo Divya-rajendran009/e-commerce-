@@ -42,6 +42,7 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=20, unique=True)
     role = models.CharField(max_length=24, choices=Role.choices, default=Role.CUSTOMER)
+    admin_modules = models.JSONField(default=list, blank=True)
     referral_code = models.CharField(max_length=8, unique=True, default=referral_code)
     is_active = models.BooleanField(default=True)
     USERNAME_FIELD = "email"

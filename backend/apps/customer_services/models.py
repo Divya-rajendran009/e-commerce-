@@ -14,6 +14,9 @@ def _code(prefix="", length=10):
 def reseller_code():
     return _code("RS", 10)
 
+def default_delivery_pin_codes():
+    return ["625531", "625534"]
+
 
 class Address(models.Model):
     customer = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="saved_addresses", on_delete=models.CASCADE)
@@ -210,11 +213,16 @@ class SecurityEvent(models.Model):
 
 
 class SystemSettings(models.Model):
-    store_name = models.CharField(max_length=120, default="SUPER MARKET")
+    store_name = models.CharField(max_length=120, default="Pandiyan Store")
+    store_location = models.CharField(max_length=160, default="Theni, Tamil Nadu, India")
+    contact_phone = models.CharField(max_length=20, default="8072661435")
+    business_hours = models.CharField(max_length=120, default="Every day, 9:00 AM to 9:00 PM")
+    delivery_timeline = models.CharField(max_length=60, default="6–24 hours")
+    delivery_pin_codes = models.JSONField(default=default_delivery_pin_codes, blank=True)
     currency = models.CharField(max_length=3, default="INR")
-    delivery_fee = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal("0"))
-    free_delivery_threshold = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    minimum_order_value = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0"))
+    delivery_fee = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal("30.00"))
+    free_delivery_threshold = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("1000.00"))
+    minimum_order_value = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("300.00"))
     default_low_stock_threshold = models.PositiveIntegerField(default=5)
     return_window_days = models.PositiveSmallIntegerField(default=7)
     allow_returns = models.BooleanField(default=True)

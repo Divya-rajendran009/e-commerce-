@@ -7,15 +7,29 @@ from django.db import models
 def default_qualifying_order_statuses():
     return ["delivered"]
 
+def default_referral_rates():
+    return {
+        1: Decimal("1.00"),
+        2: Decimal("0.75"),
+        3: Decimal("0.50"),
+        4: Decimal("0.40"),
+        5: Decimal("0.30"),
+    }
+
 
 class ReferralProgram(models.Model):
+    class CategoryScope(models.TextChoices):
+        ALL = "all", "All Categories"
+        SPECIFIC = "specific", "Specific Categories"
+
     active = models.BooleanField(default=True)
     reward_type = models.CharField(max_length=12, choices=[("wallet", "Wallet credit")], default="wallet")
     referrer_reward = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal("100.00"), validators=[MinValueValidator(0)])
     customer_reward = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal("50.00"), validators=[MinValueValidator(0)])
     minimum_order_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("500.00"), validators=[MinValueValidator(0)])
+    qualification_threshold = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("1000.00"), validators=[MinValueValidator(0)])
     max_reward_per_referral = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
-    max_depth = models.PositiveSmallIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(6)])
+    max_depth = models.PositiveSmallIntegerField(default=5, validators=[MinValueValidator(1), MaxValueValidator(5)])
     qualifying_order_statuses = models.JSONField(default=default_qualifying_order_statuses)
     reward_on_first_qualifying_order_only = models.BooleanField(default=True)
     reward_referrer = models.BooleanField(default=True)
@@ -26,16 +40,23 @@ class ReferralProgram(models.Model):
     wallet_spending_enabled = models.BooleanField(default=False)
     wallet_expiry_days = models.PositiveIntegerField(null=True, blank=True)
     configuration_version = models.PositiveIntegerField(default=1)
+    category_scope = models.CharField(max_length=12, choices=CategoryScope.choices, default=CategoryScope.ALL)
+    category_overrides_enabled = models.BooleanField(default=True)
+    referral_rewards_enabled = models.BooleanField(default=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     @classmethod
     def current(cls):
         program = cls.objects.get_or_create(pk=1)[0]
-        ReferralLevelRule.objects.get_or_create(
-            program=program,
-            level=1,
-            defaults={"amount": program.referrer_reward},
-        )
+        for level, rate in default_referral_rates().items():
+            ReferralLevelRule.objects.filter(category__isnull=True).get_or_create(
+                program=program,
+                level=level,
+                defaults={
+                    "reward_type": ReferralLevelRule.RewardType.PERCENTAGE,
+                    "amount": rate,
+                },
+            )
         return program
 
 
@@ -45,15 +66,23 @@ class ReferralLevelRule(models.Model):
         PERCENTAGE = "percentage", "Percentage of qualifying order"
 
     program = models.ForeignKey(ReferralProgram, related_name="level_rules", on_delete=models.CASCADE)
-    level = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(6)])
+    level = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     reward_type = models.CharField(max_length=12, choices=RewardType.choices, default=RewardType.FIXED)
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"), validators=[MinValueValidator(0)])
     active = models.BooleanField(default=True)
+    category = models.ForeignKey(
+        "catalog.Category",
+        related_name="referral_level_rules",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+    )
+    scope_key = models.CharField(max_length=32, default="all", editable=False)
 
     class Meta:
         ordering = ["level"]
         constraints = [
-            models.UniqueConstraint(fields=["program", "level"], name="unique_referral_program_level"),
+            models.UniqueConstraint(fields=["program", "level", "scope_key"], name="unique_referral_program_level_scope"),
             models.CheckConstraint(condition=models.Q(level__gte=1, level__lte=6), name="referral_rule_level_range"),
             models.CheckConstraint(condition=models.Q(amount__gte=0), name="referral_rule_amount_nonnegative"),
             models.CheckConstraint(
@@ -61,6 +90,10 @@ class ReferralLevelRule(models.Model):
                 name="referral_percentage_max_100",
             ),
         ]
+
+    def save(self, *args, **kwargs):
+        self.scope_key = f"category:{self.category_id}" if self.category_id else "all"
+        super().save(*args, **kwargs)
 
 
 class Referral(models.Model):
@@ -97,7 +130,7 @@ class ReferralReward(models.Model):
     recipient = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="referral_rewards", on_delete=models.PROTECT)
     recipient_type = models.CharField(max_length=12, choices=RecipientType.choices)
     order = models.ForeignKey("orders.Order", null=True, blank=True, related_name="referral_rewards", on_delete=models.PROTECT)
-    level = models.PositiveSmallIntegerField(default=1, validators=[MinValueValidator(0), MaxValueValidator(6)])
+    level = models.PositiveSmallIntegerField(default=1, validators=[MinValueValidator(0), MaxValueValidator(5)])
     reward_type = models.CharField(max_length=12, default="wallet")
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.CREDITED)
@@ -130,7 +163,7 @@ class WalletLedger(models.Model):
     currency = models.CharField(max_length=3, default="INR")
     order = models.ForeignKey("orders.Order", null=True, blank=True, related_name="wallet_entries", on_delete=models.PROTECT)
     referral = models.ForeignKey(Referral, null=True, blank=True, related_name="wallet_entries", on_delete=models.PROTECT)
-    level = models.PositiveSmallIntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(6)])
+    level = models.PositiveSmallIntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(5)])
     configuration_version = models.PositiveIntegerField(default=1)
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.CREDITED)
     idempotency_key = models.CharField(max_length=100, unique=True, null=True, blank=True)

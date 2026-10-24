@@ -17,7 +17,14 @@ def place_order(*, customer, payload):
     product_ids = [line.get("product_id") for line in lines]
     if None in product_ids or len(product_ids) != len(set(product_ids)):
         raise ValidationError({"items": "Each product must appear once with a valid product ID."})
-    products = {product.id: product for product in Product.objects.select_for_update().filter(id__in=product_ids, is_active=True)}
+    products = {
+        product.id: product
+        for product in Product.objects.select_for_update().select_related("category").filter(
+            id__in=product_ids,
+            is_active=True,
+            category__is_active=True,
+        )
+    }
     if len(products) != len(product_ids):
         raise ValidationError({"items": "One or more products are unavailable."})
     order_lines = []
@@ -32,24 +39,13 @@ def place_order(*, customer, payload):
         amount = product.price * quantity
         subtotal += amount
         order_lines.append((product, quantity, amount))
-    from apps.customer_services.models import (
-        Coupon, CouponRedemption, DeliveryArea, PaymentTransaction, SystemSettings,
-    )
+    from apps.customer_services.models import Coupon, CouponRedemption, PaymentTransaction, SystemSettings
     settings = SystemSettings.current()
-    if subtotal < settings.minimum_order_value:
-        raise ValidationError({"items": f"The minimum order value is ₹{settings.minimum_order_value}."})
     pin_code = payload.get("delivery_pin_code", "").strip()
-    areas_configured = DeliveryArea.objects.exists()
-    delivery_area = DeliveryArea.objects.filter(pin_code=pin_code, is_active=True).first() if pin_code else None
-    if areas_configured and not delivery_area:
+    if not pin_code:
+        raise ValidationError({"delivery_pin_code": "Enter a delivery PIN code."})
+    if pin_code not in settings.delivery_pin_codes:
         raise ValidationError({"delivery_pin_code": "Delivery is not available for this PIN code."})
-    if delivery_area and delivery_area.delivery_fee is not None:
-        delivery_fee = delivery_area.delivery_fee
-    else:
-        delivery_fee = settings.delivery_fee
-    if settings.free_delivery_threshold is not None and subtotal >= settings.free_delivery_threshold:
-        delivery_fee = Decimal("0.00")
-
     coupon = None
     discount = Decimal("0.00")
     code = payload.get("coupon_code", "").strip().upper()
@@ -81,7 +77,13 @@ def place_order(*, customer, payload):
         if coupon.maximum_discount is not None:
             discount = min(discount, coupon.maximum_discount)
         discount = min(discount.quantize(Decimal("0.01")), eligible_total)
-    total = subtotal - discount + delivery_fee
+    merchandise_total = max(subtotal - discount, Decimal("0.00"))
+    if merchandise_total < settings.minimum_order_value:
+        raise ValidationError({"items": f"The minimum merchandise order value after discounts is ₹{settings.minimum_order_value}."})
+    delivery_fee = settings.delivery_fee
+    if settings.free_delivery_threshold is not None and merchandise_total > settings.free_delivery_threshold:
+        delivery_fee = Decimal("0.00")
+    total = merchandise_total + delivery_fee
     order = Order.objects.create(
         customer=customer,
         customer_name=payload["customer_name"].strip(),
@@ -103,11 +105,6 @@ def place_order(*, customer, payload):
     if coupon:
         CouponRedemption.objects.create(coupon=coupon, customer=customer, order=order, discount_amount=discount)
     PaymentTransaction.objects.create(order=order, method=PaymentTransaction.Method.COD, status=PaymentTransaction.Status.PENDING, amount=total)
-    from apps.referrals.models import ReferralProgram
-    referral_program = ReferralProgram.objects.filter(pk=1).first()
-    if referral_program and order.status in referral_program.qualifying_order_statuses:
-        from apps.referrals.services import award_referral_for_order
-        award_referral_for_order(order)
     return order
 
 @transaction.atomic
@@ -117,7 +114,8 @@ def change_order_status(*, order, new_status):
         "pending": {"confirmed", "cancelled"},
         "confirmed": {"processing", "cancelled"},
         "processing": {"packed", "cancelled"},
-        "packed": {"out_for_delivery", "cancelled"},
+        "packed": {"picked_up", "cancelled"},
+        "picked_up": {"out_for_delivery", "cancelled"},
         "out_for_delivery": {"delivered"},
         "delivered": set(),
         "cancelled": set(),
@@ -143,7 +141,7 @@ def change_order_status(*, order, new_status):
     if referral_program and new_status in referral_program.qualifying_order_statuses:
         from apps.referrals.services import award_referral_for_order
         award_referral_for_order(order)
-    if referral_program and new_status == Order.Status.CANCELLED and referral_program.reverse_on_cancellation:
+    if referral_program and new_status == Order.Status.CANCELLED:
         from apps.referrals.services import reverse_referral_rewards_for_order
         reverse_referral_rewards_for_order(order, reason="qualifying order cancelled")
     if new_status == Order.Status.DELIVERED:

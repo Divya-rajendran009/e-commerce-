@@ -27,7 +27,6 @@ py -m venv .venv
 pip install -r requirements.txt
 Copy-Item .env.example .env
 py manage.py migrate
-py manage.py seed_demo
 py manage.py createsuperuser
 py manage.py runserver
 ```
@@ -48,7 +47,6 @@ Open the Vite URL (normally http://localhost:5173). The API defaults to http://l
 ## Useful commands
 
 - `py manage.py test` — backend tests
-- `py manage.py seed_demo` — idempotently create clearly identified sample categories and products
 - `npm run build` — production frontend build
 - `py manage.py createsuperuser` — create the first administrator securely; no administrator credentials are seeded
 
@@ -85,6 +83,7 @@ runs both services locally.
 - `GET /api/v1/categories/`, `/products/`, `/products/{id}/`
 - `POST /api/v1/orders/`, `GET /api/v1/orders/`, `/orders/{id}/`
 - `GET /api/v1/referrals/me/`, `/referrals/me/rewards/`, `/referrals/me/wallet/`; `POST /api/v1/referrals/validate/`
+- `GET /api/v1/system-settings/public/` for Pandiyan Store contact and delivery details
 - `/api/v1/admin/dashboard/`, `/admin/products/`, `/admin/categories/`, `/admin/orders/`
 - Referral administration under `/api/v1/admin/`: `/referrals/`, `/referrals/stats/`, `/referrals/network/`, `/referrals/network/{customer_id}/`, `/referrals/wallet-adjustments/`, `/rewards/`, and `/referral-settings/`
 - Authenticated customer services under `/api/v1/account/`: addresses, wishlist, questions, requests, support tickets, returns, rewards, reseller applications and payouts
@@ -93,8 +92,18 @@ runs both services locally.
 
 The Account page links to orders, referral rewards, questions, saved addresses, customer requests, published blogs, wishlist, support, the reseller programme, and configured store information. Authorized staff also receive an Admin dashboard link. The administration workspace is separate from the storefront and presents tools according to staff role. Customer endpoints scope records to the authenticated user; administrative APIs require an active staff account and enforce role/module permissions.
 
+## Store policy pages
+
+The storefront provides `/terms-and-conditions`, `/privacy-policy`, `/delivery-policy`, `/return-refund-policy`, and `/ugc-policy`. Policy links open a compact, scrollable dialog with a close button; the routes remain directly accessible and refreshable. Policy prose is managed in the existing admin store-information JSON (`terms`, `privacy_policy`, `return_policy`, and `ugc_policy`); authorized Senior Admins and managers explicitly granted the `blogs` module can edit it. Saving publishes immediately. The existing store-information model has no policy-specific approval status or revision history. Delivery charges, PIN codes, minimum order, operating hours, and estimated delivery timeline are read from authorized system settings; the default 6–24 hour estimate is subject to actual operations.
+
+The policy pages are marked as drafts until owner/legal review. The owner-supplied Terms, Privacy and Refund text is included in the page drafts, with implementation-dependent privacy and payment statements qualified to match the current site. The proposed broad UGC licence is displayed as inactive pending approval. Before considering the text final, the owner must resolve the 14-day versus 30-day general return period, the start of the 24-hour perishable and 48-hour damaged-item periods, UGC licence scope/duration, dispute jurisdiction and liability wording, privacy/deletion/tracking claims, and COD refund method/timing. No legal approval or compliance claim is implied.
+
 ## Current limits
 
-SQLite is the default for local convenience; MySQL is configured as an option and should be used for deployment. Orders are COD only. The cart is persisted in the browser, with prices and stock recalculated by the server at order creation. Referral rewards use immutable wallet ledger entries, configurable level rules, and idempotent credits after a qualifying order. Full refunds and configured cancellations can reverse credited rewards. The wallet spending and expiry settings are stored for future use; checkout redemption and expiry enforcement are not implemented. Refund reversal is full-only, and ineligible reward attempts are not retained as durable records. Saved addresses, customer questions/requests/support, wishlist, returns, blogs, store information and reseller applications/commission/payout records are implemented. Payouts are review-and-record only; there is no payment transfer integration. The project has no coupon model, so coupon creation/redemption is not available. Returns are requested for delivered orders and require administrator handling; a refund/payment reversal integration is not present. Blog content is stored and rendered as plain text; rich-text HTML is intentionally not rendered. Demo products, stock and featured/bestseller labels are sample data, not real business metrics.
+SQLite is the default for local convenience; MySQL is configured as an option and should be used for deployment. Orders are COD only. Checkout requires a supported PIN and ₹300 merchandise subtotal; it charges ₹30 through a ₹1,000 subtotal inclusive and is free only above ₹1,000. Prices, discounts, delivery availability and stock are recalculated by the server. Referral qualification is cumulative net spending from a user's own delivered orders; referral purchases do not count toward that user's threshold. Referral rewards use immutable wallet ledger entries, idempotent credits, and configurable percentage rules capped at five levels. Commissions are awarded only after delivery and reversed for cancellations, completed returns and full refunds. Managers receive only Senior Admin-assigned API module grants; referral settings and wallet adjustments remain Senior Admin-only. The wallet spending and expiry settings are stored for future use; checkout redemption and expiry enforcement are not implemented. Ineligible reward attempts are not retained as durable records. Saved addresses, customer questions/requests/support, wishlist, returns, blogs, store information, coupons and reseller applications/commission/payout records are implemented. Payouts are review-and-record only; there is no payment transfer integration. Returns are requested for delivered orders and require administrator handling; customer refund transfers are not integrated. Blog content is stored and rendered as plain text; rich-text HTML is intentionally not rendered. Demo products, stock and featured/bestseller labels are sample data, not real business metrics.
+
+## Catalogue visibility and referral commission basis
+
+Customer catalogue APIs expose only active products with positive stock in active categories; checkout rechecks those flags and locks product rows while validating and decrementing stock. Administrators can still manage inactive and out-of-stock inventory. Product cards, details, cart, and checkout show the selling price and, when available, the MRP and savings; cart and checkout refresh product status and prices before proceeding. Referral rates can apply across all categories or only to selected categories, with a configurable maximum depth of one to five levels. Category reward eligibility can be explicitly enabled or disabled, or inherited from the global referral setting; category-specific rates override global rates only when the explicit override option is enabled. Commissions remain percentages of net merchandise value (subtotal less order discount). When category rates differ, the order-level discount is allocated proportionally to item line totals in cents, with rounding remainder assigned deterministically to the final line item. Confirm this proportional discount allocation as the business policy before relying on category-specific commissions for accounting.
 
 This foundation has not undergone a dedicated security review and should not be described as production-secure without one.

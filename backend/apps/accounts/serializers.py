@@ -4,7 +4,6 @@ from django.db import transaction
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.referrals.models import Referral, ReferralProgram
-from apps.catalog.permissions import role_has_admin_module
 from apps.customer_services.models import ResellerAttribution, ResellerProfile
 from .models import User
 
@@ -13,8 +12,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "first_name", "last_name", "full_name", "phone", "role", "referral_code"]
-        read_only_fields = ["id", "role", "referral_code"]
+        fields = ["id", "email", "first_name", "last_name", "full_name", "phone", "role", "referral_code", "admin_modules"]
+        read_only_fields = ["id", "role", "referral_code", "admin_modules"]
 
     def get_full_name(self, obj) -> str:
         return obj.get_full_name()
@@ -123,13 +122,21 @@ class AdminStaffSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False, min_length=12)
     can_manage_referral_settings = serializers.SerializerMethodField()
     grant_referral_settings = serializers.BooleanField(write_only=True, required=False)
+    admin_modules = serializers.ListField(
+        child=serializers.ChoiceField(choices=[
+            "products", "inventory", "orders", "delivery", "customers", "support",
+            "returns", "blogs", "referrals", "coupons", "promotions", "reports",
+            "payments", "refunds", "reseller-finance",
+        ]),
+        required=False,
+    )
 
     class Meta:
         model = User
         fields = [
             "id", "email", "first_name", "last_name", "full_name", "phone",
             "role", "is_active", "password", "can_manage_referral_settings",
-            "grant_referral_settings",
+            "grant_referral_settings", "admin_modules",
         ]
         read_only_fields = ["id", "full_name"]
 
@@ -161,8 +168,15 @@ class AdminStaffSerializer(serializers.ModelSerializer):
         if self.instance and self.instance.is_superuser and not self.context["request"].user.is_superuser:
             raise serializers.ValidationError("Only a superuser can modify a superuser account.")
         role = attrs.get("role", getattr(self.instance, "role", None))
+        modules = attrs.get("admin_modules", getattr(self.instance, "admin_modules", []))
+        if role in {User.Role.ADMIN, User.Role.SUPER_ADMIN} and "admin_modules" not in attrs:
+            modules = []
+        if role in {User.Role.ADMIN, User.Role.SUPER_ADMIN} and modules:
+            raise serializers.ValidationError({"admin_modules": "Senior administrators have full access and do not use manager module grants."})
+        if len(modules) != len(set(modules)):
+            raise serializers.ValidationError({"admin_modules": "Each manager module can only be assigned once."})
         grant_permission = attrs.get("grant_referral_settings", False)
-        if grant_permission and not role_has_admin_module(role, "referrals"):
+        if grant_permission and role not in {User.Role.ADMIN, User.Role.SUPER_ADMIN} and "referrals" not in modules:
             raise serializers.ValidationError({
                 "grant_referral_settings": "Only staff with referral access can manage referral settings."
             })
@@ -179,6 +193,8 @@ class AdminStaffSerializer(serializers.ModelSerializer):
         password = validated_data.pop("password")
         is_staff = validated_data.pop("is_staff", True)
         grant_referral_settings = validated_data.pop("grant_referral_settings", False)
+        if validated_data.get("role") not in {User.Role.ADMIN, User.Role.SUPER_ADMIN}:
+            validated_data.setdefault("admin_modules", [])
         user = User(**validated_data, is_staff=is_staff)
         user.set_password(password)
         user.save()
@@ -192,12 +208,14 @@ class AdminStaffSerializer(serializers.ModelSerializer):
         for key, value in validated_data.items():
             setattr(instance, key, value)
         instance.is_staff = True
+        if instance.role in {User.Role.ADMIN, User.Role.SUPER_ADMIN}:
+            instance.admin_modules = []
         if password:
             instance.set_password(password)
         instance.save()
         if grant_referral_settings is not None:
             self._set_referral_settings_permission(instance, grant_referral_settings)
-        elif not role_has_admin_module(instance.role, "referrals"):
+        elif instance.role not in {User.Role.ADMIN, User.Role.SUPER_ADMIN} and "referrals" not in (instance.admin_modules or []):
             self._set_referral_settings_permission(instance, False)
         return instance
 

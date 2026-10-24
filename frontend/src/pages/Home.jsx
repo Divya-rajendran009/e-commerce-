@@ -1,4 +1,4 @@
-import { ArrowRight, BadgeCheck, Clock3, MapPin } from 'lucide-react'
+import { ArrowRight, ShoppingBag } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import api, { errorMessage } from '../services/api'
@@ -16,10 +16,10 @@ const departments = [
 ]
 
 export default function Home() {
+  const [selection, setSelection] = useState('all')
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [campaigns, setCampaigns] = useState([])
-  const [store, setStore] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [retry, setRetry] = useState(0)
@@ -37,7 +37,6 @@ export default function Home() {
       .catch(e => { if (!controller.signal.aborted) setError(errorMessage(e)) })
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     api.get('/homepage-banners/', { signal: controller.signal }).then(({ data }) => setCampaigns(Array.isArray(data) ? data : [])).catch(() => {})
-    api.get('/system-settings/public/', { signal: controller.signal }).then(({ data }) => setStore(data)).catch(() => {})
     return () => controller.abort()
   }, [retry])
   const categoryTiles = departments.map(department => {
@@ -45,15 +44,19 @@ export default function Home() {
     return { ...department, to: category ? `/products?category=${category.id}` : `/products?search=${encodeURIComponent(department.search)}` }
   }).concat(categories.filter(c => !departments.some(d => d.match.test(c.name))).map(c => ({ name: c.name, photo: categoryPhoto(c.name), to: `/products?category=${c.id}` })))
   const buckets = categories.map(c => products.filter(p => String(p.category) === String(c.id) || p.category_name === c.name))
-  const essentials = buckets.length ? Array.from({ length: 6 }, (_, index) => buckets.map(bucket => bucket[index]).filter(Boolean)).flat().slice(0, 6) : products.slice(0, 6)
-  return <div className="store-home wrap">
-    <section className="market-banner"><div className="market-banner-copy"><span className="banner-label">PANDIYAN STORE</span><h1>For you. For your family.<br /><span>For every day.</span></h1><p>Groceries, fashion, personal care &amp; more.</p><Link className="button primary" to="/products">Shop now <ArrowRight size={17} /></Link></div><GroceryPhoto photo={groceryPhotos.family} hero /></section>
-    <div className="service-strip"><span><MapPin size={17} /> Your local Pandiyan Store</span><span><BadgeCheck size={17} /> Everyday value</span><span><Clock3 size={17} /> {store?.delivery_timeline ? `Delivery in ${store.delivery_timeline}` : 'Local doorstep delivery'}</span></div>
-    <section className="home-block"><div className="section-heading"><div><h2>Shop by category</h2></div><Link className="text-link" to="/products">View all <ArrowRight size={16} /></Link></div><div className="aisle-grid department-grid">{categoryTiles.map(c => <Link key={c.name} to={c.to} className="aisle-tile">{c.photo && <GroceryPhoto photo={c.photo} />}<span className="category-photo-label"><strong>{c.name}</strong><ArrowRight size={18} aria-hidden="true" /></span></Link>)}</div>{loading && <div className="category-loading" role="status">Loading categories…</div>}</section>
-    <div className="offer-grid"><Link to="/products" className="offer-tile offer-yellow"><div><h3>Daily essentials</h3><b>Shop essentials <ArrowRight size={15} /></b></div></Link><Link to="/referrals" className="offer-tile offer-green"><div><h3>Refer & earn</h3><b>Invite friends <ArrowRight size={15} /></b></div></Link></div>
-    {campaigns.slice(0, 2).map(c => <section className="store-campaign" key={c.id || c.title}>{c.image_url && <img src={c.image_url} alt="" loading="lazy" onError={e => { e.currentTarget.hidden = true }} />}<div><span className="eyebrow">FROM YOUR STORE</span><h2>{c.title}</h2><p>{c.subtitle}</p>{c.target_url && <Link className="text-link" to={c.target_url}>Explore offer <ArrowRight size={16} /></Link>}</div></section>)}
-    <section className="home-block"><div className="section-heading"><div><h2>Everyday essentials</h2></div><Link className="text-link" to="/products">See all <ArrowRight size={16} /></Link></div>{error ? <><ErrorState message={error} /><button className="button secondary" onClick={() => setRetry(v => v + 1)}>Try again</button></> : loading ? <ProductSkeletons /> : products.length ? <div className="product-grid">{essentials.map(p => <ProductCard key={p.id} product={p} />)}</div> : <p className="notice">We’re stocking the shelves. Check back soon.</p>}</section>
-
-    <section className="neighbourhood-note"><div className="brand-mark"><MapPin size={26} /></div><div><h2>Your neighbourhood store.</h2><p>{store?.store_location || 'Pandiyan Store, Theni'}</p>{store && <small>Minimum order ₹{Number(store.minimum_order_value)} · Delivery ₹{Number(store.delivery_fee)} · Free delivery above ₹{Number(store.free_delivery_threshold)}</small>}</div><Link className="text-link" to="/products">Let’s shop <ArrowRight size={16} /></Link></section>
+  const mixed = buckets.length ? Array.from({ length: 24 }, (_, index) => buckets.map(bucket => bucket[index]).filter(Boolean)).flat() : products
+  const savings = p => Number(p.mrp) > Number(p.price) ? (Number(p.mrp) - Number(p.price)) / Number(p.mrp) : 0
+  const discounted = mixed.filter(p => savings(p) > 0).sort((a, b) => savings(b) - savings(a))
+  const shown = selection === 'deals' ? discounted : selection === 'value' ? mixed.filter(p => Number(p.price) < 500).sort((a,b) => Number(a.price) - Number(b.price)) : [...discounted, ...mixed.filter(p => !savings(p))]
+  return <div className="store-home shopping-home wrap">
+    <nav className="shop-departments" aria-label="Shop departments"><Link to="/products" className="department-shortcut"><span className="all-departments"><ShoppingBag size={25} /></span><strong>All</strong></Link>{categoryTiles.map(c => <Link key={c.name} to={c.to} className="department-shortcut">{c.photo && <GroceryPhoto photo={c.photo} />}<strong>{c.name}</strong></Link>)}</nav>
+    <section className="shopping-discovery" aria-labelledby="shopping-title">
+      <div className="discovery-heading"><h1 id="shopping-title">Shop picks</h1><Link to="/products">View all <ArrowRight size={16} /></Link></div>
+      <div className="discovery-tabs" role="group" aria-label="Filter suggested products">{[['all','For you','Across the store'],['deals','Price drops','Below MRP'],['value','Under ₹500','Everyday value']].map(([key,label,caption]) => <button key={key} type="button" aria-pressed={selection === key} onClick={() => setSelection(key)}><strong>{label}</strong><small>{caption}</small></button>)}</div>
+      {error ? <><ErrorState message={error} /><button className="button secondary" onClick={() => setRetry(v => v + 1)}>Try again</button></> : loading ? <ProductSkeletons /> : shown.length ? <div className="product-grid discovery-products">{shown.slice(0,12).map(p => <ProductCard key={p.id} product={p} />)}</div> : <div className="empty-state"><h2>{selection === 'deals' ? 'No price drops right now' : 'No matching products yet'}</h2><button className="button secondary" onClick={() => setSelection('all')}>Browse all picks</button></div>}
+    </section>
+    {campaigns.slice(0, 2).map(c => <section className="store-campaign" key={c.id || c.title}>{c.image_url && <img src={c.image_url} alt="" loading="lazy" onError={e => { e.currentTarget.hidden = true }} />}<div><h2>{c.title}</h2><p>{c.subtitle}</p>{c.target_url && <Link className="text-link" to={c.target_url}>Explore offer <ArrowRight size={16} /></Link>}</div></section>)}
+    <section className="home-block"><div className="section-heading"><h2>Explore every department</h2></div><div className="aisle-grid department-grid">{categoryTiles.map(c => <Link key={c.name} to={c.to} className="aisle-tile">{c.photo && <GroceryPhoto photo={c.photo} />}<span className="category-photo-label"><strong>{c.name}</strong><ArrowRight size={18} /></span></Link>)}</div></section>
+    <Link to="/referrals" className="referral-discovery"><span><strong>Share your store</strong><small>Explore referral rewards</small></span><ArrowRight size={20} /></Link>
   </div>
 }

@@ -48,7 +48,7 @@ export default function StoreLayout() {
     api.get('/system-settings/public/').then(({ data }) => setStore((current) => ({ ...current, ...data }))).catch(() => setStoreSettingsError('Store information could not be refreshed.'))
   }, [])
   const showBasket = count > 0 && !['/cart', '/checkout', '/login', '/register'].includes(location.pathname)
-  return <div className={`pandiyan-store${showBasket ? ' has-basket' : ''}`}>
+  return <div className={`pandiyan-store${location.pathname === '/' ? ' discovery-store' : ''}${showBasket ? ' has-basket' : ''}`}>
     <a href="#store-content" className="skip-link">Skip to shopping</a>
     <div className="announcement"><Leaf size={14} /> Your everyday essentials <span>•</span> Free delivery above ₹{Number(store.free_delivery_threshold).toLocaleString('en-IN')}</div>
     <header className="site-header">

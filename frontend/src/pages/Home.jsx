@@ -1,7 +1,8 @@
+import { SHOW_CATALOGUE_PREVIEW } from '../utils/demoCatalogue'
 import categoryImages from '../data/departments.json'
 import DemoStorefront from '../components/DemoStorefront'
 import { ArrowRight, ShoppingBag } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import api, { errorMessage } from '../services/api'
 import { ErrorState, ProductCard, ProductImage } from '../components/Shared'
@@ -17,9 +18,10 @@ const departments = [
   { name: 'Rice & grains', match: /rice|grain/i, search: 'rice', photo: groceryPhotos.rice },
 ]
 
-// Set to false when the verified store catalogue is ready.
-const SHOW_CATALOGUE_PREVIEW = true
-export default function Home() { return SHOW_CATALOGUE_PREVIEW ? <DemoStorefront /> : <LiveHome /> }
+export default function Home() {
+  const [params] = useSearchParams()
+  return SHOW_CATALOGUE_PREVIEW ? <DemoStorefront key={params.get('search') || ''} /> : <LiveHome />
+}
 
 function LiveHome() {
   const [selection, setSelection] = useState('all')

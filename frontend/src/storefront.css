@@ -378,3 +378,37 @@
  .discovery-store .discovery-tabs strong { font-size:12px; }
  .discovery-store .discovery-tabs small { font-size:9px; }
 }
+/* Compact mobile merchandising with readable product quantities. */
+.demo-pack { font-size:12px; color:#4e574c; margin:0 0 8px; line-height:1.35; }
+.demo-pack span { color:#7d8279; font-size:10px; }
+.demo-size { display:flex; align-items:center; gap:8px; font-size:12px; color:#4e574c; margin-bottom:8px; }
+.demo-size select { min-height:44px; min-width:64px; padding:6px 10px; border:1px solid #dbdfd5; border-radius:6px; background:white; color:#233c2c; }
+.demo-results-summary { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:13px; margin-bottom:12px; color:#3f473b; }
+.demo-results-summary a { flex-shrink:0; min-height:44px; display:flex; align-items:center; color:#25613d; text-decoration:underline; }
+@media(max-width:650px) {
+ .discovery-store .header-main { padding:7px 0; gap:4px; }
+ .discovery-store .brand small { display:none; }
+ .discovery-store .store-emblem svg { width:28px; height:28px; }
+ .discovery-store .shop-departments { padding-top:8px; gap:8px; }
+ .discovery-store .department-shortcut { gap:4px; flex-basis:60px; }
+ .discovery-store .department-shortcut > img,.discovery-store .all-departments { width:42px; height:40px; }
+ .discovery-store .demo-notice { padding-top:5px; font-size:9px; }
+ .discovery-store .diwali-strip { padding:7px 4px 12px; gap:26px; }
+ .discovery-store .diwali-strip h2 { font-size:26px; margin:3px 0 0; }
+ .discovery-store .diwali-strip p { display:none; }
+ .discovery-store .diwali-strip small { font-size:7px; }
+ .discovery-store .festival-lamp { margin-top:15px; }
+ .discovery-store .discovery-tabs { margin-bottom:8px; }
+ .discovery-store .discovery-tabs button { min-height:46px; padding:8px 6px; }
+ .discovery-store .discovery-tabs small { display:none; }
+ .discovery-store .shopping-discovery { padding-top:8px; }
+ .discovery-store .demo-products .product-image { aspect-ratio:1.4; }
+ .discovery-store .demo-products .product-title { font-size:12px; min-height:35px; margin:5px 0 6px; }
+ .discovery-store .demo-products .product-info { padding:8px; }
+ .discovery-store .demo-products .product-buy { margin-top:0; padding-top:0; }
+ .demo-pack { font-size:11px; margin-bottom:5px; }
+ .demo-size { margin-bottom:5px; }
+ .demo-results-summary { font-size:12px; }
+ /* Keep the section heading available to assistive technology. */
+ .discovery-store .discovery-heading { display:block; position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+}

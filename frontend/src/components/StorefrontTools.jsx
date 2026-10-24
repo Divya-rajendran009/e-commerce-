@@ -1,3 +1,4 @@
+import { SHOW_CATALOGUE_PREVIEW, searchDemoProducts } from '../utils/demoCatalogue'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ArrowRight, ChevronDown, Clock3, MapPin, Search, X } from 'lucide-react'
@@ -9,6 +10,7 @@ export function readPin() { try { return localStorage.getItem('pandiyan_pin') ||
 export function StoreSearch() {
   const navigate = useNavigate()
   const location = useLocation()
+  const demoSearch = SHOW_CATALOGUE_PREVIEW && location.pathname === '/'
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [results, setResults] = useState([])
@@ -17,6 +19,11 @@ export function StoreSearch() {
   useEffect(() => { setQuery(new URLSearchParams(location.search).get('search') || ''); setOpen(false) }, [location])
   useEffect(() => {
     if (!open || !query.trim()) { setResults([]); setStatus(''); return }
+    if (demoSearch) {
+      const matches = searchDemoProducts(query).slice(0, 5)
+      setResults(matches); setStatus(matches.length ? '' : 'No matches. Try a product or category name.')
+      return
+    }
     const controller = new AbortController()
     setStatus('Searching…')
     setResults([])
@@ -26,12 +33,12 @@ export function StoreSearch() {
       setResults(rows); setStatus(rows.length ? '' : 'No matches. Try a product or category name.')
     }).catch(() => { if (!controller.signal.aborted) setStatus('Suggestions unavailable. Press Search to try again.') }), 250)
     return () => { clearTimeout(timer); controller.abort() }
-  }, [query, open])
+  }, [query, open, demoSearch])
   const remember = (term) => { const next = [term, ...recent.filter(x => x !== term)].slice(0, 5); setRecent(next); try { localStorage.setItem('pandiyan_searches', JSON.stringify(next)) } catch { /* Storage is optional. */ } }
-  const search = (term) => { const text = term.trim(); if (text) remember(text); setOpen(false); navigate(`/products${text ? `?search=${encodeURIComponent(text)}` : ''}`) }
+  const search = (term) => { const text = term.trim(); if (text) remember(text); setOpen(false); navigate(`${demoSearch ? '/' : '/products'}${text ? `?search=${encodeURIComponent(text)}` : ''}`) }
   return <div className="store-search" onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false) }} onKeyDown={e => { if (e.key === 'Escape') setOpen(false) }}>
     <form className="search-box" role="search" onSubmit={e => { e.preventDefault(); search(query) }}><input aria-label="Search products" aria-controls={open ? 'search-suggestions' : undefined} placeholder="Search products, clothing, care…" value={query} onFocus={() => setOpen(true)} onChange={e => { setQuery(e.target.value); setOpen(true) }} />{query && <button type="button" className="search-clear" aria-label="Clear search" onClick={() => setQuery('')}><X size={16} /></button>}<button type="submit" aria-label="Search products"><Search size={21} aria-hidden="true" /></button></form>
-    {open && <div className="search-suggestions" id="search-suggestions"><strong>{query.trim() ? 'Matching products' : recent.length ? 'Recent searches' : 'Find your everyday favourites'}</strong>{status && <p role="status">{status}</p>}{query.trim() ? results.map(p => <Link key={p.id} to={`/products/${p.id}`} onClick={() => { remember(query.trim()); setOpen(false) }}><Search size={16} /><span>{p.name}</span><small>{money(p.price)}</small></Link>) : (recent.length ? recent : ['Rice', 'Milk', 'Snacks']).map(term => <button type="button" key={term} onClick={() => search(term)}><Clock3 size={16} />{term}<ArrowRight size={14} /></button>)}</div>}
+    {open && <div className="search-suggestions" id="search-suggestions"><strong>{query.trim() ? (demoSearch ? 'Matching demo products' : 'Matching products') : recent.length ? 'Recent searches' : 'Find your everyday favourites'}</strong>{status && <p role="status">{status}</p>}{query.trim() ? results.map(p => <Link key={p.id} to={demoSearch ? `/?search=${encodeURIComponent(p.name)}` : `/products/${p.id}`} onClick={() => { remember(query.trim()); setOpen(false) }}><Search size={16} /><span>{p.name}</span><small>{money(p.price)}</small></Link>) : (recent.length ? recent : (demoSearch ? ['Perfume', 'Clothes', 'Body wash'] : ['Rice', 'Milk', 'Snacks'])).map(term => <button type="button" key={term} onClick={() => search(term)}><Clock3 size={16} />{term}<ArrowRight size={14} /></button>)}</div>}
   </div>
 }
 

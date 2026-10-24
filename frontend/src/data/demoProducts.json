@@ -7,7 +7,14 @@
     "mrp": 999,
     "image_url": "https://cdn.dummyjson.com/product-images/mens-shirts/blue-&-black-check-shirt/thumbnail.webp",
     "source": "https://dummyjson.com/products",
-    "demo": true
+    "demo": true,
+    "pack_size": "1 shirt",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ]
   },
   {
     "id": "demo-118",
@@ -17,7 +24,8 @@
     "mrp": 249,
     "image_url": "https://cdn.dummyjson.com/product-images/skin-care/attitude-super-leaves-hand-soap/thumbnail.webp",
     "source": "https://dummyjson.com/products",
-    "demo": true
+    "demo": true,
+    "pack_size": "300 ml"
   },
   {
     "id": "demo-6",
@@ -27,7 +35,8 @@
     "mrp": 2999,
     "image_url": "https://cdn.dummyjson.com/product-images/fragrances/calvin-klein-ck-one/thumbnail.webp",
     "source": "https://dummyjson.com/products",
-    "demo": true
+    "demo": true,
+    "pack_size": "100 ml"
   },
   {
     "id": "demo-35",
@@ -37,7 +46,8 @@
     "mrp": 50,
     "image_url": "https://cdn.dummyjson.com/product-images/groceries/potatoes/thumbnail.webp",
     "source": "https://dummyjson.com/products",
-    "demo": true
+    "demo": true,
+    "pack_size": "1 kg"
   },
   {
     "id": "demo-32",
@@ -47,7 +57,8 @@
     "mrp": 65,
     "image_url": "https://cdn.dummyjson.com/product-images/groceries/milk/thumbnail.webp",
     "source": "https://dummyjson.com/products",
-    "demo": true
+    "demo": true,
+    "pack_size": "1 litre"
   },
   {
     "id": "demo-38",
@@ -57,7 +68,8 @@
     "mrp": 349,
     "image_url": "https://cdn.dummyjson.com/product-images/groceries/rice/thumbnail.webp",
     "source": "https://dummyjson.com/products",
-    "demo": true
+    "demo": true,
+    "pack_size": "5 kg"
   },
   {
     "id": "demo-86",
@@ -67,7 +79,14 @@
     "mrp": 799,
     "image_url": "https://cdn.dummyjson.com/product-images/mens-shirts/man-short-sleeve-shirt/thumbnail.webp",
     "source": "https://dummyjson.com/products",
-    "demo": true
+    "demo": true,
+    "pack_size": "1 shirt",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ]
   },
   {
     "id": "demo-119",
@@ -77,7 +96,8 @@
     "mrp": 449,
     "image_url": "https://cdn.dummyjson.com/product-images/skin-care/olay-ultra-moisture-shea-butter-body-wash/thumbnail.webp",
     "source": "https://dummyjson.com/products",
-    "demo": true
+    "demo": true,
+    "pack_size": "250 ml"
   },
   {
     "id": "demo-10",
@@ -87,7 +107,8 @@
     "mrp": 3999,
     "image_url": "https://cdn.dummyjson.com/product-images/fragrances/gucci-bloom-eau-de/thumbnail.webp",
     "source": "https://dummyjson.com/products",
-    "demo": true
+    "demo": true,
+    "pack_size": "50 ml"
   },
   {
     "id": "demo-37",
@@ -97,7 +118,8 @@
     "mrp": 60,
     "image_url": "https://cdn.dummyjson.com/product-images/groceries/red-onions/thumbnail.webp",
     "source": "https://dummyjson.com/products",
-    "demo": true
+    "demo": true,
+    "pack_size": "1 kg"
   },
   {
     "id": "demo-28",
@@ -107,7 +129,8 @@
     "mrp": 199,
     "image_url": "https://cdn.dummyjson.com/product-images/groceries/ice-cream/thumbnail.webp",
     "source": "https://dummyjson.com/products",
-    "demo": true
+    "demo": true,
+    "pack_size": "500 ml"
   },
   {
     "id": "demo-20",
@@ -117,7 +140,8 @@
     "mrp": 199,
     "image_url": "https://cdn.dummyjson.com/product-images/groceries/cooking-oil/thumbnail.webp",
     "source": "https://dummyjson.com/products",
-    "demo": true
+    "demo": true,
+    "pack_size": "1 litre"
   },
   {
     "id": "demo-85",
@@ -127,7 +151,14 @@
     "mrp": 999,
     "image_url": "https://cdn.dummyjson.com/product-images/mens-shirts/man-plaid-shirt/thumbnail.webp",
     "source": "https://dummyjson.com/products",
-    "demo": true
+    "demo": true,
+    "pack_size": "1 shirt",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ]
   },
   {
     "id": "demo-120",
@@ -137,7 +168,8 @@
     "mrp": 299,
     "image_url": "https://cdn.dummyjson.com/product-images/skin-care/vaseline-men-body-and-face-lotion/thumbnail.webp",
     "source": "https://dummyjson.com/products",
-    "demo": true
+    "demo": true,
+    "pack_size": "200 ml"
   },
   {
     "id": "demo-9",
@@ -147,7 +179,8 @@
     "mrp": 3499,
     "image_url": "https://cdn.dummyjson.com/product-images/fragrances/dolce-shine-eau-de/thumbnail.webp",
     "source": "https://dummyjson.com/products",
-    "demo": true
+    "demo": true,
+    "pack_size": "50 ml"
   },
   {
     "id": "demo-25",
@@ -157,7 +190,8 @@
     "mrp": 75,
     "image_url": "https://cdn.dummyjson.com/product-images/groceries/green-bell-pepper/thumbnail.webp",
     "source": "https://dummyjson.com/products",
-    "demo": true
+    "demo": true,
+    "pack_size": "250 g"
   },
   {
     "id": "demo-41",
@@ -167,7 +201,8 @@
     "mrp": 99,
     "image_url": "https://cdn.dummyjson.com/product-images/groceries/tissue-paper-box/thumbnail.webp",
     "source": "https://dummyjson.com/products",
-    "demo": true
+    "demo": true,
+    "pack_size": "100 pulls · 1 box"
   },
   {
     "id": "demo-27",
@@ -177,6 +212,7 @@
     "mrp": 249,
     "image_url": "https://cdn.dummyjson.com/product-images/groceries/honey-jar/thumbnail.webp",
     "source": "https://dummyjson.com/products",
-    "demo": true
+    "demo": true,
+    "pack_size": "250 g"
   }
 ]

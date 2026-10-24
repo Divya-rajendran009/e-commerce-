@@ -39,7 +39,7 @@ export default function Products() {
     setParams(next)
   }
   return <section className="wrap section catalogue">
-    <div className="catalogue-title"><div><h1>{params.get('search') ? `Results for “${params.get('search')}”` : categories.find(c => String(c.id) === params.get('category'))?.name || 'Shop groceries'}</h1></div><div className="catalog-count"><SlidersHorizontal size={17} /> {total} items</div></div>
+    <div className="catalogue-title"><div><h1>{params.get('search') ? `Results for “${params.get('search')}”` : categories.find(c => String(c.id) === params.get('category'))?.name || 'Shop all products'}</h1></div><div className="catalog-count"><SlidersHorizontal size={17} /> {total} items</div></div>
     <nav className="category-shortcuts" aria-label="Shop by category">
       <button type="button" aria-pressed={!params.get('category')} className={!params.get('category') ? 'is-active' : ''} onClick={() => setParam('category', '')}>All aisles</button>
       {categories.map((category) => <button type="button" aria-pressed={params.get('category') === String(category.id)} className={params.get('category') === String(category.id) ? 'is-active' : ''} key={category.id} onClick={() => setParam('category', String(category.id))}>{category.name}</button>)}

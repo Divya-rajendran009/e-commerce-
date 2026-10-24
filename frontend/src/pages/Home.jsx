@@ -20,7 +20,7 @@ const departments = [
 
 export default function Home() {
   const [params] = useSearchParams()
-  return SHOW_CATALOGUE_PREVIEW ? <DemoStorefront key={params.get('search') || ''} /> : <LiveHome />
+  return SHOW_CATALOGUE_PREVIEW ? <DemoStorefront key={`${params.get('department') || ''}-${params.get('search') || ''}`} /> : <LiveHome />
 }
 
 function LiveHome() {

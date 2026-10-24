@@ -1,3 +1,5 @@
+import Categories from './pages/Categories'
+import Wallet from './pages/Wallet'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import { useAuth } from './context/AuthContext'
@@ -39,6 +41,8 @@ function Guard({ admin = false, adminModule, adminRoles, children }) {
 export default function App() {
   return <Suspense fallback={<div className="state-card">Loading page…</div>}><Routes><Route element={<StoreLayout />}>
     <Route index element={<Home />} />
+    <Route path="categories" element={<Categories />} />
+    <Route path="wallet" element={<Wallet />} />
     <Route path="products" element={<Products />} />
     <Route path="products/:id" element={<ProductDetail />} />
     <Route path="cart" element={<Cart />} />
@@ -51,7 +55,7 @@ export default function App() {
     <Route path="checkout" element={<Guard><Checkout /></Guard>} />
     <Route path="login" element={<Login />} />
     <Route path="register" element={<Register />} />
-    <Route path="account" element={<Guard><Account /></Guard>} />
+    <Route path="account" element={<Account />} />
     <Route path="account/:section" element={<Guard><AccountServices /></Guard>} />
     <Route path="blogs" element={<AccountServices />} />
     <Route path="blogs/:slug" element={<AccountServices />} />

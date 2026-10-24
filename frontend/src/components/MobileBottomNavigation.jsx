@@ -6,7 +6,7 @@ export default function MobileBottomNavigation() {
   const { count } = useCart()
   const { pathname } = useLocation()
 
-  const accountActive = ['/account', '/orders', '/referrals', '/login', '/register', '/blogs'].some((path) => pathname === path || pathname.startsWith(`${path}/`))
+  const accountActive = ['/account', '/wallet', '/orders', '/referrals', '/login', '/register', '/blogs'].some((path) => pathname === path || pathname.startsWith(`${path}/`))
   const bagActive = pathname === '/cart' || pathname === '/checkout'
 
   return (
@@ -15,9 +15,9 @@ export default function MobileBottomNavigation() {
         <House size={21} strokeWidth={1.9} />
         <span>Home</span>
       </NavLink>
-      <NavLink to="/products" className={({ isActive }) => `mobile-bottom-item${isActive ? ' is-active' : ''}`}>
+      <NavLink to="/categories" className={({ isActive }) => `mobile-bottom-item${isActive ? ' is-active' : ''}`}>
         <LayoutGrid size={21} strokeWidth={1.9} />
-        <span>Catalog</span>
+        <span>Categories</span>
       </NavLink>
       <NavLink to="/cart" className={() => `mobile-bottom-item${bagActive ? ' is-active' : ''}`}>
         <span className="mobile-bag-icon">

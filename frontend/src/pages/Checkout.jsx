@@ -9,7 +9,7 @@ import { readPin } from '../components/StorefrontTools'
 import { deliveryQuote } from '../utils/delivery'
 
 const defaultSettings = {
-  store_name: 'Pandiyan Store',
+  store_name: 'Pandiyan Stores',
   store_location: 'Theni, Tamil Nadu, India',
   contact_phone: '8072661435',
   business_hours: 'Every day, 9:00 AM to 9:00 PM',

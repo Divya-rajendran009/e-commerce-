@@ -83,7 +83,7 @@ runs both services locally.
 - `GET /api/v1/categories/`, `/products/`, `/products/{id}/`
 - `POST /api/v1/orders/`, `GET /api/v1/orders/`, `/orders/{id}/`
 - `GET /api/v1/referrals/me/`, `/referrals/me/rewards/`, `/referrals/me/wallet/`; `POST /api/v1/referrals/validate/`
-- `GET /api/v1/system-settings/public/` for Pandiyan Store contact and delivery details
+- `GET /api/v1/system-settings/public/` for Pandiyan Stores contact and delivery details
 - `/api/v1/admin/dashboard/`, `/admin/products/`, `/admin/categories/`, `/admin/orders/`
 - Referral administration under `/api/v1/admin/`: `/referrals/`, `/referrals/stats/`, `/referrals/network/`, `/referrals/network/{customer_id}/`, `/referrals/wallet-adjustments/`, `/rewards/`, and `/referral-settings/`
 - Authenticated customer services under `/api/v1/account/`: addresses, wishlist, questions, requests, support tickets, returns, rewards, reseller applications and payouts

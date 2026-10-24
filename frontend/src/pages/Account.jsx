@@ -20,6 +20,6 @@ export default function Account() {
     {groups.map(group => <section className="profile-group" key={group.title}><h2>{group.title}</h2>{group.rows.map(([Icon,title,to]) => <Link key={to} to={to}><Icon size={18} strokeWidth={1.6} /><span>{title}</span><ChevronRight size={15} /></Link>)}</section>)}
     {hasAdminAccess(user) && <Link className="profile-admin" to="/admin"><ShieldCheck size={18} />Admin dashboard<ChevronRight size={16} /></Link>}
     {user && <button className="profile-logout" onClick={() => logout().finally(() => navigate('/'))}><LogOut size={18} />Log out</button>}
-    <p className="profile-signature">Paniam Stores<small>Theni, Tamil Nadu</small></p>
+    <p className="profile-signature">Pandiyan Stores<small>Theni, Tamil Nadu</small></p>
   </section>
 }

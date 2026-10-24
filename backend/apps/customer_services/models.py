@@ -213,7 +213,7 @@ class SecurityEvent(models.Model):
 
 
 class SystemSettings(models.Model):
-    store_name = models.CharField(max_length=120, default="Pandiyan Store")
+    store_name = models.CharField(max_length=120, default="Pandiyan Stores")
     store_location = models.CharField(max_length=160, default="Theni, Tamil Nadu, India")
     contact_phone = models.CharField(max_length=20, default="8072661435")
     business_hours = models.CharField(max_length=120, default="Every day, 9:00 AM to 9:00 PM")

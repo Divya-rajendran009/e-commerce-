@@ -42,7 +42,7 @@ export default function Referral() {
   const share = async () => {
     try {
       if (navigator.share) {
-        await navigator.share({ title: 'Join Pandiyan Store', text: 'Use my referral link to join the shop.', url: link })
+        await navigator.share({ title: 'Join Pandiyan Stores', text: 'Use my referral link to join the shop.', url: link })
         setShareMessage('Invite shared.')
       } else await copy()
     } catch (exception) {
@@ -59,7 +59,7 @@ export default function Referral() {
       <div>
         <span className="eyebrow">PASS ON THE GOODNESS</span>
         <h1>Invite your people.<br /><em>Shop together.</em></h1>
-        <p>Share your personal invite code or link with someone new to Pandiyan Store.</p>
+        <p>Share your personal invite code or link with someone new to Pandiyan Stores.</p>
         <div className="referral-code-row">
           <span><small>Your referral code</small><strong>{referralCode}</strong></span>
           <button type="button" className="button secondary" onClick={copyCode}>{copiedCode ? <Check size={16} /> : <Copy size={16} />} {copiedCode ? 'Copied' : 'Copy code'}</button>

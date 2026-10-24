@@ -89,7 +89,7 @@ export default function Admin() {
   return <section className="wrap section admin-page admin-dashboard">
     <div className="admin-dashboard-welcome">
       <div className="admin-dashboard-welcome-copy">
-        <span className="admin-dashboard-kicker">PANDIYAN STORE · ADMIN OVERVIEW</span>
+        <span className="admin-dashboard-kicker">PANDIYAN STORES · ADMIN OVERVIEW</span>
         <h1>{greeting}, {user?.first_name || 'Store admin'}</h1>
         <p>Your store at a glance. Here’s what’s happening {periodLabel.toLowerCase()}.</p>
         <nav className="admin-dashboard-actions" aria-label="Quick actions">{quickActions.map(([to, label, Icon]) => <Link to={to} key={to}><Icon size={15} />{label}</Link>)}</nav>

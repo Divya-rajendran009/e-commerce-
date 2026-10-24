@@ -7,7 +7,7 @@ import api, { errorMessage } from '../services/api'
 const contact = {
   email: 'pandiyanestore@gmail.com',
   phone: '8610501831',
-  address: 'PANDIYAN STORE, M9, MULLAI NAGAR, THENI 625531, THENI, India',
+  address: 'PANDIYAN STORES, M9, MULLAI NAGAR, THENI 625531, THENI, India',
 }
 
 const policyPages = {
@@ -15,7 +15,7 @@ const policyPages = {
     title: 'Terms & Conditions',
     key: 'terms',
     sections: [
-      ['1. Acceptance of Terms', "By accessing and using PANDIYAN STORE's website and services, you agree to be bound by these Terms & Conditions. If you do not agree to these terms, please do not use our services."],
+      ['1. Acceptance of Terms', "By accessing and using PANDIYAN STORES's website and services, you agree to be bound by these Terms & Conditions. If you do not agree to these terms, please do not use our services."],
       ['2. Use of Website', 'You agree to use our website for lawful purposes only and in a way that does not infringe upon or restrict others’ use and enjoyment. You are prohibited from: using the website for any unlawful purpose; attempting to gain unauthorized access to our systems; transmitting harmful code or malware; collecting user information without consent.'],
       ['3. Product Information', 'We strive to provide accurate product descriptions and pricing. However, we do not warrant that product descriptions or prices are accurate, complete, or current. We reserve the right to modify product specifications without notice, discontinue products at any time, correct pricing errors, and reject orders in cases of pricing errors. Product prices, availability and order totals are verified by the store at checkout.'],
       ['4. Pricing and Payment', 'All prices are in Indian rupees and subject to change without notice. The website currently offers Cash on Delivery (COD); no card or online payment details are collected through checkout. We reserve the right to refuse or cancel orders for any reason, subject to applicable law.'],
@@ -31,7 +31,7 @@ const policyPages = {
     title: 'Privacy Policy',
     key: 'privacy_policy',
     sections: [
-      ['Introduction', 'PANDIYAN STORE (“we,” “our,” or “us”) is committed to protecting your privacy. This draft explains how information is handled when you visit the website or place an order. It must be checked against the store’s actual hosting, operational practices and applicable law before being treated as final.'],
+      ['Introduction', 'PANDIYAN STORES (“we,” “our,” or “us”) is committed to protecting your privacy. This draft explains how information is handled when you visit the website or place an order. It must be checked against the store’s actual hosting, operational practices and applicable law before being treated as final.'],
       ['Information We Collect', 'The website handles information supplied for accounts and orders, including name, email/contact details, phone number, saved or checkout delivery addresses, delivery instructions, order items and order history. Authentication access and refresh tokens and the shopping cart are stored in browser local storage. Checkout currently supports Cash on Delivery only. The website does not collect card numbers or online payment credentials through checkout. No separate billing-address field or payment-information collection is identified in the current checkout.'],
       ['How We Use Your Information', 'Information is used to manage accounts, process and fulfil orders, arrange delivery, communicate about orders and support requests, and maintain order history. The supplied draft also mentions marketing communications with consent, improving services, fraud prevention and unauthorized transactions; no marketing-consent control or marketing communication feature was identified in the website, so those uses must not be treated as active without verification and implementation.'],
       ['Information Sharing', 'Information needed for order fulfilment and support is available to authorized store staff through the website. The supplied draft says information may be shared with operational service providers, payment processors and law enforcement when required by law. No online payment processor integration was identified; the owner must confirm actual service providers, hosting disclosures and any legally required disclosure practices before publishing those statements as fact. The store does not make private account, delivery-address, phone or order information public.'],
@@ -74,7 +74,7 @@ const policyPages = {
 }
 
 const defaults = {
-  store_name: 'Pandiyan Store',
+  store_name: 'Pandiyan Stores',
   store_location: 'Theni, Tamil Nadu, India',
   contact_phone: '8072661435',
   business_hours: 'Every day, 9:00 AM to 9:00 PM',
@@ -159,7 +159,7 @@ export default function PolicyPage({ policy, modal = false, onClose }) {
   const managedText = page.key ? policies[page.key] : null
 
   const content = <>
-    {!modal && <span className="eyebrow">PANDIYAN STORE · STORE INFORMATION</span>}
+    {!modal && <span className="eyebrow">PANDIYAN STORES · STORE INFORMATION</span>}
     <h1 id={modal ? 'policy-dialog-title' : undefined}>{page.title}</h1>
     {error && <ErrorState message={`Some live store information could not be loaded. ${error}`} />}
     {policy !== 'delivery' && <div className="policy-review-notice" role="note">

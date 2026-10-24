@@ -193,7 +193,7 @@ class CustomerServicesApiTests(APITestCase):
     def test_public_business_settings_have_pandiyan_store_defaults_and_pin_validation(self):
         public = self.client.get("/api/v1/system-settings/public/")
         self.assertEqual(public.status_code, 200)
-        self.assertEqual(public.data["store_name"], "Pandiyan Store")
+        self.assertEqual(public.data["store_name"], "Pandiyan Stores")
         self.assertEqual(public.data["delivery_pin_codes"], ["625531", "625534"])
         self.assertEqual(Decimal(public.data["minimum_order_value"]), Decimal("300.00"))
         self.assertEqual(Decimal(public.data["delivery_fee"]), Decimal("30.00"))

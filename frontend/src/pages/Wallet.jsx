@@ -8,7 +8,7 @@ export default function Wallet() {
   const { wallet, walletError, refreshWallet } = useOutletContext()
   return <section className="wallet-page personal-page">
     <div className="simple-page-title"><Link to="/account" aria-label="Back to profile"><ArrowLeft size={21} /></Link><h1>Wallet</h1></div>
-    <div className="wallet-masthead"><span className="wallet-emblem" aria-hidden="true"><WalletCards size={48} strokeWidth={1.5} /></span><small>PANIAM STORES</small><h2>Your wallet</h2>
+    <div className="wallet-masthead"><span className="wallet-emblem" aria-hidden="true"><WalletCards size={48} strokeWidth={1.5} /></span><small>PANDIYAN STORES</small><h2>Your wallet</h2>
       <p>Referral rewards, in one place.</p>
       {user ? <div className="wallet-amount"><span>Current balance</span><strong>{wallet ? money(wallet.balance) : '—'}</strong></div> : <Link className="button primary full" to="/login">Sign in to view your balance</Link>}
     </div>

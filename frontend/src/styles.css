@@ -992,3 +992,11 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .policy-modal-content { padding: 0 17px 20px; }
   .policy-modal-content > h1 { font-size: 23px; }
 }
+
+.pagination-controls { display:flex; align-items:center; justify-content:center; gap:1rem; margin:1.5rem 0; }
+.catalogue > .category-shortcuts:first-of-type { display:grid; grid-template-columns:repeat(auto-fit,minmax(135px,1fr)); overflow:visible; gap:12px; }
+.catalogue > .category-shortcuts:first-of-type button { white-space:normal; min-height:64px; border-radius:12px; }
+
+.wallet-summary .admin-metric-card { display:flex; flex-direction:column; align-items:flex-start; gap:8px; }
+.wallet-summary .admin-metric-card > span { font-size:12px; }
+.wallet-summary .admin-metric-card > strong { margin:0; font-size:22px; }

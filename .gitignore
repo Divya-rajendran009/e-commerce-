@@ -9,3 +9,6 @@ staticfiles/
 node_modules/
 dist/
 .DS_Store
+.upstream/
+.local/
+test-results.txt

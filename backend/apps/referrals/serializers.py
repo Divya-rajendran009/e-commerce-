@@ -161,11 +161,15 @@ class ReferralRewardSerializer(serializers.ModelSerializer):
 
 
 class CustomerReferralRewardSerializer(serializers.ModelSerializer):
+    category_breakdown = serializers.SerializerMethodField()
+
+    def get_category_breakdown(self, obj):
+        return [{key: rule.get(key) for key in ("category_name", "configured_amount", "reward_type", "eligible_order_amount")} for rule in obj.configuration_snapshot.get("applied_rules", [])]
     order_number = serializers.CharField(source="order.order_number", read_only=True, allow_null=True)
 
     class Meta:
         model = ReferralReward
-        fields = ["id", "recipient_type", "order_number", "level", "amount", "status", "created_at"]
+        fields = ["id", "recipient_type", "order_number", "level", "amount", "status", "category_breakdown", "created_at"]
 
 
 class WalletLedgerSerializer(serializers.ModelSerializer):

@@ -12,6 +12,22 @@ from .models import Referral, ReferralLevelRule, ReferralProgram, ReferralReward
 CENT = Decimal("0.01")
 
 
+def effective_commission_rates(program):
+    from apps.catalog.models import Category
+    if not program.active:
+        return []
+    rules = {(rule.level, rule.category_id): rule for rule in program.level_rules.filter(active=True, level__lte=program.max_depth).select_related("category")}
+    result = []
+    for category in Category.objects.filter(is_active=True):
+        for level in range(1, program.max_depth + 1):
+            if (level == 1 and not program.reward_referrer) or (level > 1 and not program.reward_ancestors):
+                continue
+            amount, _, applied = _commission_for_level(program=program, level=level, item_amounts={category.pk: (category, Decimal("100"))}, rules=rules)
+            if applied:
+                result.append({"category_id": category.pk, "category_name": category.name, "level": level, "reward_type": "percentage", "amount": amount})
+    return result
+
+
 def _reward_amount(rule, eligible_amount):
     if rule.reward_type == ReferralLevelRule.RewardType.PERCENTAGE:
         return (eligible_amount * rule.amount / Decimal("100")).quantize(CENT, rounding=ROUND_HALF_UP)
@@ -125,7 +141,7 @@ def _eligible_item_amounts(order):
     eligible_total = max(order.subtotal - order.discount_amount, Decimal("0.00")).quantize(
         CENT, rounding=ROUND_HALF_UP,
     )
-    items = list(order.items.select_related("product", "product__category").order_by("pk"))
+    items = list(order.items.select_related("category_snapshot", "product", "product__category").order_by("pk"))
     if not items:
         return {None: (None, eligible_total)} if eligible_total > 0 else {}
 
@@ -144,7 +160,7 @@ def _eligible_item_amounts(order):
             )
             amount = min(max(amount, Decimal("0.00")), remaining)
             remaining -= amount
-        category = item.product.category if item.product_id else None
+        category = item.category_snapshot or (item.product.category if item.product_id else None)
         category_id = category.pk if category else None
         if category_id in result:
             existing_category, current = result[category_id]

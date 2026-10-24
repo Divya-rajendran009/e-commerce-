@@ -232,10 +232,10 @@ export default function AdminReferrals() {
         <label className="check-field"><input type="checkbox" checked={settings.reward_referrer} onChange={(event) => setSetting('reward_referrer', event.target.checked)} /> Reward direct referrer</label>
         <label className="check-field"><input type="checkbox" checked={settings.reward_ancestors} onChange={(event) => setSetting('reward_ancestors', event.target.checked)} /> Reward higher-level ancestors</label>
         <label className="check-field"><input type="checkbox" checked={settings.reward_referred_customer} onChange={(event) => setSetting('reward_referred_customer', event.target.checked)} /> Reward referred customer</label>
-        <label className="check-field"><input type="checkbox" checked={settings.wallet_spending_enabled} disabled readOnly /> Wallet spending at checkout (not implemented)</label>
+        <label className="check-field"><input type="checkbox" checked={settings.wallet_spending_enabled} onChange={(event) => setSetting('wallet_spending_enabled', event.target.checked)} /> Allow customers to pay with their wallet</label>
         <label className="field"><span>Wallet credit expiry (not implemented)</span><input type="number" min="1" value={settings.wallet_expiry_days || ''} disabled readOnly /></label>
       </div>
-      <p className="form-hint">Wallet redemption during checkout and automatic credit expiry are not active. These stored settings do not affect orders.</p>
+      <p className="form-hint">Wallet payments apply at checkout when enabled. Credits do not currently expire.</p>
       <p className="form-hint">Qualification is cumulative across your own delivered purchases, less recorded refunds and completed returns. Referral purchases do not count toward your own qualification. A referral commission is considered only after the referred order is delivered.</p>
       <p className="form-hint">Delivered orders are the only eligible order status. COD orders are not credited when placed.</p>
       <div className="service-form-grid referral-scope-controls">
@@ -250,8 +250,8 @@ export default function AdminReferrals() {
         <label className="check-field"><input type="checkbox" checked={rule.active} onChange={(event) => setRule(rule.level, 'active', event.target.checked)} /> Active</label>
         <label className="field"><span>Percentage of eligible item amount</span><input type="number" min="0" max="100" step="0.01" value={rule.amount} onChange={(event) => { setRule(rule.level, 'reward_type', 'percentage'); setRule(rule.level, 'amount', event.target.value) }} /></label>
       </article>)}</div>
-      <h3>Specific category rates</h3>
-      <p className="form-hint">Category rates are saved separately per referral level. Existing orders and ledger snapshots are not recalculated when rules change.</p>
+      <h3>Specific category rates</h3><p>Select categories below to configure them together, or edit each category individually.</p><button type="button" className="button secondary" onClick={() => setSettings((current) => ({ ...current, level_rules: current.level_rules.map((rule) => { if (rule.category == null) return rule; const source = current.level_rules.find((item) => item.category == null && item.level === rule.level); return source ? { ...rule, amount: source.amount, active: source.active, reward_type: 'percentage' } : rule }) }))}>Apply All Categories rates to selected categories</button>
+      <p className="form-hint">Category rates are saved separately per referral level. Rates are applied at delivery. Credited rewards retain their original audit snapshot.</p>
       <div className="referral-category-rates">
         <h4>Category reward eligibility</h4>
         <p className="form-hint">Each category can inherit the global setting or explicitly enable or disable referral rewards. Disabled categories are excluded from commissions at every level.</p>
@@ -273,7 +273,7 @@ export default function AdminReferrals() {
         return <label className="check-field" key={category.id}><input type="checkbox" checked={selected} onChange={(event) => toggleReferralCategory(category.id, event.target.checked)} /> {category.name}{category.is_active ? '' : ' (inactive)'}</label>
       })}</div>
       {categories.filter((category) => settings.level_rules.some((rule) => String(rule.category ?? '') === String(category.id))).map((category) => <section className="referral-category-rates" key={category.id}>
-        <h4>{category.name}</h4>
+        <h4>{category.name}</h4><p>Total enabled level commission: {settings.level_rules.filter((rule) => String(rule.category) === String(category.id) && rule.active && rule.level <= settings.max_depth).reduce((total, rule) => total + Number(rule.amount || 0), 0).toFixed(2)}%</p>
         <div className="referral-rule-grid">{settings.level_rules.filter((rule) => String(rule.category ?? '') === String(category.id) && rule.level <= settings.max_depth).map((rule) => <article className="referral-rule-card" key={`${category.id}-${rule.level}`}>
           <strong>Level {rule.level}</strong>
           <label className="check-field"><input type="checkbox" checked={rule.active} onChange={(event) => setRule(rule.level, 'active', event.target.checked, category.id)} /> Active</label>

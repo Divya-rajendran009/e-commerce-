@@ -12,23 +12,29 @@ export default function Products() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [hasNext, setHasNext] = useState(false)
+  const [retry, setRetry] = useState(0)
   const { add } = useCart()
   useEffect(() => { api.get('/categories/').then(({ data }) => setCategories(data.results || data)).catch((e) => setError(errorMessage(e))) }, [])
   useEffect(() => {
+    const controller = new AbortController()
     setLoading(true)
-    api.get('/products/', { params: Object.fromEntries(params.entries()) })
+    setError('')
+    const timer = setTimeout(() => api.get('/products/', { params: Object.fromEntries(params.entries()), signal: controller.signal })
       .then(({ data }) => {
         const results = data.results || data
         setProducts(results)
         setTotal(data.count ?? results.length)
+        setHasNext(Boolean(data.next))
       })
-      .catch((e) => setError(errorMessage(e)))
-      .finally(() => setLoading(false))
-  }, [params])
+      .catch((e) => { if (!controller.signal.aborted) setError(errorMessage(e)) })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false) }), params.get('search') ? 250 : 0)
+    return () => { clearTimeout(timer); controller.abort() }
+  }, [params, retry])
   const setParam = (key, value) => {
     const next = new URLSearchParams(params)
     if (value) next.set(key, value); else next.delete(key)
-    next.delete('page')
+    if (key !== 'page') next.delete('page')
     setParams(next)
   }
   return <section className="wrap section catalogue">
@@ -37,11 +43,14 @@ export default function Products() {
       <button type="button" className={!params.get('category') ? 'is-active' : ''} onClick={() => setParam('category', '')}>All aisles</button>
       {categories.map((category) => <button type="button" className={params.get('category') === String(category.id) ? 'is-active' : ''} key={category.id} onClick={() => setParam('category', String(category.id))}>{category.name}</button>)}
     </nav>
+    <nav className="category-shortcuts" aria-label="Product collections">{[['', 'All products'], ['referral', 'Referral bonus'], ['fast-moving', 'Fast moving']].map(([value, label]) => <button key={value} className={(params.get('collection') || '') === value ? 'is-active' : ''} onClick={() => setParam('collection', value)}>{label}</button>)}</nav>
     <div className="filters">
       <label>Category<select value={params.get('category') || ''} onChange={(e) => setParam('category', e.target.value)}><option value="">All aisles</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
       <label>Sort by<select value={params.get('ordering') || ''} onChange={(e) => setParam('ordering', e.target.value)}><option value="">Recommended</option><option value="price">Price: low to high</option><option value="-price">Price: high to low</option><option value="name">Name: A to Z</option></select></label>
       <label className="catalog-search">Search<input value={params.get('search') || ''} onChange={(e) => setParam('search', e.target.value)} placeholder="Search products…" /></label>
     </div>
     {error ? <ErrorState message={error} /> : loading ? <Loading /> : products.length ? <div className="product-grid">{products.map((product) => <ProductCard key={product.id} product={product} onAdd={add} />)}</div> : <div className="empty-state"><h2>No products found</h2><p>Try a different search or category.</p></div>}
+    {error && <button className="button secondary" onClick={() => setRetry((value) => value + 1)}>Retry products</button>}
+    {!loading && !error && <nav className="pagination-controls" aria-label="Product pages"><button className="button secondary" disabled={Number(params.get('page') || 1) <= 1} onClick={() => setParam('page', String(Number(params.get('page')) - 1))}>Previous</button><span>Page {params.get('page') || 1}</span><button className="button secondary" disabled={!hasNext} onClick={() => setParam('page', String(Number(params.get('page') || 1) + 1))}>Next</button></nav>}
   </section>
 }

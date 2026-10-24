@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import api, { errorMessage } from '../services/api'
 import { ErrorState, Loading } from '../components/Shared'
 import { copyText } from '../utils/clipboard'
+import CustomerNetwork from '../components/CustomerNetwork'
 
 export default function Referral() {
   const { user } = useAuth()
@@ -80,10 +81,11 @@ export default function Referral() {
       <div className="referral-level-summary">{dashboard.commission_rates.map((rule) => <article key={`${rule.level}-${rule.category_id ?? 'all'}`}><span>{rule.category_name ? `${rule.category_name} · Level ${rule.level}` : `All Categories · Level ${rule.level}`}</span><strong>{rule.reward_type === 'percentage' ? `${Number(rule.amount).toFixed(2)}%` : amount(rule.amount)}</strong></article>)}</div>
       <h3>Your network</h3>
       <div className="referral-level-summary">{dashboard.network_levels.map(({ level, count }) => <article key={level}><span>Level {level}</span><strong>{count} {count === 1 ? 'person' : 'people'}</strong></article>)}</div>
+      <CustomerNetwork levels={dashboard.network_levels} />
       <h3>Wallet balance</h3>
       <p>{amount(dashboard.wallet_balance)}</p>
       <h3>Eligible rewards and wallet history</h3>
-      {dashboard.rewards.length > 0 && <div className="service-record-list">{dashboard.rewards.map((reward) => <article className="service-record" key={reward.id}><span>Level {reward.level} · {reward.status}{reward.order_number ? ` · ${reward.order_number}` : ''}</span><strong>{amount(reward.amount)}</strong></article>)}</div>}
+      {dashboard.rewards.length > 0 && <div className="service-record-list">{dashboard.rewards.map((reward) => <article className="service-record" key={reward.id}><span>Level {reward.level} · {reward.status}{reward.order_number ? ` · ${reward.order_number}` : ''}</span><strong>{amount(reward.amount)}</strong><ul>{(reward.category_breakdown || []).map((rule, index) => <li key={index}>{rule.category_name || 'Welcome reward'} · {rule.reward_type === 'percentage' ? `${rule.configured_amount}%` : amount(rule.configured_amount)} · eligible value {amount(rule.eligible_order_amount)}</li>)}</ul></article>)}</div>}
       {dashboard.wallet_transactions.length > 0 ? <div className="service-record-list">{dashboard.wallet_transactions.map((entry) => <article className="service-record" key={entry.id}><span>{entry.description} · {new Date(entry.created_at).toLocaleDateString()}</span><strong>{amount(entry.amount)}</strong></article>)}</div> : <p className="fine-print">No wallet transactions yet.</p>}
     </section>
   </section>

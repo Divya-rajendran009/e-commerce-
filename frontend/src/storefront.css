@@ -281,6 +281,19 @@
 }
 
 /* Product-first discovery storefront. Promotional claims come from catalogue data. */
+.demo-notice { margin:12px 0 0; padding:10px 12px; background:#f4f0e7; border-radius:8px; color:#61513e; font-size:12px; line-height:1.5; }
+.shop-departments button.department-shortcut { background:none; border:0; padding:0 0 8px; color:inherit; border-bottom:3px solid transparent; cursor:pointer; }
+.shop-departments button.department-shortcut[aria-pressed=true] { border-bottom-color:#761c24; color:#761c24; }
+.department-shortcut > img { width:56px; height:52px; object-fit:contain; background:#f6f5f0; border-radius:10px; }
+.demo-count { color:#6c6559; font-size:12px; white-space:nowrap; }
+.demo-products .product-image { background:#fff; }
+.demo-products .product-image > img { object-fit:contain; padding:22px 12px 8px; box-sizing:border-box; }
+.demo-products .product-title { margin:8px 0 12px; line-height:1.45; font-weight:600; }
+.demo-products .product-buy { flex-wrap:wrap; gap:8px; }
+.demo-only { font-size:11px; color:#716c63; background:#f4f2ed; padding:7px 9px; border-radius:5px; }
+.demo-source { margin:20px 0 32px; color:#777267; font-size:12px; line-height:1.6; }
+.demo-source a { text-decoration:underline; }
+@media(max-width:650px) { .department-shortcut > img { width:48px; height:44px; } .demo-notice { font-size:11px; margin-top:10px; } .demo-products .tag { font-size:10px; } }
 .discovery-store .announcement,.discovery-store .main-nav,.discovery-store .brand small { display:none; }
 .pandiyan-store.discovery-store .site-header { background:#761c24; color:white; box-shadow:none; }
 .discovery-store .brand,.discovery-store .delivery-picker,.discovery-store .delivery-picker small { color:white; }

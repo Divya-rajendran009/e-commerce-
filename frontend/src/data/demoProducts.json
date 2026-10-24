@@ -1,0 +1,182 @@
+[
+  {
+    "id": "demo-83",
+    "name": "Blue & Black Check Shirt",
+    "category_name": "Clothing",
+    "price": 699,
+    "mrp": 999,
+    "image_url": "https://cdn.dummyjson.com/product-images/mens-shirts/blue-&-black-check-shirt/thumbnail.webp",
+    "source": "https://dummyjson.com/products",
+    "demo": true
+  },
+  {
+    "id": "demo-118",
+    "name": "Attitude Super Leaves Hand Soap",
+    "category_name": "Toiletries",
+    "price": 199,
+    "mrp": 249,
+    "image_url": "https://cdn.dummyjson.com/product-images/skin-care/attitude-super-leaves-hand-soap/thumbnail.webp",
+    "source": "https://dummyjson.com/products",
+    "demo": true
+  },
+  {
+    "id": "demo-6",
+    "name": "Calvin Klein CK One",
+    "category_name": "Perfumes",
+    "price": 2499,
+    "mrp": 2999,
+    "image_url": "https://cdn.dummyjson.com/product-images/fragrances/calvin-klein-ck-one/thumbnail.webp",
+    "source": "https://dummyjson.com/products",
+    "demo": true
+  },
+  {
+    "id": "demo-35",
+    "name": "Potatoes",
+    "category_name": "Vegetables",
+    "price": 39,
+    "mrp": 50,
+    "image_url": "https://cdn.dummyjson.com/product-images/groceries/potatoes/thumbnail.webp",
+    "source": "https://dummyjson.com/products",
+    "demo": true
+  },
+  {
+    "id": "demo-32",
+    "name": "Milk",
+    "category_name": "Dairy",
+    "price": 60,
+    "mrp": 65,
+    "image_url": "https://cdn.dummyjson.com/product-images/groceries/milk/thumbnail.webp",
+    "source": "https://dummyjson.com/products",
+    "demo": true
+  },
+  {
+    "id": "demo-38",
+    "name": "Rice",
+    "category_name": "Rice & grains",
+    "price": 299,
+    "mrp": 349,
+    "image_url": "https://cdn.dummyjson.com/product-images/groceries/rice/thumbnail.webp",
+    "source": "https://dummyjson.com/products",
+    "demo": true
+  },
+  {
+    "id": "demo-86",
+    "name": "Man Short Sleeve Shirt",
+    "category_name": "Clothing",
+    "price": 599,
+    "mrp": 799,
+    "image_url": "https://cdn.dummyjson.com/product-images/mens-shirts/man-short-sleeve-shirt/thumbnail.webp",
+    "source": "https://dummyjson.com/products",
+    "demo": true
+  },
+  {
+    "id": "demo-119",
+    "name": "Olay Ultra Moisture Shea Butter Body Wash",
+    "category_name": "Toiletries",
+    "price": 349,
+    "mrp": 449,
+    "image_url": "https://cdn.dummyjson.com/product-images/skin-care/olay-ultra-moisture-shea-butter-body-wash/thumbnail.webp",
+    "source": "https://dummyjson.com/products",
+    "demo": true
+  },
+  {
+    "id": "demo-10",
+    "name": "Gucci Bloom Eau de",
+    "category_name": "Perfumes",
+    "price": 3499,
+    "mrp": 3999,
+    "image_url": "https://cdn.dummyjson.com/product-images/fragrances/gucci-bloom-eau-de/thumbnail.webp",
+    "source": "https://dummyjson.com/products",
+    "demo": true
+  },
+  {
+    "id": "demo-37",
+    "name": "Red Onions",
+    "category_name": "Vegetables",
+    "price": 49,
+    "mrp": 60,
+    "image_url": "https://cdn.dummyjson.com/product-images/groceries/red-onions/thumbnail.webp",
+    "source": "https://dummyjson.com/products",
+    "demo": true
+  },
+  {
+    "id": "demo-28",
+    "name": "Ice Cream",
+    "category_name": "Dairy",
+    "price": 149,
+    "mrp": 199,
+    "image_url": "https://cdn.dummyjson.com/product-images/groceries/ice-cream/thumbnail.webp",
+    "source": "https://dummyjson.com/products",
+    "demo": true
+  },
+  {
+    "id": "demo-20",
+    "name": "Cooking Oil",
+    "category_name": "Pantry",
+    "price": 179,
+    "mrp": 199,
+    "image_url": "https://cdn.dummyjson.com/product-images/groceries/cooking-oil/thumbnail.webp",
+    "source": "https://dummyjson.com/products",
+    "demo": true
+  },
+  {
+    "id": "demo-85",
+    "name": "Man Plaid Shirt",
+    "category_name": "Clothing",
+    "price": 799,
+    "mrp": 999,
+    "image_url": "https://cdn.dummyjson.com/product-images/mens-shirts/man-plaid-shirt/thumbnail.webp",
+    "source": "https://dummyjson.com/products",
+    "demo": true
+  },
+  {
+    "id": "demo-120",
+    "name": "Vaseline Men Body and Face Lotion",
+    "category_name": "Toiletries",
+    "price": 249,
+    "mrp": 299,
+    "image_url": "https://cdn.dummyjson.com/product-images/skin-care/vaseline-men-body-and-face-lotion/thumbnail.webp",
+    "source": "https://dummyjson.com/products",
+    "demo": true
+  },
+  {
+    "id": "demo-9",
+    "name": "Dolce Shine Eau de",
+    "category_name": "Perfumes",
+    "price": 2999,
+    "mrp": 3499,
+    "image_url": "https://cdn.dummyjson.com/product-images/fragrances/dolce-shine-eau-de/thumbnail.webp",
+    "source": "https://dummyjson.com/products",
+    "demo": true
+  },
+  {
+    "id": "demo-25",
+    "name": "Green Bell Pepper",
+    "category_name": "Vegetables",
+    "price": 59,
+    "mrp": 75,
+    "image_url": "https://cdn.dummyjson.com/product-images/groceries/green-bell-pepper/thumbnail.webp",
+    "source": "https://dummyjson.com/products",
+    "demo": true
+  },
+  {
+    "id": "demo-41",
+    "name": "Tissue Paper Box",
+    "category_name": "Toiletries",
+    "price": 79,
+    "mrp": 99,
+    "image_url": "https://cdn.dummyjson.com/product-images/groceries/tissue-paper-box/thumbnail.webp",
+    "source": "https://dummyjson.com/products",
+    "demo": true
+  },
+  {
+    "id": "demo-27",
+    "name": "Honey Jar",
+    "category_name": "Pantry",
+    "price": 199,
+    "mrp": 249,
+    "image_url": "https://cdn.dummyjson.com/product-images/groceries/honey-jar/thumbnail.webp",
+    "source": "https://dummyjson.com/products",
+    "demo": true
+  }
+]

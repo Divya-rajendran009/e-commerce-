@@ -1,3 +1,4 @@
+import DemoStorefront from '../components/DemoStorefront'
 import { ArrowRight, ShoppingBag } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
@@ -15,7 +16,11 @@ const departments = [
   { name: 'Rice & grains', match: /rice|grain/i, search: 'rice', photo: groceryPhotos.rice },
 ]
 
-export default function Home() {
+// Set to false when the verified store catalogue is ready.
+const SHOW_CATALOGUE_PREVIEW = true
+export default function Home() { return SHOW_CATALOGUE_PREVIEW ? <DemoStorefront /> : <LiveHome /> }
+
+function LiveHome() {
   const [selection, setSelection] = useState('all')
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])

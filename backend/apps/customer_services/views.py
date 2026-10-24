@@ -151,10 +151,13 @@ class AdminReturnRequestViewSet(AdminCustomerViewSet):
     queryset = ReturnRequest.objects.select_related("customer", "order")
     serializer_class = AdminReturnRequestSerializer
 
+    @transaction.atomic
     def perform_update(self, serializer):
         previous_status = serializer.instance.status
         return_request = serializer.save()
         if previous_status != ReturnRequest.Status.COMPLETED and return_request.status == ReturnRequest.Status.COMPLETED:
+            from apps.referrals.wallet import restore_order_wallet
+            restore_order_wallet(return_request.order, full=True)
             from apps.referrals.models import ReferralProgram
             from apps.referrals.services import reverse_referral_rewards_for_order
             program = ReferralProgram.objects.filter(pk=1).first()
@@ -508,6 +511,8 @@ class AdminPaymentViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixi
         if payment.cod_collected and not collected:
             raise ValidationError({"cod_collected": "A completed COD collection cannot be reversed here."})
         before = payment.cod_collected
+        if before:
+            return Response(self.get_serializer(payment).data)
         payment.cod_collected = collected
         if collected:
             payment.status = PaymentTransaction.Status.SUCCESSFUL
@@ -536,6 +541,9 @@ class AdminRefundViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def partial_update(self, request, *args, **kwargs):
         refund = Refund.objects.select_for_update().get(pk=self.get_object().pk)
+        refund.order = Order.objects.select_for_update().get(pk=refund.order_id)
+        if refund.status in {Refund.Status.RECORDED, Refund.Status.PROCESSED}:
+            raise ValidationError({"detail": "Recorded refunds are immutable."})
         status_value = request.data.get("status")
         transitions = {
             "requested": {"approved", "rejected"},
@@ -554,6 +562,8 @@ class AdminRefundViewSet(viewsets.ModelViewSet):
             raise ValidationError({"status": "Manual refund recording is only available for Cash on Delivery orders."})
         audit_admin_change(request, refund, "update", {"before_status": old_status, "after_status": refund.status, "reference": refund.transaction_reference})
         if refund.status == Refund.Status.RECORDED:
+            from apps.referrals.wallet import restore_order_wallet
+            restore_order_wallet(refund.order)
             recorded_total = refund.order.refunds.filter(status=Refund.Status.RECORDED).aggregate(amount=Sum("amount"))["amount"] or Decimal("0")
             if recorded_total >= refund.order.total and refund.order.payment_status == Order.PaymentStatus.PAID:
                 refund.order.payment_status = Order.PaymentStatus.REFUNDED
@@ -642,7 +652,7 @@ class AdminReportView(APIView):
     permission_classes = [IsStoreAdmin]
 
     def get(self, request, report):
-        if report in {"sales", "payments", "refunds", "reseller_commissions", "payouts"} and request.user.role not in {"admin", "super_admin", "finance_manager"}:
+        if report in {"sales", "payments", "refunds", "referrals", "wallet", "reseller_commissions", "payouts"} and request.user.role not in {"admin", "super_admin", "finance_manager"}:
             return Response({"detail": "Financial report access is restricted."}, status=403)
         start_date = request.query_params.get("start")
         end_date = request.query_params.get("end")
@@ -659,6 +669,10 @@ class AdminReportView(APIView):
             return queryset
 
         orders = by_date(orders)
+        if report == "wallet":
+            from apps.referrals.models import WalletLedger
+            entries = by_date(WalletLedger.objects.select_related("customer", "order"))
+            return _csv_response(report, ["customer", "order", "type", "amount", "level", "created"], entries.values_list("customer__email", "order__order_number", "transaction_type", "amount", "level", "created_at"))
         if report in {"orders", "sales"}:
             return _csv_response(report, ["order_number", "customer_email", "status", "payment_method", "payment_status", "subtotal", "discount_amount", "delivery_fee", "total", "created_at"], orders.values_list("order_number", "customer__email", "status", "payment_method", "payment_status", "subtotal", "discount_amount", "delivery_fee", "total", "created_at"))
         if report == "products":

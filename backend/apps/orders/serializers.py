@@ -7,14 +7,26 @@ class OrderItemSerializer(serializers.ModelSerializer):
         fields = ["product_name", "sku", "unit_price", "quantity", "line_total"]
 
 class OrderSerializer(serializers.ModelSerializer):
+    amount_due = serializers.SerializerMethodField()
+
+    def get_amount_due(self, obj):
+        return str(obj.total - obj.wallet_amount)
+
     items = OrderItemSerializer(many=True, read_only=True)
 
     class Meta:
         model = Order
-        fields = ["id", "order_number", "status", "payment_method", "payment_status", "customer_name", "phone", "address", "instructions", "subtotal", "discount_amount", "delivery_fee", "total", "delivery_pin_code", "items", "created_at", "updated_at"]
+        fields = ["id", "order_number", "status", "payment_method", "payment_status", "customer_name", "phone", "address", "instructions", "subtotal", "discount_amount", "delivery_fee", "total", "wallet_amount", "amount_due", "delivery_pin_code", "items", "created_at", "updated_at"]
+
+class CheckoutLineSerializer(serializers.Serializer):
+    product_id = serializers.IntegerField(min_value=1)
+    quantity = serializers.IntegerField(min_value=1, max_value=99)
+
 
 class CreateOrderSerializer(serializers.Serializer):
-    items = serializers.ListField(child=serializers.DictField(), allow_empty=False)
+    use_wallet = serializers.BooleanField(default=False)
+    checkout_key = serializers.UUIDField(required=False)
+    items = CheckoutLineSerializer(many=True, allow_empty=False)
     customer_name = serializers.CharField(max_length=150)
     phone = serializers.CharField(max_length=20)
     address = serializers.CharField()

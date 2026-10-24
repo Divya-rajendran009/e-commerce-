@@ -14,7 +14,7 @@ from apps.accounts.models import User
 from apps.catalog.permissions import IsStoreAdmin, allowed_admin_module
 from apps.customer_services.models import AdminAuditEntry
 from .models import Referral, ReferralLevelRule, ReferralProgram, ReferralReward, WalletLedger
-from .services import qualifying_self_purchase_total
+from .services import qualifying_self_purchase_total, effective_commission_rates
 from .serializers import (
     AdminWalletAdjustmentSerializer,
     AdminWalletLedgerSerializer,
@@ -132,18 +132,7 @@ class ReferralMeView(APIView):
             ),
             "is_qualified": self_purchase_total >= threshold,
             "commission_category_scope": program.category_scope,
-            "commission_rates": [
-                {
-                    "level": rule.level,
-                    "reward_type": rule.reward_type,
-                    "amount": rule.amount,
-                    "category_id": rule.category_id,
-                    "category_name": rule.category.name if rule.category_id else None,
-                }
-                for rule in ReferralLevelRule.objects.filter(
-                    program=program, active=True, level__lte=min(program.max_depth, 5),
-                ).select_related("category").order_by("level", "category_id")
-            ],
+            "commission_rates": effective_commission_rates(program),
             "network_levels": referral_levels,
             "wallet_balance": wallet_balance,
             "wallet_transactions": wallet_entries,
@@ -169,6 +158,7 @@ class ReferralWalletView(APIView):
         balance = entries.aggregate(balance=Sum("amount"))["balance"] or Decimal("0.00")
         return Response({
             "balance": balance,
+            "spending_enabled": ReferralProgram.current().wallet_spending_enabled,
             "currency": "INR",
             "transactions": WalletLedgerSerializer(entries[:100], many=True).data,
         })
@@ -178,6 +168,32 @@ class ReferralPagePagination(PageNumberPagination):
     page_size = 25
     page_size_query_param = "page_size"
     max_page_size = 100
+
+
+class CustomerNetworkView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        program = ReferralProgram.current()
+        levels = referral_level_map(request.user.pk, program.max_depth)
+        requested = request.query_params.get("level")
+        if requested:
+            try:
+                selected = int(requested)
+            except ValueError:
+                return Response({"detail": "Invalid referral level."}, status=400)
+            if not 1 <= selected <= program.max_depth:
+                return Response({"detail": "Level exceeds the configured depth."}, status=400)
+            levels = {key: level for key, level in levels.items() if level == selected}
+        customers = User.objects.filter(pk__in=levels).order_by("date_joined", "pk")
+        paginator = ReferralPagePagination()
+        page = paginator.paginate_queryset(customers, request, view=self)
+        rewards = dict(ReferralReward.objects.filter(recipient=request.user, referral__referred_id__in=[c.pk for c in page], status="credited").values("referral__referred_id").annotate(total=Sum("amount")).values_list("referral__referred_id", "total"))
+        return paginator.get_paginated_response([{
+            "id": customer.pk, "name": customer.first_name or "Member",
+            "level": levels[customer.pk], "joined": customer.date_joined,
+            "commission_earned": rewards.get(customer.pk, Decimal("0.00")),
+        } for customer in page])
 
 
 class AdminReferralsView(APIView):

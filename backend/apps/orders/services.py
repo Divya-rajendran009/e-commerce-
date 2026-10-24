@@ -7,6 +7,22 @@ from .models import InventoryMovement, Order, OrderItem
 
 @transaction.atomic
 def place_order(*, customer, payload):
+    import hashlib
+    import json
+    from apps.accounts.models import User
+    from apps.referrals.models import ReferralProgram, WalletLedger
+    from apps.referrals.wallet import balance
+    customer = User.objects.select_for_update().get(pk=customer.pk)
+    checkout_key = payload.get("checkout_key")
+    fingerprint = hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()
+    if checkout_key:
+        previous = Order.objects.filter(checkout_key=checkout_key).first()
+        if previous:
+            if previous.customer_id != customer.pk or previous.checkout_fingerprint != fingerprint:
+                raise ValidationError({"checkout_key": "This checkout key has already been used for another order."})
+            return previous
+    if payload.get("use_wallet") and not checkout_key:
+        raise ValidationError({"checkout_key": "A checkout key is required for wallet payments."})
     if payload.get("payment_method", "cod") != "cod":
         raise ValidationError({"payment_method": "Only Cash on Delivery is currently available."})
     lines = payload.get("items", [])
@@ -64,9 +80,11 @@ def place_order(*, customer, payload):
         if coupon.new_customer_only and Order.objects.filter(customer=customer).exists():
             raise ValidationError({"coupon_code": "This coupon is available to new customers only."})
         eligible_total = Decimal("0.00")
-        restrictions = coupon.products.exists() or coupon.categories.exists()
+        product_restrictions = set(coupon.products.values_list("pk", flat=True))
+        category_restrictions = set(coupon.categories.values_list("pk", flat=True))
+        restrictions = product_restrictions or category_restrictions
         for product, quantity, amount in order_lines:
-            if not restrictions or coupon.products.filter(pk=product.pk).exists() or coupon.categories.filter(pk=product.category_id).exists():
+            if not restrictions or product.pk in product_restrictions or product.category_id in category_restrictions:
                 eligible_total += amount
         if eligible_total <= 0:
             raise ValidationError({"coupon_code": "This coupon does not apply to items in your basket."})
@@ -84,7 +102,18 @@ def place_order(*, customer, payload):
     if settings.free_delivery_threshold is not None and merchandise_total > settings.free_delivery_threshold:
         delivery_fee = Decimal("0.00")
     total = merchandise_total + delivery_fee
+    wallet_amount = Decimal("0.00")
+    if payload.get("use_wallet"):
+        if customer.role != "customer":
+            raise ValidationError({"use_wallet": "Referral wallet payments are available to customers only."})
+        program = ReferralProgram.current()
+        if not program.wallet_spending_enabled:
+            raise ValidationError({"use_wallet": "Wallet payments are currently disabled."})
+        wallet_amount = min(total, max(Decimal("0.00"), balance(customer)))
     order = Order.objects.create(
+        wallet_amount=wallet_amount,
+        checkout_key=checkout_key,
+        checkout_fingerprint=fingerprint,
         customer=customer,
         customer_name=payload["customer_name"].strip(),
         phone=payload["phone"].strip(),
@@ -100,11 +129,17 @@ def place_order(*, customer, payload):
     for product, quantity, amount in order_lines:
         product.stock -= quantity
         product.save(update_fields=["stock"])
-        OrderItem.objects.create(order=order, product=product, product_name=product.name, sku=product.sku, unit_price=product.price, quantity=quantity, line_total=amount)
+        OrderItem.objects.create(order=order, product=product, category_snapshot=product.category, product_name=product.name, sku=product.sku, unit_price=product.price, quantity=quantity, line_total=amount)
         InventoryMovement.objects.create(order=order, product=product, kind=InventoryMovement.Kind.SALE, quantity=quantity)
     if coupon:
         CouponRedemption.objects.create(coupon=coupon, customer=customer, order=order, discount_amount=discount)
-    PaymentTransaction.objects.create(order=order, method=PaymentTransaction.Method.COD, status=PaymentTransaction.Status.PENDING, amount=total)
+    if wallet_amount:
+        WalletLedger.objects.create(customer=customer, order=order, amount=-wallet_amount, transaction_type="redemption", description=f"Wallet payment for {order.order_number}", idempotency_key=f"checkout:{order.pk}")
+    if total > wallet_amount:
+        PaymentTransaction.objects.create(order=order, method=PaymentTransaction.Method.COD, status=PaymentTransaction.Status.PENDING, amount=total-wallet_amount)
+    else:
+        order.payment_status = Order.PaymentStatus.PAID
+        order.save(update_fields=["payment_status"])
     return order
 
 @transaction.atomic
@@ -130,6 +165,11 @@ def change_order_status(*, order, new_status):
         from apps.customer_services.models import DeliveryAssignment
         DeliveryAssignment.objects.get_or_create(order=order)
     if new_status == Order.Status.CANCELLED:
+        from apps.referrals.wallet import restore_order_wallet
+        restore_order_wallet(order, full=True)
+        if order.wallet_amount and order.wallet_amount == order.total:
+            order.payment_status = Order.PaymentStatus.REFUNDED
+            order.save(update_fields=["payment_status"])
         for movement in order.inventory_movements.filter(kind=InventoryMovement.Kind.SALE).select_related("product"):
             if not order.inventory_movements.filter(product=movement.product, kind=InventoryMovement.Kind.RESTOCK).exists():
                 product = Product.objects.select_for_update().get(pk=movement.product_id)

@@ -1,6 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
+  timeout: 20000,
   baseURL: import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '/api/v1' : 'http://localhost:8000/api/v1'),
   headers: { 'Content-Type': 'application/json' },
 })
@@ -10,6 +11,25 @@ api.interceptors.request.use((config) => {
   if (token) config.headers.Authorization = `Bearer ${token}`
   if (typeof FormData !== 'undefined' && config.data instanceof FormData) config.headers.delete('Content-Type')
   return config
+})
+
+let refreshRequest = null
+api.interceptors.response.use((response) => response, async (error) => {
+  const config = error.config
+  const refresh = localStorage.getItem('sm_refresh')
+  if (error.response?.status !== 401 || !config || config._retried || !refresh || /\/auth\/(login|register|refresh|logout)\//.test(config.url)) throw error
+  config._retried = true
+  if (!refreshRequest) {
+    refreshRequest = api.post('/auth/refresh/', { refresh }).then(({ data }) => {
+      if (localStorage.getItem('sm_refresh') !== refresh) throw new Error('Session changed. Please sign in again.')
+      localStorage.setItem('sm_access', data.access)
+      if (data.refresh) localStorage.setItem('sm_refresh', data.refresh)
+      return data.access
+    }).finally(() => { refreshRequest = null })
+  }
+  const access = await refreshRequest
+  config.headers.Authorization = `Bearer ${access}`
+  return api(config)
 })
 
 export function errorMessage(error) {

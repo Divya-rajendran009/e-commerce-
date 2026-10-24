@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import { useAuth } from './context/AuthContext'
 import StoreLayout from './layouts/StoreLayout'
-import AdminLayout from './layouts/AdminLayout'
+const AdminLayout = lazy(() => import('./layouts/AdminLayout'))
 import Home from './pages/Home'
 import Products from './pages/Products'
 import ProductDetail from './pages/ProductDetail'
@@ -12,15 +12,15 @@ import Orders from './pages/Orders'
 import OrderDetail from './pages/OrderDetail'
 import Referral from './pages/Referral'
 import Account from './pages/Account'
-import Admin from './pages/Admin'
-import AdminOrders from './pages/AdminOrders'
-import AdminProducts from './pages/AdminProducts'
-import AdminReferrals from './pages/AdminReferrals'
-import AdminReferralNetwork from './pages/AdminReferralNetwork'
-import AdminCustomers from './pages/AdminCustomers'
-import AdminStaff from './pages/AdminStaff'
-import AccountServices from './pages/AccountServices'
-import AdminServices from './pages/AdminServices'
+const Admin = lazy(() => import('./pages/Admin'))
+const AdminOrders = lazy(() => import('./pages/AdminOrders'))
+const AdminProducts = lazy(() => import('./pages/AdminProducts'))
+const AdminReferrals = lazy(() => import('./pages/AdminReferrals'))
+const AdminReferralNetwork = lazy(() => import('./pages/AdminReferralNetwork'))
+const AdminCustomers = lazy(() => import('./pages/AdminCustomers'))
+const AdminStaff = lazy(() => import('./pages/AdminStaff'))
+const AccountServices = lazy(() => import('./pages/AccountServices'))
+const AdminServices = lazy(() => import('./pages/AdminServices'))
 import { Login, Register } from './pages/AuthPages'
 import { canAccessAdminModule, hasAdminAccess } from './utils/adminAccess'
 
@@ -37,7 +37,7 @@ function Guard({ admin = false, adminModule, adminRoles, children }) {
 }
 
 export default function App() {
-  return <Routes><Route element={<StoreLayout />}>
+  return <Suspense fallback={<div className="state-card">Loading page…</div>}><Routes><Route element={<StoreLayout />}>
     <Route index element={<Home />} />
     <Route path="products" element={<Products />} />
     <Route path="products/:id" element={<ProductDetail />} />
@@ -72,5 +72,5 @@ export default function App() {
     <Route path="services" element={<AdminServices />} />
     <Route path="services/:module" element={<AdminServices />} />
   </Route>
-  </Routes>
+  </Routes></Suspense>
 }

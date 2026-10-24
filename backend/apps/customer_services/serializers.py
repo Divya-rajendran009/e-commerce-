@@ -381,16 +381,30 @@ class PaymentTransactionSerializer(serializers.ModelSerializer):
 
 
 class RefundSerializer(serializers.ModelSerializer):
+    wallet_refund_amount = serializers.SerializerMethodField()
+    cash_refund_amount = serializers.SerializerMethodField()
+
+    def get_wallet_refund_amount(self, obj):
+        from decimal import ROUND_HALF_UP
+        if not obj.order.wallet_amount or not obj.order.total:
+            return "0.00"
+        return str((obj.amount * obj.order.wallet_amount / obj.order.total).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+
+    def get_cash_refund_amount(self, obj):
+        return str(obj.amount - Decimal(self.get_wallet_refund_amount(obj)))
+
     order_number = serializers.CharField(source="order.order_number", read_only=True)
     customer_email = serializers.EmailField(source="order.customer.email", read_only=True)
 
     class Meta:
         model = Refund
-        fields = ["id", "order", "order_number", "customer_email", "amount", "reason", "status", "transaction_reference", "created_at", "updated_at"]
+        fields = ["id", "order", "order_number", "customer_email", "amount", "wallet_refund_amount", "cash_refund_amount", "reason", "status", "transaction_reference", "created_at", "updated_at"]
         read_only_fields = ["id", "order_number", "customer_email", "created_by", "updated_by", "created_at", "updated_at"]
 
     def validate(self, attrs):
         from django.db.models import Sum
+        if self.instance and "order" in attrs and attrs["order"].pk != self.instance.order_id:
+            raise serializers.ValidationError({"order": "A refund cannot be reassigned to another order."})
         status_value = attrs.get("status", Refund.Status.REQUESTED)
         if not self.instance and status_value != Refund.Status.REQUESTED:
             raise serializers.ValidationError({"status": "New refunds must begin in requested status."})

@@ -15,7 +15,8 @@ export function AuthProvider({ children }) {
     api.get('/auth/me/').then(({ data }) => {
       setUser(data)
       localStorage.setItem('sm_user', JSON.stringify(data))
-    }).catch(() => {
+    }).catch((error) => {
+      if (error.response?.status !== 401) return
       localStorage.removeItem('sm_access')
       localStorage.removeItem('sm_refresh')
       localStorage.removeItem('sm_user')

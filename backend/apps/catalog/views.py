@@ -1,4 +1,8 @@
 from rest_framework import filters, permissions, viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.pagination import PageNumberPagination
+from django.db.models import Q
+from django.db.models.functions import Coalesce
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
@@ -25,6 +29,12 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.AllowAny]
     pagination_class = None
 
+class ProductPagination(PageNumberPagination):
+    page_size = 12
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Product.objects.filter(
         is_active=True,
@@ -33,11 +43,30 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     ).select_related("category")
     serializer_class = ProductSerializer
     permission_classes = [permissions.AllowAny]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    pagination_class = ProductPagination
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name", "description", "category__name"]
     ordering_fields = ["name", "price"]
     ordering = ["name"]
     filterset_fields = ["category", "is_featured"]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.request.query_params.get("collection") == "fast-moving":
+            from apps.orders.models import OrderItem
+            from django.db.models import Subquery, IntegerField
+            sales = OrderItem.objects.filter(
+                product_id=OuterRef("pk"), order__status="delivered",
+                order__created_at__gte=timezone.now() - timedelta(days=30),
+            ).values("product_id").annotate(units=Sum("quantity")).values("units")
+            queryset = queryset.annotate(sold_units=Coalesce(Subquery(sales, output_field=IntegerField()), 0)).filter(sold_units__gt=0)
+            self.ordering = ["-sold_units", "name", "pk"]
+        if self.request.query_params.get("collection") == "referral":
+            from apps.referrals.services import effective_commission_rates
+            from apps.referrals.models import ReferralProgram
+            rates = effective_commission_rates(ReferralProgram.current())
+            queryset = queryset.filter(category_id__in={rate["category_id"] for rate in rates if rate["amount"] > 0})
+        return queryset
 
 class AdminProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.select_related("category").all()
@@ -65,6 +94,7 @@ class AdminProductViewSet(viewsets.ModelViewSet):
         audit_admin_change(self.request, product, "update", {key: str(value.pk) if hasattr(value, "pk") else str(value) for key, value in serializer.validated_data.items()})
 
 class AdminCategoryViewSet(viewsets.ModelViewSet):
+    pagination_class = None
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsStoreAdmin]
@@ -148,7 +178,7 @@ def dashboard(request):
     product_sales = OrderItem.objects.all() if period == "all_time" else OrderItem.objects.filter(
         order__created_at__gte=start, order__created_at__lt=end,
     )
-    product_sales = product_sales.exclude(order__status=Order.Status.CANCELLED).values("product_name").annotate(
+    product_sales = product_sales.filter(order__status=Order.Status.DELIVERED).values("product_name").annotate(
         quantity=Sum("quantity"),
     ).order_by("-quantity")[:5]
     top_products = list(product_sales)
@@ -185,11 +215,30 @@ def dashboard(request):
         "financials_available": financial_allowed,
     }
     if financial_allowed:
+        from apps.referrals.models import WalletLedger
+        from apps.customer_services.models import PaymentTransaction
+        ledger = WalletLedger.objects.all()
+        payments = PaymentTransaction.objects.filter(status="successful")
+        if start:
+            ledger = ledger.filter(created_at__gte=start, created_at__lt=end)
+            payments = payments.filter(updated_at__gte=start, updated_at__lt=end)
+        totals = ledger.aggregate(
+            referral_credits=Sum("amount", filter=Q(transaction_type="credit")),
+            referral_reversals=Sum("amount", filter=Q(transaction_type="reversal")),
+            wallet_redeemed=Sum("amount", filter=Q(transaction_type="redemption")),
+            wallet_restored=Sum("amount", filter=Q(transaction_type="restore")),
+        )
+        response["referral_financials"] = {key: abs(value or 0) for key, value in totals.items()}
+        balances = WalletLedger.objects.values("customer_id").annotate(balance=Sum("amount"))
+        response["wallet_outstanding"] = balances.filter(balance__gt=0).aggregate(total=Sum("balance"))["total"] or 0
+        response["purchasing_customers"] = period_orders.filter(status="delivered").values("customer_id").distinct().count()
+        response["delivered_sales"] = period_orders.filter(status="delivered").aggregate(total=Sum("total"))["total"] or 0
+        response["cash_collected"] = payments.aggregate(total=Sum("amount"))["total"] or 0
         financial_product_sales = OrderItem.objects.all() if period == "all_time" else OrderItem.objects.filter(
             order__created_at__gte=start, order__created_at__lt=end,
         )
         top_products = list(
-            financial_product_sales.exclude(order__status=Order.Status.CANCELLED)
+            financial_product_sales.filter(order__status=Order.Status.DELIVERED)
             .values("product_name").annotate(quantity=Sum("quantity"), revenue=Sum("line_total"))
             .order_by("-quantity")[:5]
         )

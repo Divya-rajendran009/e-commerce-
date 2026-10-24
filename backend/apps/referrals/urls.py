@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import (
+    CustomerNetworkView,
     AdminReferralNetworkDetailView,
     AdminReferralNetworkView,
     AdminReferralProgramView,
@@ -14,6 +15,7 @@ from .views import (
 )
 
 urlpatterns = [
+    path("referrals/me/network/", CustomerNetworkView.as_view()),
     path("referrals/validate/", ReferralValidateView.as_view()),
     path("referrals/me/", ReferralMeView.as_view()),
     path("referrals/me/rewards/", ReferralRewardsView.as_view()),

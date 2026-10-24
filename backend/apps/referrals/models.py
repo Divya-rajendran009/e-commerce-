@@ -48,7 +48,10 @@ class ReferralProgram(models.Model):
     @classmethod
     def current(cls):
         program = cls.objects.get_or_create(pk=1)[0]
+        existing_levels = set(program.level_rules.filter(category__isnull=True).values_list("level", flat=True))
         for level, rate in default_referral_rates().items():
+            if level in existing_levels:
+                continue
             ReferralLevelRule.objects.filter(category__isnull=True).get_or_create(
                 program=program,
                 level=level,
@@ -147,6 +150,8 @@ class ReferralReward(models.Model):
 
 class WalletLedger(models.Model):
     class TransactionType(models.TextChoices):
+        REDEMPTION = "redemption", "Checkout payment"
+        RESTORE = "restore", "Checkout refund"
         CREDIT = "credit", "Credit"
         REVERSAL = "reversal", "Reversal"
         ADJUSTMENT = "adjustment", "Manual adjustment"
@@ -179,6 +184,8 @@ class WalletLedger(models.Model):
                     models.Q(transaction_type="credit", amount__gt=0)
                     | models.Q(transaction_type="reversal", amount__lt=0)
                     | models.Q(transaction_type="adjustment")
+                    | models.Q(transaction_type="redemption", amount__lt=0)
+                    | models.Q(transaction_type="restore", amount__gt=0)
                 ),
                 name="wallet_ledger_signed_transaction",
             ),

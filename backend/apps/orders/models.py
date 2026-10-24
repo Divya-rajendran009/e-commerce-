@@ -35,6 +35,9 @@ class Order(models.Model):
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
     delivery_fee = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     total = models.DecimalField(max_digits=10, decimal_places=2)
+    wallet_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    checkout_key = models.UUIDField(null=True, blank=True, unique=True)
+    checkout_fingerprint = models.CharField(max_length=64, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -47,6 +50,7 @@ class Order(models.Model):
         super().save(*args, **kwargs)
 
 class OrderItem(models.Model):
+    category_snapshot = models.ForeignKey("catalog.Category", null=True, blank=True, on_delete=models.PROTECT)
     order = models.ForeignKey(Order, related_name="items", on_delete=models.CASCADE)
     product = models.ForeignKey("catalog.Product", null=True, on_delete=models.SET_NULL)
     product_name = models.CharField(max_length=150)

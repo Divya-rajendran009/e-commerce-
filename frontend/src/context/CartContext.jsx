@@ -8,28 +8,31 @@ const savedCart = () => {
 
 export function CartProvider({ children }) {
   const [items, setItems] = useState(savedCart)
-  const update = (next) => {
-    setItems(next)
-    localStorage.setItem('sm_cart', JSON.stringify(next))
+  const update = (transform) => {
+    setItems(current => {
+      const next = typeof transform === 'function' ? transform(current) : transform
+      try { localStorage.setItem('sm_cart', JSON.stringify(next)) } catch { /* Keep the current session usable when storage is blocked. */ }
+      return next
+    })
   }
   const syncProduct = useCallback((product) => {
     setItems((current) => {
       const next = current.map((item) => item.id === product.id ? { ...item, ...product, quantity: item.quantity } : item)
-      localStorage.setItem('sm_cart', JSON.stringify(next))
+      try { localStorage.setItem('sm_cart', JSON.stringify(next)) } catch { /* Optional persistence. */ }
       return next
     })
   }, [])
   const add = (product, quantity = 1) => {
-    const found = items.find((item) => item.id === product.id)
     const availableStock = Number.isInteger(product.stock) ? product.stock : 99
-    update(found
-      ? items.map((item) => item.id === product.id ? { ...item, ...product, quantity: Math.min(item.quantity + quantity, availableStock, 99) } : item)
-      : [...items, { ...product, quantity: Math.min(quantity, availableStock, 99) }])
+    if (!product.in_stock || availableStock < 1 || quantity < 1) return
+    update(current => current.some(item => item.id === product.id)
+      ? current.map(item => item.id === product.id ? { ...item, ...product, quantity: Math.min(item.quantity + quantity, availableStock, 99) } : item)
+      : [...current, { ...product, quantity: Math.min(quantity, availableStock, 99) }])
   }
-  const setQuantity = (id, quantity) => update(quantity < 1
-    ? items.filter((item) => item.id !== id)
-    : items.map((item) => item.id === id ? { ...item, quantity: Math.min(quantity, item.stock ?? 99, 99) } : item))
-  const remove = (id) => update(items.filter((item) => item.id !== id))
+  const setQuantity = (id, quantity) => update(current => quantity < 1
+    ? current.filter(item => item.id !== id)
+    : current.map(item => item.id === id ? { ...item, quantity: Math.min(quantity, item.stock ?? 99, 99) } : item).filter(item => item.quantity > 0))
+  const remove = (id) => update(current => current.filter(item => item.id !== id))
   const clear = () => update([])
   const count = items.reduce((total, item) => total + item.quantity, 0)
   const subtotal = items.reduce((total, item) => total + Number(item.price) * item.quantity, 0)

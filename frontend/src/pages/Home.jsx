@@ -1,37 +1,51 @@
-import { ArrowRight, BadgePercent, Leaf, Sparkles } from 'lucide-react'
+import { ArrowRight, BadgeCheck, Clock3, MapPin, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import api, { errorMessage } from '../services/api'
-import { ErrorState, Loading, ProductCard } from '../components/Shared'
-import PolicyLink from '../components/PolicyLink'
-import { useCart } from '../context/CartContext'
+import { ErrorState, ProductCard } from '../components/Shared'
+import { ProductSkeletons } from '../components/StorefrontTools'
+import GroceryArt from '../components/GroceryArt'
 
 export default function Home() {
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
+  const [collections, setCollections] = useState([])
   const [campaigns, setCampaigns] = useState([])
-  const [storeSettings, setStoreSettings] = useState(null)
-  const [storeSettingsError, setStoreSettingsError] = useState('')
+  const [store, setStore] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
-  const { add } = useCart()
+  const [retry, setRetry] = useState(0)
   useEffect(() => {
-    Promise.all([api.get('/products/?page_size=4'), api.get('/categories/')])
-      .then(([productResponse, categoryResponse]) => {
-        setProducts(productResponse.data.results || productResponse.data)
-        setCategories(categoryResponse.data.results || categoryResponse.data)
-      }).catch((e) => setError(errorMessage(e))).finally(() => setLoading(false))
-    api.get('/homepage-banners/').then(({ data }) => setCampaigns(Array.isArray(data) ? data : [])).catch(() => setCampaigns([]))
-    api.get('/system-settings/public/').then(({ data }) => setStoreSettings(data)).catch((e) => setStoreSettingsError(errorMessage(e)))
-  }, [])
-  const campaign = campaigns[0]
-  return <>
-    {campaign && <section className="homepage-campaign"><div className="wrap homepage-campaign-inner">{campaign.image_url && <img src={campaign.image_url} alt="" /> }<div className="homepage-campaign-copy"><span className="eyebrow">STORE OFFER</span><h2>{campaign.title}</h2>{campaign.subtitle && <p>{campaign.subtitle}</p>}{campaign.target_url && <Link className="button white" to={campaign.target_url}>Explore offer <ArrowRight size={16} /></Link>}</div></div></section>}
-    <section className="hero"><div className="wrap hero-inner"><div className="hero-copy"><span className="hero-kicker"><Sparkles size={15} /> YOUR NEIGHBOURHOOD GROCERY, ONLINE</span><h1>Good food.<br /><em>Good days.</em></h1><p>Everyday essentials and fresh favourites, brought right to your doorstep.</p><Link className="button white" to="/products">Start shopping <ArrowRight size={17} /></Link><div className="hero-trust"><span><Leaf size={16} /> Carefully picked</span><span><BadgePercent size={16} /> Great everyday value</span></div></div><div className="hero-art"><div className="produce-orbit">🥬</div><div className="produce-main">🥑</div><div className="produce-side">🍊</div><div className="hero-note">Fresh from our<br />market to you</div></div><div className="hero-blob" /></div></section>
-    <section className="wrap section category-section"><div className="section-heading"><div><span className="eyebrow">SHOP BY AISLE</span><h2>Good things, grouped</h2></div><Link to="/products" className="text-link">See all <ArrowRight size={15} /></Link></div><div className="category-grid">{categories.slice(0, 7).map((category, index) => <Link to={`/products?category=${category.id}`} className={`category-tile category-${index % 5}`} key={category.id}><span>{['🥬', '🌾', '🥛', '🍪', '🥤', '🧼', '🧴'][index]}</span><strong>{category.name}</strong></Link>)}</div></section>
-    <section className="section products-section"><div className="wrap"><div className="section-heading"><div><span className="eyebrow">A FEW CUSTOMER FAVOURITES</span><h2>Everyday essentials</h2></div><Link to="/products" className="text-link">Browse all products <ArrowRight size={15} /></Link></div>{error ? <ErrorState message={error} /> : loading ? <Loading /> : <div className="product-grid">{products.slice(0, 4).map((product) => <ProductCard key={product.id} product={product} onAdd={add} />)}</div>}</div></section>
-    <section className="wrap section"><div className="promo-card"><div><span className="eyebrow">PANDIYAN STORE</span><h2>{storeSettings?.store_name || 'Pandiyan Store'}</h2><p>{storeSettings?.store_location || 'Theni, Tamil Nadu, India'} · Call {storeSettings?.contact_phone || '8072661435'}</p><p>Delivery to PIN codes {(storeSettings?.delivery_pin_codes || ['625531', '625534']).join(' and ')}. Minimum order ₹{Number(storeSettings?.minimum_order_value ?? 300)}; delivery ₹{Number(storeSettings?.delivery_fee ?? 30)}, free only above ₹{Number(storeSettings?.free_delivery_threshold ?? 1000)}.</p><p>{storeSettings?.business_hours || 'Every day, 9:00 AM to 9:00 PM'}</p>{storeSettingsError && <p className="fine-print" role="status">{storeSettingsError}</p>}<PolicyLink className="button primary" policy="delivery">Delivery information</PolicyLink></div></div></section>
-    <section className="wrap section promo-row"><div className="promo-card"><div className="promo-icon"><Leaf /></div><div><span className="eyebrow">SHARE THE GOODNESS</span><h2>Groceries are better together.</h2><p>Invite a friend. Earn wallet rewards on eligible delivered purchases under the current referral programme.</p><Link to="/referrals" className="button primary">Explore referrals <ArrowRight size={16} /></Link></div><div className="promo-decoration">✳</div></div></section>
-    <section className="wrap trust-row"><div><b>01</b><span><strong>Quality you can feel good about</strong><small>Everyday favourites, thoughtfully selected</small></span></div><div><b>02</b><span><strong>Shopping made simple</strong><small>Find your essentials without the fuss</small></span></div><div><b>03</b><span><strong>At your convenience</strong><small>Choose what works for your household</small></span></div></section>
-  </>
+    const controller = new AbortController()
+    setLoading(true); setError('')
+    Promise.all([api.get('/products/?page_size=24', { signal: controller.signal }), api.get('/categories/', { signal: controller.signal })])
+      .then(async ([p, c]) => {
+        setProducts(p.data.results || p.data)
+        const aisles = c.data.results || c.data
+        setCategories(aisles)
+        const shelves = await Promise.allSettled(aisles.slice(0, 3).map(async category => {
+          const { data } = await api.get('/products/', { params: { category: category.id, page_size: 6 }, signal: controller.signal })
+          return { ...category, products: data.results || data }
+        }))
+        if (!controller.signal.aborted) setCollections(shelves.filter(shelf => shelf.status === 'fulfilled' && shelf.value.products.length).map(shelf => shelf.value))
+      })
+      .catch(e => { if (!controller.signal.aborted) setError(errorMessage(e)) })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false) })
+    api.get('/homepage-banners/', { signal: controller.signal }).then(({ data }) => setCampaigns(Array.isArray(data) ? data : [])).catch(() => {})
+    api.get('/system-settings/public/', { signal: controller.signal }).then(({ data }) => setStore(data)).catch(() => {})
+    return () => controller.abort()
+  }, [retry])
+  const groups = collections
+  const buckets = categories.map(c => products.filter(p => String(p.category) === String(c.id) || p.category_name === c.name))
+  const essentials = buckets.length ? Array.from({ length: 6 }, (_, index) => buckets.map(bucket => bucket[index]).filter(Boolean)).flat().slice(0, 6) : products.slice(0, 6)
+  return <div className="store-home wrap">
+    <section className="market-banner"><div className="market-banner-copy"><span className="banner-label"><Sparkles size={14} /> YOUR NEIGHBOURHOOD. YOUR STORE.</span><h1>Everyday essentials.<br /><span>A little closer to home.</span></h1><p>Fresh picks, pantry favourites & everything in between.</p><Link className="button primary" to="/products">Shop your essentials <ArrowRight size={17} /></Link></div><div className="market-banner-art"><span className="art-circle" /><GroceryArt hero /><span className="fresh-stamp">Picked with care<br /><b>Made for your day.</b></span></div></section>
+    <div className="service-strip"><span><MapPin size={17} /> Your local Pandiyan Store</span><span><BadgeCheck size={17} /> Everyday value</span><span><Clock3 size={17} /> {store?.delivery_timeline ? `Delivery in ${store.delivery_timeline}` : 'Local doorstep delivery'}</span></div>
+    <section className="home-block"><div className="section-heading"><div><h2>What’s on your list?</h2><p>Find your favourites, aisle by aisle.</p></div><Link className="text-link" to="/products">View all <ArrowRight size={16} /></Link></div><div className={`aisle-grid${categories.length <= 4 ? ' aisle-grid-short' : ''}`}>{categories.map(c => <Link key={c.id} to={`/products?category=${c.id}`} className="aisle-tile"><div className="aisle-art"><GroceryArt name={c.name} /></div><strong>{c.name}</strong></Link>)}</div>{loading && <div className="category-loading" role="status">Finding your aisles…</div>}</section>
+    <div className="offer-grid"><Link to="/products" className="offer-tile offer-yellow"><div><span>THE EVERYDAY SHOP</span><h3>Small essentials.<br />Big part of your day.</h3><b>Fill your basket <ArrowRight size={15} /></b></div><GroceryArt name="rice" /></Link><Link to="/referrals" className="offer-tile offer-green"><div><span>GOOD THINGS ARE FOR SHARING</span><h3>Your friends shop.<br />You earn rewards.</h3><b>Explore referrals <ArrowRight size={15} /></b></div><div className="reward-art"><span>₹</span><Sparkles size={28} /></div></Link></div>
+    {campaigns.slice(0, 2).map(c => <section className="store-campaign" key={c.id || c.title}>{c.image_url && <img src={c.image_url} alt="" loading="lazy" onError={e => { e.currentTarget.hidden = true }} />}<div><span className="eyebrow">FROM YOUR STORE</span><h2>{c.title}</h2><p>{c.subtitle}</p>{c.target_url && <Link className="text-link" to={c.target_url}>Explore offer <ArrowRight size={16} /></Link>}</div></section>)}
+    <section className="home-block"><div className="section-heading"><div><h2>Everyday essentials</h2><p>A good day starts with a well-stocked home.</p></div><Link className="text-link" to="/products">See all <ArrowRight size={16} /></Link></div>{error ? <><ErrorState message={error} /><button className="button secondary" onClick={() => setRetry(v => v + 1)}>Try again</button></> : loading ? <ProductSkeletons /> : products.length ? <div className="product-grid">{essentials.map(p => <ProductCard key={p.id} product={p} />)}</div> : <p className="notice">We’re stocking the shelves. Check back soon.</p>}</section>
+    {groups.slice(0, 3).map(group => <section className="home-block" key={group.id}><div className="section-heading"><h2>{group.name}</h2><Link className="text-link" to={`/products?category=${group.id}`}>See all <ArrowRight size={16} /></Link></div><div className="product-grid">{group.products.slice(0, 6).map(p => <ProductCard key={p.id} product={p} />)}</div></section>)}
+    <section className="neighbourhood-note"><div className="brand-mark"><MapPin size={26} /></div><div><h2>A familiar store. A fresher way to shop.</h2><p>{store?.store_location || 'Pandiyan Store, Theni'} · Your daily shop, delivered to your door.</p>{store && <small>Minimum order ₹{Number(store.minimum_order_value)} · Delivery ₹{Number(store.delivery_fee)} · Free delivery above ₹{Number(store.free_delivery_threshold)}</small>}</div><Link className="text-link" to="/products">Let’s shop <ArrowRight size={16} /></Link></section>
+  </div>
 }

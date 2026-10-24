@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext'
 import { DeliverySummary, ProductPrice } from '../components/Shared'
 import api, { errorMessage } from '../services/api'
 import PolicyLink from '../components/PolicyLink'
+import { readPin } from '../components/StorefrontTools'
 import { deliveryQuote } from '../utils/delivery'
 
 const defaultSettings = {
@@ -22,7 +23,7 @@ const defaultSettings = {
 export default function Checkout() {
   const { user } = useAuth()
   const { items, subtotal, clear, syncProduct } = useCart()
-  const [form, setForm] = useState({ customer_name: user?.full_name || `${user?.first_name || ''} ${user?.last_name || ''}`.trim(), phone: user?.phone || '', address: '', delivery_pin_code: '', coupon_code: '', instructions: '', payment_method: 'cod' })
+  const [form, setForm] = useState({ customer_name: user?.full_name || `${user?.first_name || ''} ${user?.last_name || ''}`.trim(), phone: user?.phone || '', address: '', delivery_pin_code: readPin(), coupon_code: '', instructions: '', payment_method: 'cod' })
   const [error, setError] = useState('')
   const [settingsError, setSettingsError] = useState('')
   const [addresses, setAddresses] = useState([])
@@ -119,7 +120,7 @@ export default function Checkout() {
     <div className="section-heading"><div><span className="eyebrow">ALMOST THERE</span><h1>Checkout</h1></div></div>
     <div className="cart-layout">
       <form className="checkout-form" onSubmit={submit}>
-        <h2>Delivery details</h2>
+        <div className="checkout-steps"><span>1 · Basket</span><strong>2 · Delivery & payment</strong><span>3 · Confirmation</span></div><h2>Delivery details</h2>
         {addresses.length > 0 && <label className="field"><span>Use a saved address</span><select defaultValue="" onChange={(event) => { const address = addresses.find((item) => String(item.id) === event.target.value); if (address) useAddress(address) }}><option value="">Enter delivery details manually</option>{addresses.map((address) => <option key={address.id} value={address.id}>{address.recipient_name} · {address.city} · {address.pin_code}{address.is_default ? ' (default)' : ''}</option>)}</select></label>}
         {settingsError && <p className="fine-print" role="status">{settingsError}</p>}
         <label className="field"><span>Full name</span><input required autoComplete="name" maxLength="150" value={form.customer_name} onChange={(e) => setForm({ ...form, customer_name: e.target.value })} /></label>

@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { Leaf, LoaderCircle, Minus, PackageOpen, Plus } from 'lucide-react'
 import { useState } from 'react'
+import { useCart } from '../context/CartContext'
+import { money } from './StorefrontTools'
 import { deliveryQuote } from '../utils/delivery'
 
 export function Loading({ label = 'Loading your shop…' }) {
@@ -41,29 +43,27 @@ export function EmptyState({ title, body, to = '/products', action = 'Browse pro
   return <div className="empty-state"><PackageOpen size={38} /><h2>{title}</h2><p>{body}</p><Link className="button primary" to={to}>{action}</Link></div>
 }
 
-export function ProductCard({ product, onAdd }) {
-  const [quantity, setQuantity] = useState(1)
-  const unavailable = !product.in_stock
+export function ProductCard({ product }) {
+  const { items, add, setQuantity } = useCart()
+  const quantity = items.find(item => item.id === product.id)?.quantity || 0
+  const unavailable = !product.in_stock || product.stock < 1
+  const discount = Number(product.mrp) > Number(product.price) ? Math.round((1 - Number(product.price) / Number(product.mrp)) * 100) : 0
   return <article className="product-card">
-    <Link to={`/products/${product.id}`} className="product-image">
-      {product.image_url ? <img src={product.image_url} alt={product.name} onError={(e) => { e.currentTarget.style.display = 'none' }} /> : null}
-      <span className="product-placeholder"><Leaf size={38} /></span>
-      {product.is_featured && <span className="tag">Popular</span>}
+    <Link to={`/products/${product.id}`} className="product-image" aria-label={`View ${product.name}`}>
+      <ProductImage product={product} />
+      {discount > 0 && <span className="tag">{discount}% OFF</span>}
     </Link>
     <div className="product-info">
-      <span className="eyebrow">{product.category_name}</span>
+      <span className="product-category">{product.category_name}</span>
       <Link to={`/products/${product.id}`} className="product-title">{product.name}</Link>
-      <p className="product-description">{product.description || 'A quality everyday grocery essential.'}</p>
-      <ProductPrice product={product} />
-      <div className="product-buy">
-        <div className="quantity-control compact" aria-label={`Quantity for ${product.name}`}>
-          <button type="button" aria-label={`Decrease ${product.name} quantity`} disabled={quantity <= 1} onClick={() => setQuantity((current) => Math.max(1, current - 1))}><Minus size={14} /></button>
-          <span aria-live="polite">{quantity}</span>
-          <button type="button" aria-label={`Increase ${product.name} quantity`} disabled={unavailable || quantity >= product.stock} onClick={() => setQuantity((current) => Math.min(product.stock, current + 1))}><Plus size={14} /></button>
-        </div>
-        <button className="button small primary" aria-label={`${unavailable ? 'Sold out' : 'Add'} ${quantity} ${product.name} to bag`} disabled={unavailable} onClick={() => onAdd(product, quantity)}>{unavailable ? 'Sold out' : 'Add'}</button>
+      <div className="product-buy"><div className="card-price"><strong>{money(product.price)}</strong>{discount > 0 && <s>{money(product.mrp)}</s>}</div>
+        {quantity ? <div className="quantity-control compact cart-stepper"><button type="button" aria-label={`Decrease ${product.name} quantity`} onClick={() => setQuantity(product.id, quantity - 1)}><Minus size={16} /></button><span aria-live="polite">{quantity}</span><button type="button" aria-label={`Increase ${product.name} quantity`} disabled={unavailable || quantity >= Math.min(product.stock, 99)} onClick={() => add(product)}><Plus size={16} /></button></div> : <button className="quick-add" aria-label={`Add ${product.name} to cart`} disabled={unavailable} onClick={() => add(product)}>{unavailable ? 'Sold out' : 'ADD'}</button>}
       </div>
-      {unavailable && <span className="stock-note">Currently unavailable</span>}
     </div>
   </article>
+}
+
+export function ProductImage({ product }) {
+  const [failed, setFailed] = useState(false)
+  return product.image_url && !failed ? <img src={product.image_url} alt={product.name} loading="lazy" decoding="async" onError={() => setFailed(true)} /> : <span className="product-placeholder"><PackageOpen size={32} /><small>Image coming soon</small></span>
 }

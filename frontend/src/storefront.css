@@ -270,3 +270,4 @@
 .pandiyan-store .market-banner-copy > p { max-width:430px; line-height:1.7; }
 .pandiyan-store .hero-photo img { object-position:50% 45%; }
 @media(max-width:650px) { .pandiyan-store .market-banner h1 { font-size:28px; line-height:1.18; } .pandiyan-store .market-banner > .hero-photo { min-height:210px; height:210px; } }
+.pandiyan-store .market-banner-copy > .button { margin-top:12px; }

@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 // Real photographs from Unsplash. Provenance is kept alongside the source.
 export const groceryPhotos = {
+  homeCooking: { id: 'photo-1507048331197-7d4ac70811cf', alt: 'Hands preparing fresh vegetables for a home-cooked meal', photographer: 'Maarten van den Heuvel', source: 'https://unsplash.com/photos/EzH46XCDQRY' },
   vegetables: { id: 'photo-1579113800032-c38bd7635818', alt: 'Fresh vegetables arranged on a table', photographer: 'Marisol Benitez', source: 'https://unsplash.com/photos/QvkAQTNj4zk' },
   dairy: { id: 'photo-1550583724-b2692b85b150', alt: 'Milk being poured into a glass', photographer: 'Eiliv Aceron', source: 'https://unsplash.com/photos/_8bnn1GqX70' },
   rice: { id: 'photo-1586201375761-83865001e31c', alt: 'Uncooked white rice grains', photographer: 'Pierre Bamin', source: 'https://unsplash.com/photos/-LdilhDx3sk' },

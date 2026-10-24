@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 // Real photographs from Unsplash. Provenance is kept alongside the source.
 export const groceryPhotos = {
-  family: { id: 'photo-1509913265763-b64490c3c1b3', alt: 'Parents and their child together on a shopping-centre escalator', source: 'https://unsplash.com/photos/atx6RnKB3aw' },
+  family: { id: 'photo-1753354868431-a5317771a3ea', alt: 'Family shopping together with a trolley in a supermarket', photographer: 'Vitaly Gariev', source: 'https://unsplash.com/photos/lPma27584mA' },
   clothing: { id: 'photo-1558769132-cb1aea458c5e', alt: 'Clothing neatly arranged on a rail', source: 'https://unsplash.com/photos/TS--uNw-JqE' },
   toiletries: { id: 'photo-1603990103103-baf3ada7af1c', alt: 'Personal-care bottles arranged on a bathroom shelf', source: 'https://unsplash.com/photos/APszipc01pA' },
   perfume: { id: 'photo-1594035910387-fea47794261f', alt: 'Perfume bottle photographed in warm light', source: 'https://unsplash.com/photos/4sKdeIMiFEI' },

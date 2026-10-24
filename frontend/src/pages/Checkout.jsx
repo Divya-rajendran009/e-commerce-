@@ -13,7 +13,7 @@ const defaultSettings = {
   store_location: 'Theni, Tamil Nadu, India',
   contact_phone: '8072661435',
   business_hours: 'Every day, 9:00 AM to 9:00 PM',
-  delivery_timeline: '6–24 hours',
+  delivery_timeline: '30 minutes',
   delivery_pin_codes: ['625531', '625534'],
   delivery_fee: 30,
   free_delivery_threshold: 1000,

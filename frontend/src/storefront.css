@@ -335,3 +335,46 @@
  .discovery-products .product-info { padding:9px; }.discovery-products .product-buy { padding-top:5px; }
  .discovery-store .floating-basket { background:#267c18; border-radius:18px; }
 }
+/* Diwali merchandising: restrained gold, oxblood and ivory. */
+.pandiyan-store.discovery-store { background:#fffdf7; }
+.pandiyan-store.discovery-store .site-header { background:#741c25; border-bottom:1px solid #a95d45; }
+.store-emblem { display:flex; flex-shrink:0; }
+.pandiyan-store .brand { letter-spacing:-.6px; }
+.discovery-store .brand small { display:block; font-size:9px; letter-spacing:2px; color:#ebd4a6; margin-top:5px; }
+.pandiyan-store .search-box button[type=submit] { width:44px; min-width:44px; height:44px; padding:0; display:grid; place-items:center; }
+.pandiyan-store .search-box input { padding-left:16px; }
+.discovery-store .shopping-home { background:#741c25; padding-inline:24px; padding-bottom:20px; }
+.discovery-store .shop-departments { color:#fff4dc; padding-top:15px; gap:22px; }
+.discovery-store .shop-departments button.department-shortcut[aria-pressed=true] { color:#ffe0a0; border-color:#ffe0a0; }
+.discovery-store .department-shortcut > img { background:#fff7df; border-radius:50%; padding:5px; box-sizing:border-box; }
+.discovery-store .demo-notice { background:transparent; color:#edcfb7; padding:7px 0 0; margin:0; font-size:11px; }
+.diwali-strip { display:flex; justify-content:center; align-items:center; gap:42px; color:#ffe2a5; text-align:center; padding:18px 12px 23px; border-top:1px solid #be8d4f55; }
+.diwali-strip small { font-size:10px; letter-spacing:4px; font-weight:700; }
+.diwali-strip h2 { font-family:Georgia,serif; font-size:44px; font-weight:500; letter-spacing:-1px; margin:6px 0; color:#ffe2a5; }
+.diwali-strip p { margin:0; font-size:12px; color:#edd2b1; }
+.festival-lamp { width:48px; height:20px; border:1px solid #e6bd72; border-radius:3px 3px 40px 40px; position:relative; margin-top:24px; background:#bd8033; box-shadow:0 -16px 32px #f7be4422; }
+.festival-lamp:before { content:''; position:absolute; width:12px; height:22px; background:#ffdd8e; border-radius:80% 0 70% 30%; left:17px; top:-28px; transform:rotate(-25deg); }
+.discovery-store .shopping-discovery { border-radius:18px 18px 8px 8px; background:#fcf5e5; padding:20px 16px; border-color:#ecdbb8; }
+.discovery-store .discovery-heading h1 { font-size:22px; color:#302a1e; }
+.discovery-store .discovery-tabs button { border-radius:10px; background:#fffdf6; border-color:#ddcda8; }
+.discovery-store .discovery-tabs button[aria-pressed=true] { background:#174d31; color:#fff5da; border-color:#174d31; box-shadow:none; }
+.discovery-store .discovery-products .product-card { border:1px solid #ece5d7; border-radius:9px; box-shadow:none; }
+.discovery-store .demo-source { color:#ecd3b8; margin-bottom:0; }
+@media(max-width:650px) {
+ .discovery-store .shopping-home { padding-inline:12px; }
+ .discovery-store .store-emblem svg { width:34px; height:34px; }
+ .discovery-store .brand small { font-size:8px; letter-spacing:1.3px; }
+ .discovery-store .shop-departments { gap:10px; padding-block:12px 5px; scrollbar-width:none; }
+ .discovery-store .demo-notice { font-size:10px; line-height:1.4; }
+ .diwali-strip { padding:14px 6px 18px; gap:24px; border-top:0; }
+ .diwali-strip h2 { font-size:30px; margin:5px 0; }
+ .diwali-strip small { font-size:8px; letter-spacing:2.5px; }
+ .diwali-strip p { font-size:10px; }
+ .festival-lamp { width:30px; height:13px; }
+ .festival-lamp:before { width:9px; height:17px; left:10px; top:-22px; }
+ .discovery-store .shopping-discovery { margin-inline:-6px; padding:12px 8px; }
+ .discovery-store .discovery-heading { display:none; }
+ .discovery-store .discovery-tabs { gap:5px; }
+ .discovery-store .discovery-tabs strong { font-size:12px; }
+ .discovery-store .discovery-tabs small { font-size:9px; }
+}

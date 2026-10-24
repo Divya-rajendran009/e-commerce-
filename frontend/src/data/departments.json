@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Clothing",
+    "image_url": "/images/categories/clothing.webp",
+    "source": "https://cdn.dummyjson.com/product-images/mens-shirts/blue-&-black-check-shirt/thumbnail.webp"
+  },
+  {
+    "name": "Toiletries",
+    "image_url": "/images/categories/toiletries.webp",
+    "source": "https://cdn.dummyjson.com/product-images/skin-care/attitude-super-leaves-hand-soap/thumbnail.webp"
+  },
+  {
+    "name": "Perfumes",
+    "image_url": "/images/categories/perfumes.webp",
+    "source": "https://cdn.dummyjson.com/product-images/fragrances/calvin-klein-ck-one/thumbnail.webp"
+  },
+  {
+    "name": "Vegetables",
+    "image_url": "/images/categories/vegetables.webp",
+    "source": "https://cdn.dummyjson.com/product-images/groceries/potatoes/thumbnail.webp"
+  },
+  {
+    "name": "Dairy",
+    "image_url": "/images/categories/dairy.webp",
+    "source": "https://cdn.dummyjson.com/product-images/groceries/milk/thumbnail.webp"
+  },
+  {
+    "name": "Rice & grains",
+    "image_url": "/images/categories/rice-grains.webp",
+    "source": "https://cdn.dummyjson.com/product-images/groceries/rice/thumbnail.webp"
+  },
+  {
+    "name": "Pantry",
+    "image_url": "/images/categories/pantry.webp",
+    "source": "https://cdn.dummyjson.com/product-images/groceries/cooking-oil/thumbnail.webp"
+  }
+]

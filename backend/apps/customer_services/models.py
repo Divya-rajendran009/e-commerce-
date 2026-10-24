@@ -217,7 +217,7 @@ class SystemSettings(models.Model):
     store_location = models.CharField(max_length=160, default="Theni, Tamil Nadu, India")
     contact_phone = models.CharField(max_length=20, default="8072661435")
     business_hours = models.CharField(max_length=120, default="Every day, 9:00 AM to 9:00 PM")
-    delivery_timeline = models.CharField(max_length=60, default="6–24 hours")
+    delivery_timeline = models.CharField(max_length=60, default="30 minutes")
     delivery_pin_codes = models.JSONField(default=default_delivery_pin_codes, blank=True)
     currency = models.CharField(max_length=3, default="INR")
     delivery_fee = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal("30.00"))

@@ -303,9 +303,9 @@ class SystemSettingsSerializer(serializers.ModelSerializer):
         return attrs
 
     def validate_delivery_timeline(self, value):
-        match = re.fullmatch(r"(\d+)[–-](\d+)\s+hours", value.strip())
-        if not match or int(match.group(1)) < 1 or int(match.group(2)) < int(match.group(1)):
-            raise serializers.ValidationError("Use a valid delivery window such as 6–24 hours.")
+        match = re.fullmatch(r"(\d+)(?:[–-](\d+))?\s+(?:minutes|hours)", value.strip())
+        if not match or int(match.group(1)) < 1 or (match.group(2) is not None and int(match.group(2)) < int(match.group(1))):
+            raise serializers.ValidationError("Use a valid delivery window such as 30 minutes or 6–24 hours.")
         return value.strip()
 
     def validate_delivery_pin_codes(self, value):

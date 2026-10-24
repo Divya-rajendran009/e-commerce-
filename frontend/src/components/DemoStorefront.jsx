@@ -6,14 +6,16 @@ import { departmentUrl, resolveDepartment, storeThemes } from '../utils/storeThe
 import categoryImages from '../data/departments.json'
 import { ProductImage } from './Shared'
 import { money } from './StorefrontTools'
+import DemoQuantityControl from './DemoQuantityControl'
 
 function DemoProductCard({ product }) {
+  const [size, setSize] = useState(product.sizes?.includes('M') ? 'M' : product.sizes?.[0] || '')
   return <article className="product-card">
     <div className="product-image"><ProductImage product={product} /><span className="tag">{Math.round((1 - product.price / product.mrp) * 100)}% OFF · Demo</span></div>
     <div className="product-info"><span className="product-category">{product.category_name}</span><h2 className="product-title">{product.name}</h2>
       <p className="demo-pack">{product.pack_size} <span>· example</span></p>
-      {product.sizes && <label className="demo-size"><span>Size</span><select aria-label={`Example size for ${product.name}`} defaultValue="M">{product.sizes.map(size => <option key={size}>{size}</option>)}</select></label>}
-      <div className="product-buy"><div className="card-price"><strong>{money(product.price)}</strong><s>{money(product.mrp)}</s></div><span className="demo-only">Preview only</span></div>
+      {product.sizes && <label className="demo-size"><span>Size</span><select aria-label={`Example size for ${product.name}`} value={size} onChange={event => setSize(event.target.value)}>{product.sizes.map(option => <option key={option}>{option}</option>)}</select></label>}
+      <div className="product-buy"><div className="card-price"><strong>{money(product.price)}</strong><s>{money(product.mrp)}</s></div><DemoQuantityControl product={product} size={size} /></div>
     </div>
   </article>
 }
@@ -30,7 +32,7 @@ export default function DemoStorefront() {
     .sort((a, b) => selection === 'deals' ? (1 - b.price / b.mrp) - (1 - a.price / a.mrp) : 0)
   const featureDepartments = department === 'Diwali' ? ['Clothing', 'Perfumes', 'Toiletries'] : [department]
   return <div className="store-home shopping-home wrap video-storefront">
-    <p className="demo-notice"><strong>Store preview</strong> · Example products, sizes & prices. Not available to purchase.</p>
+    <p className="demo-notice"><strong>Store preview</strong> · Try ADD & quantities. Demo basket only; checkout disabled.</p>
     {!query && <section className={`department-hero ${festive ? 'festival-hero' : ''}`} aria-label={theme.subtitle}>
       {festive && <div className="festoon" aria-hidden="true">{Array.from({length:18}, (_, index) => <i key={index} style={{'--bulb':index}} />)}</div>}
       <small>{theme.subtitle}</small>

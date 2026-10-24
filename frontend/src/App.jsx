@@ -1,4 +1,5 @@
 import Categories from './pages/Categories'
+import DemoBasket from './pages/DemoBasket'
 import Wallet from './pages/Wallet'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
@@ -46,6 +47,7 @@ export default function App() {
     <Route path="products" element={<Products />} />
     <Route path="products/:id" element={<ProductDetail />} />
     <Route path="cart" element={<Cart />} />
+    <Route path="demo-basket" element={<DemoBasket />} />
     <Route path="delivery-info" element={<Navigate to="/delivery-policy" replace />} />
     <Route path="terms-and-conditions" element={<Suspense fallback={<div className="state-card">Loading policy…</div>}><PolicyPage policy="terms" /></Suspense>} />
     <Route path="privacy-policy" element={<Suspense fallback={<div className="state-card">Loading policy…</div>}><PolicyPage policy="privacy" /></Suspense>} />

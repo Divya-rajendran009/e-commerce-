@@ -137,3 +137,54 @@
 }
 .pandiyan-store.discovery-store .shopping-discovery { color:#222821; }
 .pandiyan-store.discovery-store .demo-products .product-title,.pandiyan-store.discovery-store .demo-products .card-price { color:#222821; }
+
+/* Demo controls are separate from the live cart and checkout. */
+.demo-add,.demo-stepper { width:100%; min-height:44px; border-radius:7px; font-size:12px; font-weight:750; }
+.demo-add { border:1px solid #0c831f; color:#0c831f; background:#f8fff7; cursor:pointer; }
+.demo-add:hover { background:#eaf6e8; }
+.demo-stepper { display:flex; align-items:center; justify-content:space-between; background:#0c831f; color:white; }
+.demo-stepper button { display:grid; place-items:center; background:transparent; color:inherit; border:0; padding:0; min-height:44px; min-width:28px; flex:1; cursor:pointer; }
+.demo-stepper span { min-width:18px; text-align:center; font-variant-numeric:tabular-nums; }
+.demo-stepper button:disabled { opacity:.45; cursor:default; }
+.demo-add:focus-visible,.demo-stepper button:focus-visible,.demo-remove:focus-visible { outline:3px solid #d5a436; outline-offset:2px; }
+.demo-products .product-buy { flex-wrap:wrap; gap:8px; }
+.demo-products .product-buy .card-price { width:100%; display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 4px; }
+.demo-products .product-card { display:flex; flex-direction:column; }
+.demo-products .product-image { flex-shrink:0; }
+.demo-products .product-info { display:flex; flex-direction:column; flex:1; }
+.discovery-store .demo-products .product-buy { margin-top:auto; padding-top:8px; }
+.demo-basket-page { max-width:1050px; }
+.demo-basket-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:20px; }
+.demo-basket-heading h1 { font-size:27px; margin:0; }
+.demo-basket-heading button { border:0; background:transparent; min-height:44px; cursor:pointer; }
+.demo-basket-notice { background:#fff7de; border:1px solid #ebdca8; border-radius:10px; padding:14px; color:#655026; font-size:13px; line-height:1.6; }
+.demo-basket-layout { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:22px; margin-top:20px; align-items:start; }
+.demo-basket-items { display:grid; gap:12px; }
+.demo-basket-item { display:grid; grid-template-columns:66px minmax(0,1fr) 44px; align-items:center; gap:12px; padding:16px; border:1px solid #e4e9e0; border-radius:12px; background:white; }
+.demo-basket-photo { grid-column:1; grid-row:1; }
+.demo-basket-photo img { width:66px; height:75px; object-fit:contain; }
+.demo-basket-description { grid-column:2; grid-row:1; }
+.demo-basket-description h2 { font-size:14px; margin:0 0 6px; line-height:1.45; }
+.demo-basket-description p,.demo-basket-description small { font-size:11px; color:#6b7169; margin:0 0 8px; }
+.demo-basket-description strong { font-size:13px; }
+.demo-remove { grid-column:3; grid-row:1; display:grid; place-items:center; width:44px; height:44px; border:0; background:transparent; color:#73786e; cursor:pointer; }
+.demo-basket-item .demo-stepper { grid-column:2; grid-row:2; width:112px; }
+.demo-line-total { grid-column:3; grid-row:2; justify-self:end; white-space:nowrap; font-size:14px; }
+.demo-basket-summary { background:#f5f8f1; border:1px solid #e4e9e0; border-radius:12px; padding:20px; }
+.demo-basket-summary h2 { font-size:19px; margin:0 0 18px; }
+.demo-basket-summary > div { display:flex; justify-content:space-between; gap:12px; font-size:15px; }
+.demo-basket-summary p { font-size:12px; color:#687161; line-height:1.7; margin-block:18px; }
+.pandiyan-store .demo-basket-summary button:disabled { opacity:1; background:#e1e5db; color:#69725f; border-color:#e1e5db; cursor:not-allowed; }
+.demo-basket-summary > small { display:block; margin-top:12px; color:#69725f; text-align:center; font-size:11px; }
+.demo-basket-empty { text-align:center; padding:55px 16px; color:#52634a; }
+.demo-basket-empty h2 { font-size:22px; }
+.demo-basket-empty p { font-size:14px; margin-bottom:24px; }
+@media(max-width:650px) {
+ .demo-basket-layout { grid-template-columns:minmax(0,1fr); gap:16px; }
+ .demo-basket-heading { align-items:start; }.demo-basket-heading h1 { font-size:23px; }
+ .demo-basket-heading button { font-size:11px; }
+ .demo-basket-item { padding:12px; gap:10px; grid-template-columns:54px minmax(0,1fr) 44px; }
+ .demo-basket-photo img { width:54px; height:65px; }
+ .demo-basket-item .demo-stepper { grid-column:1 / 3; }
+ .demo-products .demo-stepper,.demo-products .demo-add { font-size:11px; }
+}

@@ -271,3 +271,11 @@
 .pandiyan-store .hero-photo img { object-position:50% 45%; }
 @media(max-width:650px) { .pandiyan-store .market-banner h1 { font-size:28px; line-height:1.18; } .pandiyan-store .market-banner > .hero-photo { min-height:210px; height:210px; } }
 .pandiyan-store .market-banner-copy > .button { margin-top:12px; }
+.pandiyan-store .department-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
+.pandiyan-store .department-grid .aisle-tile > .grocery-photo { aspect-ratio:2; }
+.pandiyan-store .hero-photo img { object-position:50% 40%; }
+@media(max-width:650px) {
+  .pandiyan-store .department-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+  .pandiyan-store .department-grid .aisle-tile > .grocery-photo { aspect-ratio:1.35; }
+  .pandiyan-store .hero-photo img { object-position:50% 40%; }
+}

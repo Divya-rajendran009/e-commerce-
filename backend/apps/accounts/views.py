@@ -66,6 +66,7 @@ class LogoutView(APIView):
         return Response(status=status.HTTP_205_RESET_CONTENT)
 
 class MeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserSerializer
 
     def get(self, request):

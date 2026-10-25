@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from urllib.parse import parse_qs, unquote, urlsplit
 
 from dotenv import load_dotenv
 
@@ -60,7 +61,26 @@ TEMPLATES = [{
 }]
 WSGI_APPLICATION = "config.wsgi.application"
 
-if os.getenv("DB_ENGINE", "sqlite").lower() == "mysql":
+database_url = os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL")
+if database_url:
+    database = urlsplit(database_url)
+    if database.scheme not in {"postgres", "postgresql"}:
+        raise RuntimeError("DATABASE_URL must be a PostgreSQL connection URL.")
+    DATABASES = {"default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": unquote(database.path.lstrip("/")),
+        "USER": unquote(database.username or ""),
+        "PASSWORD": unquote(database.password or ""),
+        "HOST": database.hostname,
+        "PORT": database.port or 5432,
+        "CONN_MAX_AGE": 0,
+        "DISABLE_SERVER_SIDE_CURSORS": True,
+        "OPTIONS": {
+            "sslmode": parse_qs(database.query).get("sslmode", ["require"])[0],
+            "connect_timeout": 15,
+        },
+    }}
+elif os.getenv("DB_ENGINE", "sqlite").lower() == "mysql":
     DATABASES = {"default": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": os.getenv("DB_NAME", "super_market"),

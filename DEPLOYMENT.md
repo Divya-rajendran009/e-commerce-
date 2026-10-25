@@ -18,10 +18,13 @@ Set these directly in Vercel, without committing credentials:
 
 - `DJANGO_SECRET_KEY`: a unique production secret.
 - `DJANGO_DEBUG=False`.
-- `DB_ENGINE=mysql` and the existing persistent database's `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, and `DB_PORT`.
+- `DATABASE_URL`: the persistent PostgreSQL connection string (automatically supplied by the Neon integration). SSL is required by default, connections close after each request, and server-side cursors are disabled for pooled connections. `POSTGRES_URL` is also accepted.
+- For an existing MySQL installation instead, set `DB_ENGINE=mysql` and `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, and `DB_PORT`.
 - `DJANGO_ALLOWED_HOSTS` for any custom domain. Vercel's deployment and production hostnames are added automatically.
 
 Do not upload a local SQLite database or sample inventory. Vercel function storage does not persist customer accounts, inventory or orders. Reuse the existing database when repairing a production deployment. Back it up before migrations, then apply `python manage.py migrate` against the intended persistent database. Migrations are a separate operation and are not run during every build.
+
+For Neon migrations, temporarily use `DATABASE_URL_UNPOOLED` as `DATABASE_URL` in the migration process. New installations start empty; create the administrator with `python manage.py createsuperuser` using a private terminal prompt. Never commit database credentials or administrator passwords.
 
 ## Stage, check and release
 

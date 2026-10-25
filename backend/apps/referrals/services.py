@@ -122,7 +122,7 @@ def settle_pending_commissions(customer, at=None):
         return
     User.objects.select_for_update().get(pk=customer.pk)
     at = at or timezone.now()
-    pending = ReferralReward.objects.select_for_update().filter(recipient=customer, status=ReferralReward.Status.PENDING).select_related("order", "referral")
+    pending = ReferralReward.objects.select_for_update(of=("self",)).filter(recipient=customer, status=ReferralReward.Status.PENDING).select_related("order", "referral")
     qualified = program.active and qualifying_self_purchase_total(customer, program, at) >= program.qualification_threshold
     credited = 0
     for reward in pending:

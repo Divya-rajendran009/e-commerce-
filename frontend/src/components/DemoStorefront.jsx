@@ -5,6 +5,7 @@ import { searchDemoProducts } from '../utils/demoCatalogue'
 import { departmentUrl, resolveDepartment, storeThemes } from '../utils/storeThemes'
 import categoryImages from '../data/departments.json'
 import { ProductImage } from './Shared'
+import { productImageSource } from '../utils/catalogueArtwork'
 import { money } from './StorefrontTools'
 import DemoQuantityControl from './DemoQuantityControl'
 
@@ -41,7 +42,7 @@ export default function DemoStorefront() {
       {!festive && <img className="department-hero-photo" src={categoryImages.find(c => c.name === department)?.image_url} alt="" width="110" height="110" />}
     </section>}
     {department !== 'All' && !query && <div className="department-stories" aria-label="Department highlights">
-      {(department === 'Diwali' ? featureDepartments.map(name => ({name, image_url:categoryImages.find(c => c.name === name)?.image_url, to:departmentUrl(name)})) : shown.slice(0,3).map(p => ({name:p.name,image_url:p.image_url,to:`/?department=${encodeURIComponent(department)}&search=${encodeURIComponent(p.name)}`}))).map(item => <Link key={item.name} to={item.to}><img src={item.image_url} alt="" width="120" height="100" /><strong>{item.name}</strong><span>Explore <ChevronRight size={13} /></span></Link>)}
+      {(department === 'Diwali' ? featureDepartments.map(name => ({name, image_url:categoryImages.find(c => c.name === name)?.image_url, to:departmentUrl(name)})) : shown.slice(0,3).map(p => ({name:p.name,image_url:productImageSource(p),to:`/?department=${encodeURIComponent(department)}&search=${encodeURIComponent(p.name)}`}))).map(item => <Link key={item.name} to={item.to}><img src={item.image_url} alt="" width="120" height="100" /><strong>{item.name}</strong><span>Explore <ChevronRight size={13} /></span></Link>)}
     </div>}
     <section className="shopping-discovery" aria-labelledby="shopping-title" key={`${department}-${query}`}>
       {query && <div className="demo-results-summary" role="status"><span>{shown.length} {shown.length === 1 ? 'result' : 'results'} for <strong>“{query}”</strong></span><Link to={departmentUrl(department)}>Clear search</Link></div>}

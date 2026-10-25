@@ -3,7 +3,7 @@ import { Leaf, LoaderCircle, Minus, PackageOpen, Plus, ShoppingBag } from 'lucid
 import { useState } from 'react'
 import { useCart } from '../context/CartContext'
 import { money } from './StorefrontTools'
-import GroceryPhoto, { categoryPhoto } from './GroceryPhoto'
+import { productImageSource } from '../utils/catalogueArtwork'
 import { deliveryQuote } from '../utils/delivery'
 
 export function Loading({ label = 'Loading your shop…' }) {
@@ -67,6 +67,6 @@ export function ProductCard({ product }) {
 
 export function ProductImage({ product }) {
   const [failedUrl, setFailedUrl] = useState(null)
-  const fallback = categoryPhoto(product.category_name)
-  return product.image_url && failedUrl !== product.image_url ? <img src={product.image_url} alt={product.name} loading="lazy" decoding="async" onError={() => setFailedUrl(product.image_url)} /> : fallback ? <GroceryPhoto key={fallback.id} photo={fallback} representative /> : <span className="product-placeholder"><PackageOpen size={32} /><small>Image coming soon</small></span>
+  const source = productImageSource(product)
+  return source && failedUrl !== source ? <img className="catalogue-product-photo" src={source} alt={product.name} loading="lazy" decoding="async" onError={() => setFailedUrl(source)} /> : <span className="product-placeholder" role="img" aria-label={`Photo unavailable for ${product.name}`}><PackageOpen size={32} aria-hidden="true" /><small>Photo coming soon</small></span>
 }

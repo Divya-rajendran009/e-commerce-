@@ -194,3 +194,6 @@
   .quick-store .cart-drawer .summary-line { font-size:13px; }
   .quick-store .cart-drawer .cart-item-name > a { font-size:13px; }
 }
+
+/* Catalogue photos include their own framing; keep labels and product edges visible. */
+.quick-store .product-image > .catalogue-product-photo { max-height:none; padding:8px; object-fit:contain; }

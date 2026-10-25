@@ -473,19 +473,29 @@ class AdminDeliveryAssignmentViewSet(viewsets.ModelViewSet):
 
     @transaction.atomic
     def perform_update(self, serializer):
+        # Lock in the same order as cancellation/restore, and validate fresh state.
+        order = Order.objects.select_for_update().get(pk=serializer.instance.order_id)
         assignment = DeliveryAssignment.objects.select_for_update().get(pk=serializer.instance.pk)
+        assignment.order = order
+        serializer.instance = assignment
+        serializer.validate(serializer.validated_data)
+        if "status" in serializer.validated_data:
+            serializer.validate_status(serializer.validated_data["status"])
         previous_status = assignment.status
         assignment = serializer.save()
         now = timezone.now()
         if assignment.status == DeliveryAssignment.Status.DISPATCHED and not assignment.dispatched_at:
             assignment.dispatched_at = now
+            if order.status == Order.Status.PICKED_UP:
+                from apps.orders.services import change_order_status
+                change_order_status(order=order, new_status=Order.Status.OUT_FOR_DELIVERY, actor=self.request.user)
         elif assignment.status == DeliveryAssignment.Status.FAILED:
             assignment.failed_at = now
         elif assignment.status == DeliveryAssignment.Status.DELIVERED:
             assignment.delivered_at = now
             if assignment.order.status == Order.Status.OUT_FOR_DELIVERY:
                 from apps.orders.services import change_order_status
-                change_order_status(order=assignment.order, new_status=Order.Status.DELIVERED)
+                change_order_status(order=assignment.order, new_status=Order.Status.DELIVERED, actor=self.request.user)
         assignment.save()
         audit_admin_change(self.request, assignment, "update", {"before_status": previous_status, "after_status": assignment.status})
 

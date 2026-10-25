@@ -1,13 +1,74 @@
 from rest_framework import serializers
-from .models import Order, OrderItem
+from .models import Order, OrderItem, OrderStatusEvent
+from .services import ORDER_TRANSITIONS
+
+
+class OrderEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderStatusEvent
+        fields = ["id", "status", "kind", "created_at"]
+
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
+    def get_image_url(self, obj):
+        from apps.catalog.serializers import ProductSerializer
+
+        return (
+            ProductSerializer(context=self.context).get_image_url(obj.product)
+            if obj.product
+            else ""
+        )
+
     class Meta:
         model = OrderItem
-        fields = ["product_name", "sku", "unit_price", "quantity", "line_total"]
+        fields = [
+            "product_name",
+            "sku",
+            "unit_price",
+            "quantity",
+            "line_total",
+            "image_url",
+        ]
+
 
 class OrderSerializer(serializers.ModelSerializer):
     amount_due = serializers.SerializerMethodField()
+    status_events = OrderEventSerializer(many=True, read_only=True)
+    next_statuses = serializers.SerializerMethodField()
+    delivery = serializers.SerializerMethodField()
+    invoice_info = serializers.SerializerMethodField()
+
+    def get_next_statuses(self, obj):
+        return ORDER_TRANSITIONS[obj.status]
+
+    def get_delivery(self, obj):
+        assignment = getattr(obj, "delivery_assignment", None)
+        if not assignment or obj.status == "cancelled":
+            return None
+        return {
+            "id": assignment.pk,
+            "status": assignment.status,
+            "scheduled_at": assignment.scheduled_at,
+            "dispatched_at": assignment.dispatched_at,
+            "delivered_at": assignment.delivered_at,
+            "personnel_name": assignment.personnel.name
+            if assignment.personnel
+            else None,
+        }
+
+    def get_invoice_info(self, obj):
+        invoice = getattr(obj, "invoice", None)
+        return (
+            {
+                "number": invoice.number,
+                "issued_at": invoice.issued_at,
+                "include_qr": invoice.include_qr,
+            }
+            if invoice
+            else None
+        )
 
     def get_amount_due(self, obj):
         return str(obj.total - obj.wallet_amount)
@@ -16,7 +77,59 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ["id", "order_number", "status", "payment_method", "payment_status", "customer_name", "phone", "address", "instructions", "subtotal", "discount_amount", "delivery_fee", "total", "wallet_amount", "amount_due", "delivery_pin_code", "items", "created_at", "updated_at"]
+        fields = [
+            "id",
+            "order_number",
+            "status",
+            "status_version",
+            "payment_method",
+            "payment_status",
+            "customer_name",
+            "phone",
+            "address",
+            "instructions",
+            "subtotal",
+            "discount_amount",
+            "delivery_fee",
+            "total",
+            "wallet_amount",
+            "amount_due",
+            "delivery_pin_code",
+            "items",
+            "created_at",
+            "updated_at",
+            "status_events",
+            "next_statuses",
+            "delivery",
+            "invoice_info",
+        ]
+
+
+class AdminOrderSerializer(OrderSerializer):
+    class Meta(OrderSerializer.Meta):
+        fields = OrderSerializer.Meta.fields + ["private_note"]
+
+
+class OrderChangeSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=Order.Status.choices, required=False)
+    private_note = serializers.CharField(
+        max_length=4000, allow_blank=True, required=False
+    )
+    expected_version = serializers.IntegerField(min_value=0, required=False)
+
+    def validate(self, attrs):
+        if not any(key in attrs for key in ("status", "private_note")):
+            raise serializers.ValidationError("Choose a status or save a note.")
+        return attrs
+
+
+class RestoreOrderSerializer(serializers.Serializer):
+    expected_version = serializers.IntegerField(min_value=0)
+
+
+class InvoiceOptionsSerializer(serializers.Serializer):
+    include_qr = serializers.BooleanField(default=True)
+
 
 class CheckoutLineSerializer(serializers.Serializer):
     product_id = serializers.IntegerField(min_value=1)
@@ -38,5 +151,7 @@ class CreateOrderSerializer(serializers.Serializer):
     def validate(self, attrs):
         for field in ["customer_name", "phone", "address"]:
             if not attrs[field].strip():
-                raise serializers.ValidationError({field: "This field cannot be blank."})
+                raise serializers.ValidationError(
+                    {field: "This field cannot be blank."}
+                )
         return attrs

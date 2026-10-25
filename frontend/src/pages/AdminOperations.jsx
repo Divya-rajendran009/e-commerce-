@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import api, { errorMessage } from '../services/api'
 import { ErrorState, Loading } from '../components/Shared'
 
@@ -9,6 +9,11 @@ const endpoints = {
   refunds: ['/admin/refunds/', 'Refund records'],
   coupons: ['/admin/coupons/', 'Coupons'],
 }
+const localDateTime = value => {
+  if (!value) return ''
+  const date = new Date(value)
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0,16)
+}
 const rows = (data) => Array.isArray(data) ? data : data.results || []
 const statuses = {
   delivery: ['assigned', 'dispatched', 'failed', 'rescheduled', 'delivered'],
@@ -16,17 +21,19 @@ const statuses = {
 }
 
 function AdminList({ module }) {
+  const [params] = useSearchParams()
+  const search = module === 'delivery' ? params.get('search') || '' : ''
   const [items, setItems] = useState([])
   const [people, setPeople] = useState([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const endpoint = endpoints[module][0]
-  const load = () => api.get(endpoint).then(({ data }) => setItems(rows(data))).catch((e) => setError(errorMessage(e))).finally(() => setLoading(false))
+  const load = () => api.get(endpoint, {params:{search}}).then(({ data }) => setItems(rows(data))).catch((e) => setError(errorMessage(e))).finally(() => setLoading(false))
   useEffect(() => {
     setLoading(true)
     Promise.all([load(), ...(module === 'delivery' ? [api.get('/admin/delivery-personnel/').then(({ data }) => setPeople(rows(data)))] : [])])
       .catch((e) => setError(errorMessage(e)))
-  }, [module])
+  }, [module, search])
   const update = async (item, changes) => {
     setError('')
     try { await api.patch(`${endpoint}${item.id}/`, changes); await load() } catch (e) { setError(errorMessage(e)) }
@@ -35,14 +42,14 @@ function AdminList({ module }) {
     try { await api.patch(`${endpoint}${item.id}/`, { is_active: !item.is_active }); await load() } catch (e) { setError(errorMessage(e)) }
   }
   if (loading) return <Loading />
-  return <><h2>{endpoints[module][1]}</h2>{error && <ErrorState message={error} />}{items.length ? <div className="service-record-list">{items.map((item) => <article className="service-record admin-service-record" key={item.id}>
+  return <><h2>{endpoints[module][1]}</h2>{search && <p>Showing delivery for {search}. <Link className="text-link" to="/admin/services/delivery">Show all</Link></p>}{error && <ErrorState message={error} />}{items.length ? <div className="service-record-list">{items.map((item) => <article className="service-record admin-service-record" key={item.id}>
     <div className="admin-service-record-main">
       <h3>{item.order_number || item.code || `Order ${item.order}`}</h3>
       <p>{module === 'delivery' ? `${item.customer_name} · ${item.address}` : module === 'payments' ? `${item.customer_email} · ₹${Number(item.amount).toFixed(2)} · ${item.method}` : module === 'refunds' ? `${item.customer_email} · ₹${Number(item.amount).toFixed(2)} · ${item.reason}` : `${item.discount_type} · ${item.value} · minimum ₹${item.minimum_purchase}`}</p>
       <small>{item.status || (item.is_active ? 'active' : 'inactive')}</small>
     </div>
     <div className="admin-service-controls">
-      {module === 'delivery' && <><label className="field"><span>Assign delivery person</span><select value={item.personnel || ''} onChange={(e) => update(item, { personnel: e.target.value || null })}><option value="">Unassigned</option>{people.map((person) => <option key={person.id} value={person.id}>{person.name} · {person.phone}</option>)}</select></label><label className="field"><span>Delivery status</span><select value={item.status} onChange={(e) => update(item, { status: e.target.value })}>{statuses.delivery.map((value) => <option value={value} key={value}>{value.replaceAll('_', ' ')}</option>)}</select></label><label className="field"><span>Delivery note</span><textarea rows="2" defaultValue={item.delivery_note} onBlur={(e) => e.target.value !== item.delivery_note && update(item, { delivery_note: e.target.value })} /></label></>}
+      {module === 'delivery' && <><label className="field"><span>Assign delivery person</span><select value={item.personnel || ''} onChange={(e) => update(item, { personnel: e.target.value || null })}><option value="">Unassigned</option>{people.map((person) => <option key={person.id} value={person.id}>{person.name} · {person.phone}</option>)}</select></label><label className="field"><span>Delivery status</span><select value={item.status} onChange={(e) => update(item, { status: e.target.value })}>{statuses.delivery.map((value) => <option value={value} key={value}>{value.replaceAll('_', ' ')}</option>)}</select></label><label className="field"><span>Scheduled delivery</span><input type="datetime-local" key={item.scheduled_at || 'unscheduled'} defaultValue={localDateTime(item.scheduled_at)} onBlur={event => {const value = event.target.value ? new Date(event.target.value).toISOString() : null; if (value !== item.scheduled_at) update(item, {scheduled_at:value})}} /></label><label className="field"><span>Delivery note</span><textarea rows="2" defaultValue={item.delivery_note} onBlur={(e) => e.target.value !== item.delivery_note && update(item, { delivery_note: e.target.value })} /></label></>}
       {module === 'payments' && item.method === 'cod' && <button className="button primary" disabled={item.cod_collected} onClick={() => update(item, { cod_collected: true })}>{item.cod_collected ? 'COD collected' : 'Record COD collection'}</button>}
       {module === 'payments' && item.method === 'online' && <small>Gateway integration required for online payment updates.</small>}
       {module === 'refunds' && <><p>Wallet share: ₹{Number(item.wallet_refund_amount || 0).toFixed(2)} · Manual cash refund: ₹{Number(item.cash_refund_amount ?? item.amount).toFixed(2)}. The wallet share is restored automatically when recorded; do not transfer that share as cash. Rounding is reconciled across refunds.</p><label className="field"><span>Refund status</span><select value={item.status} onChange={(e) => update(item, { status: e.target.value })}>{statuses.refunds.filter((value) => value === item.status || (item.status === 'requested' && ['approved', 'rejected'].includes(value)) || (item.status === 'approved' && ['recorded', 'rejected'].includes(value))).map((value) => <option value={value} key={value}>{value}</option>)}</select></label><label className="field"><span>Manual transfer reference</span><input defaultValue={item.transaction_reference} onBlur={(e) => e.target.value !== item.transaction_reference && update(item, { transaction_reference: e.target.value })} /></label></>}
@@ -154,11 +161,11 @@ function DeliveryAdmin() {
     event.preventDefault()
     try { await api.post(endpoint, Object.fromEntries(new FormData(event.currentTarget))); event.currentTarget.reset(); load() } catch (e) { setError(errorMessage(e)) }
   }
-  return <><h2>Serviceable PIN codes</h2><form className="account-service-form service-form-grid" onSubmit={(e) => create(e, '/admin/delivery-areas/')}><label className="field"><span>Area name</span><input name="name" required /></label><label className="field"><span>PIN code</span><input name="pin_code" required inputMode="numeric" pattern="[1-9][0-9]{5}" maxLength="6" /></label><label className="field"><span>Delivery fee (blank uses default)</span><input name="delivery_fee" type="number" min="0" step="0.01" /></label><button className="button primary">Add service area</button></form>
+  return <><AdminList module="delivery" /><h2>Serviceable PIN codes</h2><form className="account-service-form service-form-grid" onSubmit={(e) => create(e, '/admin/delivery-areas/')}><label className="field"><span>Area name</span><input name="name" required /></label><label className="field"><span>PIN code</span><input name="pin_code" required inputMode="numeric" pattern="[1-9][0-9]{5}" maxLength="6" /></label><label className="field"><span>Delivery fee (blank uses default)</span><input name="delivery_fee" type="number" min="0" step="0.01" /></label><button className="button primary">Add service area</button></form>
     <div className="service-record-list">{areas.map((area) => <article className="service-record" key={area.id}><span>{area.name} · {area.pin_code} · {area.is_active ? 'Active' : 'Inactive'}</span><button className="button secondary small" onClick={async () => { try { await api.patch(`/admin/delivery-areas/${area.id}/`, { is_active: !area.is_active }); load() } catch (e) { setError(errorMessage(e)) } }}>{area.is_active ? 'Disable' : 'Enable'}</button></article>)}</div>
     <h2>Delivery personnel</h2><form className="account-service-form service-form-grid" onSubmit={(e) => create(e, '/admin/delivery-personnel/')}><label className="field"><span>Name</span><input name="name" required /></label><label className="field"><span>Phone</span><input name="phone" required type="tel" /></label><button className="button primary">Add delivery person</button></form>
     <div className="service-record-list">{people.map((person) => <article className="service-record" key={person.id}><span>{person.name} · {person.phone} · {person.is_active ? 'Active' : 'Inactive'}</span><button className="button secondary small" onClick={async () => { try { await api.patch(`/admin/delivery-personnel/${person.id}/`, { is_active: !person.is_active }); load() } catch (e) { setError(errorMessage(e)) } }}>{person.is_active ? 'Deactivate' : 'Reactivate'}</button></article>)}</div>
-    <AdminList module="delivery" />{error && <ErrorState message={error} />}
+    {error && <ErrorState message={error} />}
   </>
 }
 

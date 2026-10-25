@@ -20,3 +20,7 @@ rpds-py==2026.9.1
 sqlparse==0.6.0
 tzdata==2026.5
 uritemplate==4.2.0
+reportlab==4.5.1
+uharfbuzz==0.57.0
+pillow==13.0.0
+charset-normalizer==3.5.2

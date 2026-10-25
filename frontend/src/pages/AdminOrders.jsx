@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import api, { errorMessage } from '../services/api'
 import { ErrorState, Loading } from '../components/Shared'
+import InvoiceActions from '../components/InvoiceActions'
+import { orderLabels, orderMoney, orderDate } from '../utils/orderTracking'
+import '../order-tracking.css'
 
-const statuses = { pending: 'Order placed', confirmed: 'Confirmed', processing: 'Processing', packed: 'Packed', picked_up: 'Picked up', out_for_delivery: 'Out for delivery', delivered: 'Delivered', cancelled: 'Cancelled' }
-const next = { pending: ['confirmed', 'cancelled'], confirmed: ['processing', 'cancelled'], processing: ['packed', 'cancelled'], packed: ['picked_up', 'cancelled'], picked_up: ['out_for_delivery', 'cancelled'], out_for_delivery: ['delivered'], delivered: [], cancelled: [] }
 export default function AdminOrders() {
   const [orders, setOrders] = useState([])
   const [searchInput, setSearchInput] = useState('')
@@ -12,43 +14,144 @@ export default function AdminOrders() {
   const [pagination, setPagination] = useState({ count: 0, next: null, previous: null })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
-  const load = (pageNumber = page, nextFilters = filters) => {
+  useEffect(() => {
+    const controller = new AbortController()
     setLoading(true)
     setError('')
-    return api.get('/admin/orders/', { params: { page: pageNumber, ...nextFilters } })
+    api
+      .get('/admin/orders/', { params: { page, ...filters }, signal: controller.signal })
       .then(({ data }) => {
         setOrders(data.results || data)
-        setPagination({ count: data.count ?? data.length, next: data.next ?? null, previous: data.previous ?? null })
-        setPage(pageNumber)
+        setPagination({ count: data.count ?? data.length, next: data.next, previous: data.previous })
       })
-      .catch((e) => setError(errorMessage(e)))
-      .finally(() => setLoading(false))
+      .catch((e) => {
+        if (!controller.signal.aborted) setError(errorMessage(e))
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
+    return () => controller.abort()
+  }, [page, filters])
+  const filterStatus = (status) => {
+    setPage(1)
+    setFilters((value) => ({ ...value, status }))
   }
-  useEffect(() => { load(1, filters) }, [])
-  const change = async (order, status) => {
-    try { await api.patch(`/admin/orders/${order.id}/`, { status }); await load(page, filters) } catch (e) { setError(errorMessage(e)) }
-  }
-  if (loading) return <Loading />
-  const applyFilters = (event) => {
-    event.preventDefault()
-    const nextFilters = { ...filters, search: searchInput }
-    setFilters(nextFilters)
-    load(1, nextFilters)
-  }
-  return <section className="wrap section admin-page admin-orders-page">
-    <span className="eyebrow">STORE MANAGEMENT</span><h1>Orders</h1>
-    <form className="admin-list-filters" onSubmit={applyFilters}>
-      <label className="field"><span>Search orders</span><input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="Order number or customer" /></label>
-      <label className="field"><span>Status</span><select value={filters.status} onChange={(event) => setFilters({ ...filters, status: event.target.value })}><option value="">All statuses</option>{Object.keys(statuses).map((status) => <option key={status} value={status}>{statuses[status]}</option>)}</select></label>
-      <button className="button primary">Apply filters</button>
-    </form>
-    {error && <ErrorState message={error} />}
-    {orders.length ? <div className="orders-list">{orders.map((order) => <article className="order-card" key={order.id}>
-      <div className="order-card-head"><div><strong>{order.order_number}</strong><small>{order.customer_name} · {order.phone}</small></div><span className={`status status-${order.status}`}>{statuses[order.status] || order.status.replaceAll('_', ' ')}</span></div>
-      <p>{order.address}</p>
-      <div className="admin-order-total"><span>Merchandise ₹{Number(order.subtotal).toFixed(2)}</span>{Number(order.discount_amount) > 0 && <span>Discount −₹{Number(order.discount_amount).toFixed(2)}</span>}<span>Delivery {Number(order.delivery_fee) ? `₹${Number(order.delivery_fee).toFixed(2)}` : 'Free'}</span><strong>Payable ₹{Number(order.total).toFixed(2)} · {order.payment_method?.toUpperCase() || 'COD'}</strong></div>
-      <div className="order-card-foot"><label className="admin-status">Update status<select value={order.status} onChange={(event) => change(order, event.target.value)}><option value={order.status}>{statuses[order.status] || order.status.replaceAll('_', ' ')}</option>{(next[order.status] || []).map((status) => <option key={status} value={status}>{statuses[status]}</option>)}</select></label></div>
-    </article>)}</div> : <p className="muted">No orders match these filters.</p>}
-    <div className="admin-pagination"><span>{pagination.count} orders · page {page}</span><div><button type="button" className="button secondary small" disabled={!pagination.previous} onClick={() => load(page - 1)}>Previous</button><button type="button" className="button secondary small" disabled={!pagination.next} onClick={() => load(page + 1)}>Next</button></div></div>
-  </section>
+  return (
+    <section className="wrap section admin-page admin-orders-page">
+      <span className="eyebrow">STORE MANAGEMENT</span>
+      <h1>Orders</h1>
+      <form
+        className="admin-list-filters"
+        onSubmit={(event) => {
+          event.preventDefault()
+          setPage(1)
+          setFilters((value) => ({ ...value, search: searchInput.trim() }))
+        }}
+      >
+        <label className="field">
+          <span>Find an order</span>
+          <input
+            type="search"
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            placeholder="Order number, customer or email"
+          />
+        </label>
+        <label className="field">
+          <span>Status</span>
+          <select value={filters.status} onChange={(event) => filterStatus(event.target.value)}>
+            <option value="">All statuses</option>
+            {Object.entries(orderLabels).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button className="button primary">Search</button>
+      </form>
+      <nav className="order-filter-chips" aria-label="Filter orders">
+        {[
+          ['', 'All'],
+          ['pending', 'New'],
+          ['out_for_delivery', 'Out for delivery'],
+          ['delivered', 'Delivered'],
+          ['cancelled', 'Cancelled']
+        ].map(([value, label]) => (
+          <button
+            type="button"
+            key={value}
+            aria-pressed={filters.status === value}
+            onClick={() => filterStatus(value)}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+      {error && <ErrorState message={error} />}
+      {loading ? (
+        <Loading />
+      ) : orders.length ? (
+        <div className="orders-list">
+          {orders.map((order) => (
+            <article className="order-card" key={order.id}>
+              <div className="order-card-head">
+                <div>
+                  <Link className="text-link" to={`/admin/orders/${order.id}`}>
+                    {order.order_number}
+                  </Link>
+                  <small>
+                    {order.customer_name} · {orderDate(order.created_at)}
+                  </small>
+                </div>
+                <span className={`status status-${order.status}`}>{orderLabels[order.status]}</span>
+              </div>
+              <p className="admin-order-lines">
+                {order.items
+                  .slice(0, 2)
+                  .map((item) => `${item.product_name} × ${item.quantity}`)
+                  .join(' · ')}
+                {order.items.length > 2 ? ` · +${order.items.length - 2} more` : ''}
+              </p>
+              <div className="order-card-foot">
+                <strong>
+                  {orderMoney(order.total)} · {order.items.reduce((sum, item) => sum + item.quantity, 0)}{' '}
+                  items
+                </strong>
+                <Link className="button primary small" to={`/admin/orders/${order.id}`}>
+                  {order.status === 'cancelled' ? 'Details / restore' : 'Manage order'}
+                </Link>
+              </div>
+              <InvoiceActions order={order} admin compact />
+            </article>
+          ))}
+        </div>
+      ) : (
+        !error && <p className="muted">No orders match these filters.</p>
+      )}
+      <nav className="admin-pagination" aria-label="Order pages">
+        <span>
+          {pagination.count} orders · page {page}
+        </span>
+        <div>
+          <button
+            type="button"
+            className="button secondary small"
+            disabled={loading || !pagination.previous}
+            onClick={() => setPage((value) => value - 1)}
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            className="button secondary small"
+            disabled={loading || !pagination.next}
+            onClick={() => setPage((value) => value + 1)}
+          >
+            Next
+          </button>
+        </div>
+      </nav>
+    </section>
+  )
 }

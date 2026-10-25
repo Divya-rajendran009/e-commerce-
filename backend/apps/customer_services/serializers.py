@@ -355,6 +355,15 @@ class DeliveryAssignmentSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("This delivery person is currently unavailable.")
         return personnel
 
+    def validate(self, attrs):
+        if self.instance and self.instance.order.status == "cancelled":
+            raise serializers.ValidationError("Restore the cancelled order before changing its delivery.")
+        if attrs.get("status") == "delivered" and self.instance and self.instance.order.status != "out_for_delivery":
+            raise serializers.ValidationError("The order must be out for delivery before it can be marked delivered.")
+        if attrs.get("status") == "dispatched" and self.instance and self.instance.order.status not in {"picked_up", "out_for_delivery"}:
+            raise serializers.ValidationError("Mark the order picked up before dispatching it.")
+        return attrs
+
     def validate_status(self, value):
         if not self.instance:
             return value

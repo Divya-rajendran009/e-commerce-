@@ -1,6 +1,7 @@
 import uuid
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 class Order(models.Model):
     class Status(models.TextChoices):
@@ -38,6 +39,9 @@ class Order(models.Model):
     wallet_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     checkout_key = models.UUIDField(null=True, blank=True, unique=True)
     checkout_fingerprint = models.CharField(max_length=64, blank=True)
+    fulfilment_cycle = models.PositiveIntegerField(default=0)
+    status_version = models.PositiveIntegerField(default=0)
+    private_note = models.TextField(blank=True, max_length=4000)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -69,6 +73,27 @@ class InventoryMovement(models.Model):
     kind = models.CharField(max_length=10, choices=Kind.choices)
     quantity = models.PositiveIntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
+    cycle = models.PositiveIntegerField(default=0)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["order", "product", "kind"], name="unique_order_inventory_movement")]
+        constraints = [models.UniqueConstraint(fields=["order", "product", "kind", "cycle"], name="unique_order_inventory_cycle")]
+
+
+class OrderStatusEvent(models.Model):
+    order = models.ForeignKey(Order, related_name="status_events", on_delete=models.CASCADE)
+    status = models.CharField(max_length=24, choices=Order.Status.choices)
+    kind = models.CharField(max_length=24, default="status_change")
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["created_at", "id"]
+
+
+class OrderInvoice(models.Model):
+    order = models.OneToOneField(Order, related_name="invoice", on_delete=models.PROTECT)
+    number = models.CharField(max_length=40, unique=True)
+    snapshot = models.JSONField()
+    pdf = models.BinaryField()
+    include_qr = models.BooleanField(default=True)
+    issued_at = models.DateTimeField(auto_now_add=True)

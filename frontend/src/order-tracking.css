@@ -1,0 +1,329 @@
+.order-workspace.section {
+  padding-top: 24px;
+  padding-bottom: 32px;
+}
+.order-workspace {
+  max-width: 1080px;
+}
+.order-workspace-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin: 24px 0;
+}
+.order-workspace-heading h1 {
+  font-size: 25px;
+  margin: 6px 0;
+  overflow-wrap: anywhere;
+}
+.order-workspace-heading p,
+.order-muted {
+  font-size: 12px;
+  color: #657366;
+  line-height: 1.65;
+}
+.order-current {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #edf5eb;
+  color: #214c32;
+  padding: 18px;
+  border-radius: 12px;
+}
+.order-current strong {
+  display: block;
+  font-size: 19px;
+}
+.order-current small {
+  display: block;
+  font-size: 11px;
+  margin-top: 5px;
+}
+.order-current-cancelled {
+  background: #fff0eb;
+  color: #95422b;
+}
+.order-stage-track {
+  display: flex;
+  gap: 5px;
+  margin: 12px 0 24px;
+}
+.order-stage-track span {
+  height: 4px;
+  flex: 1;
+  background: #e6ebe3;
+  border-radius: 6px;
+}
+.order-stage-track .done {
+  background: #237746;
+}
+.order-section-nav,
+.order-filter-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 20px 0;
+  scrollbar-width: none;
+}
+.order-section-nav button,
+.order-filter-chips button {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: 1px solid #dfe6dc;
+  background: white;
+  color: #52614e;
+  font-size: 12px;
+  cursor: pointer;
+}
+.order-section-nav button[aria-pressed="true"],
+.order-filter-chips button[aria-pressed="true"] {
+  background: #1c513a;
+  color: white;
+  border-color: #1c513a;
+}
+.order-workspace-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+.order-panel {
+  padding: 22px;
+  border: 1px solid #e2e7dd;
+  border-radius: 12px;
+  background: white;
+  margin-bottom: 16px;
+  min-width: 0;
+}
+.order-panel h2 {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+.order-panel h3 {
+  font-size: 15px;
+  margin-top: 25px;
+}
+.order-panel p {
+  line-height: 1.7;
+  font-size: 13px;
+}
+.order-preserve {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.order-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 15px 0;
+  border-bottom: 1px solid #eef0e9;
+  font-size: 13px;
+}
+.order-line:first-of-type {
+  padding-top: 0;
+}
+.order-line:last-child {
+  border: 0;
+  padding-bottom: 0;
+}
+.order-line small {
+  display: block;
+  color: #6f7a68;
+  margin-top: 6px;
+}
+.order-line b {
+  white-space: nowrap;
+}
+.order-bill-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  margin: 14px 0;
+}
+.order-bill-total {
+  padding-block: 14px;
+  border-block: 1px solid #e3e8dd;
+  font-size: 16px;
+}
+.order-delivery-detail {
+  padding: 12px 0;
+}
+.order-delivery-detail p {
+  margin: 4px 0;
+  font-size: 12px;
+}
+.order-history summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  min-height: 25px;
+}
+.order-history ol {
+  padding-left: 20px;
+  margin-bottom: 0;
+}
+.order-history li {
+  padding: 10px 0;
+  font-size: 12px;
+}
+.order-history time {
+  display: block;
+  color: #70806b;
+  font-size: 11px;
+  margin-top: 5px;
+}
+.order-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.order-action-row .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+}
+.order-status-actions {
+  border-top: 1px solid #e0e6da;
+  background: #f9fbf7;
+  padding: 18px;
+  border-radius: 10px;
+  margin-top: 12px;
+}
+.order-confirmation p {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.65;
+  max-width: 700px;
+}
+.order-warning {
+  border: 1px solid #eed3aa;
+  background: #fff8e8;
+  padding: 12px;
+  border-radius: 8px;
+  color: #7e5424;
+  font-size: 12px;
+}
+.invoice-qr {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 12px;
+  margin: 12px 0;
+}
+.invoice-qr input {
+  width: 18px;
+  height: 18px;
+}
+.invoice-preview {
+  margin-top: 20px;
+}
+.invoice-preview iframe {
+  display: block;
+  width: 100%;
+  height: 600px;
+  border: 1px solid #dee5d8;
+  margin: 12px 0;
+  border-radius: 8px;
+}
+.invoice-preview a {
+  font-size: 12px;
+  text-decoration: underline;
+}
+.admin-orders-page .order-card-head small {
+  display: block;
+  color: #73806c;
+  margin-top: 5px;
+  font-size: 11px;
+}
+.admin-order-lines {
+  font-size: 12px;
+  color: #657366;
+  margin: 14px 0;
+  line-height: 1.6;
+}
+.order-workspace .button:focus-visible,
+.order-section-nav button:focus-visible,
+.order-filter-chips button:focus-visible {
+  outline: 3px solid #d0ad63;
+  outline-offset: 2px;
+}
+.orders-page .invoice-actions {
+  display: inline-block;
+}
+.orders-page .invoice-actions p {
+  margin-block: 6px;
+}
+@media (max-width: 650px) {
+  .order-workspace-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .order-workspace-heading {
+    align-items: start;
+    margin: 20px 0;
+  }
+  .order-workspace-heading h1 {
+    font-size: 19px;
+  }
+  .order-workspace-heading .button {
+    padding: 8px 10px;
+  }
+  .order-panel {
+    padding: 16px;
+  }
+  .order-current {
+    padding: 15px;
+  }
+  .order-current strong {
+    font-size: 17px;
+  }
+  .order-section-nav button {
+    flex: 1;
+    padding: 10px;
+    font-size: 11px;
+  }
+  .order-status-actions {
+    padding: 14px;
+  }
+  .order-action-row {
+    gap: 8px;
+  }
+  .order-action-row .button {
+    font-size: 12px;
+  }
+  .invoice-preview iframe {
+    height: 420px;
+  }
+  .order-line {
+    font-size: 12px;
+    gap: 12px;
+  }
+}
+
+.order-line-product {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.order-line-product img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: #f7f8f4;
+}
+.admin-orders-page .invoice-actions {
+  margin-top: 12px;
+}

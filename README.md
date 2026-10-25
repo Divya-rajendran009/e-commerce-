@@ -158,3 +158,8 @@ Validated locally on 25 October 2026 with Node 24 and Python 3.14:
 - Browser preview uses disposable local sample inventory. No production data was seeded or ordered.
 
 The supplied production URL currently returns the frontend HTML for `/api/v1/categories/` instead of JSON. The client now displays a recoverable availability error in this situation. The root Vercel configuration now explicitly builds both services and routes API and Django static/admin requests to the backend. The frontend-only deployment configuration has been removed. See [DEPLOYMENT.md](DEPLOYMENT.md) for repository-root project settings, environment requirements, and the read-only deployment smoke check. Live deployment verification requires access to the Vercel account owning the existing URL.
+
+
+## Typography and photography update
+
+The customer storefront uses locally hosted Lato with the included Open Font License, a larger text scale estimated from the supplied Blinkit screenshot, and original photorealistic hero/department artwork. Desktop sizes are 44px hero heading, 26–28px hero copy, 28px promotion headings and 14px category captions. Product labels and mobile text remain readable at narrower widths. The reference site's reported Okra family is not bundled; this is a close available font substitute rather than an exact font match. See DESIGN.md for capture evidence and sizing notes, and frontend/public/images/storefront/provenance.json for generation briefs. Inventory product photographs are unchanged.

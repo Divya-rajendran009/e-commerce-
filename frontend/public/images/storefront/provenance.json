@@ -1,0 +1,35 @@
+{
+  "generator": "Built-in image_gen",
+  "purpose": "Original illustrative storefront photography, not actual SKU photos or a promise of stock.",
+  "assets": [
+    {
+      "file": "grocery-hero.webp",
+      "prompt": "Use case: ads-marketing. Create a premium photorealistic grocery website hero background, wide landscape 3:1 composition, no text, no letters, no logos or watermark. Left 53 percent is an uncluttered rich natural leaf-green backdrop, smooth softly out-of-focus garden green. On the right 47 percent arrange an abundant, attractive real still-life of vibrant fresh groceries: red tomatoes with green stems, yellow bananas, sliced orange, strawberries, green grapes, broccoli, leafy greens, carrots, brown eggs in an open paper carton, a clear glass milk jug and glass of milk. Real fresh surface textures and tiny droplets, convincing glass and milk, natural soft morning sunlight, professional food photography, crisp detail, appetizing saturated true-to-life colour, grounded shadows. Keep objects fully within the right side, with rich green extending behind them. No floating objects, no plastic-looking CGI. The left side must remain clear so accessible website copy can be overlaid."
+    },
+    {
+      "file": "fresh-picks.webp",
+      "prompt": "Use case: ads-marketing. Create a photorealistic website category promotion background, landscape 16:9. Lush vibrant emerald-green flat studio backdrop and counter. On the right half a close-up abundant arrangement of real red tomatoes on vine, broccoli, carrots, leafy spinach and green bell peppers, with natural rich fresh textures and tiny water droplets, crisp professional food photography. Fill the right edge and bottom with produce. Leave left half completely clear green negative space for overlaid HTML text. Bright realistic studio daylight, realistic shadows, strong vibrant natural colour, no haze, no illustration, no CGI, no text, no branding, no watermark."
+    },
+    {
+      "file": "pantry-essentials.webp",
+      "prompt": "Use case: ads-marketing. Create a photorealistic website category promotion background, landscape 16:9. Rich warm golden yellow studio backdrop and counter, vibrant and appetizing. On the right half arrange a clear glass bottle of golden cooking oil, a bowl of white basmati rice, one bowl of red lentils and a plain kraft paper flour pouch. Real cooking ingredients with tactile detail, convincing glass highlights, warm bright commercial food photography and natural shadows. Leave the left half totally clear yellow for overlaid HTML copy. No text or labels, no logos, no watermark, no CGI or illustration."
+    },
+    {
+      "file": "everyday-care.webp",
+      "prompt": "Use case: ads-marketing. Create a premium photorealistic website personal care category promotion background, landscape 16:9. Bright clean turquoise-teal studio backdrop and counter. On the right half arrange unbranded realistic personal care products: a white pump hand-wash bottle, a lavender shampoo bottle, a white soap bar and neatly rolled soft white cotton towel, small fresh aloe leaf. Clearly personal-care bottles, elegant real materials and natural bright studio lighting, saturated teal background, soft grounded shadows. Leave left half completely clear for overlaid HTML text. No labels, text, logos or watermark, no CGI or illustration."
+    }
+  ],
+  "encoding": "WebP quality 90, preserving the generated composition, colours and lighting.",
+  "typography": {
+    "font": "Lato",
+    "weights": [
+      400,
+      700,
+      900
+    ],
+    "license": "SIL Open Font License 1.1",
+    "referenceFamily": "Okra, reported by blinkit.com; Lato is a substitute, not an exact match.",
+    "source": "https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap",
+    "licenseSource": "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/OFL.txt"
+  }
+}

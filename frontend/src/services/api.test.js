@@ -5,6 +5,12 @@ import { AxiosError } from 'axios'
 const originalAdapter = api.defaults.adapter
 afterEach(() => { api.defaults.adapter = originalAdapter; vi.unstubAllGlobals() })
 
+it('reports an API routing failure instead of passing HTML into the catalogue', async () => {
+  vi.stubGlobal('localStorage', { getItem: () => null })
+  api.defaults.adapter = async config => ({ status: 200, data: '<!doctype html><html><body>Storefront</body></html>', headers: {}, config })
+  await expect(api.get('/categories/')).rejects.toThrow('The shop is temporarily unavailable')
+})
+
 it('refreshes an expired session once for concurrent requests', async () => {
   const values = new Map([['sm_access', 'expired'], ['sm_refresh', 'refresh-one']])
   vi.stubGlobal('localStorage', { getItem: (key) => values.get(key), setItem: (key, value) => values.set(key, value) })

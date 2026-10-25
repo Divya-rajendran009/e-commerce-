@@ -8,6 +8,9 @@
     "frontend": {
       "root": "frontend",
       "framework": "vite",
+      "installCommand": "pnpm install --frozen-lockfile",
+      "buildCommand": "pnpm build",
+      "outputDirectory": "dist",
       "rewrites": [
         {
           "source": "/(.*)",
@@ -18,7 +21,25 @@
   },
   "rewrites": [
     {
+      "source": "/api",
+      "destination": {
+        "service": "backend"
+      }
+    },
+    {
       "source": "/api/(.*)",
+      "destination": {
+        "service": "backend"
+      }
+    },
+    {
+      "source": "/static/(.*)",
+      "destination": {
+        "service": "backend"
+      }
+    },
+    {
+      "source": "/django-admin/:path*",
       "destination": {
         "service": "backend"
       }

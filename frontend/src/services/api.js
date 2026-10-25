@@ -14,7 +14,12 @@ api.interceptors.request.use((config) => {
 })
 
 let refreshRequest = null
-api.interceptors.response.use((response) => response, async (error) => {
+api.interceptors.response.use((response) => {
+  if (typeof response.data === 'string' && /^\s*(<!doctype html|<html)/i.test(response.data)) {
+    throw new Error('The shop is temporarily unavailable. Please try again shortly.')
+  }
+  return response
+}, async (error) => {
   const config = error.config
   const refresh = localStorage.getItem('sm_refresh')
   if (error.response?.status !== 401 || !config || config._retried || !refresh || /\/auth\/(login|register|refresh|logout)\//.test(config.url)) throw error

@@ -11,7 +11,7 @@ Firecrawl-reported reference tokens: yellow `#F8CB46`, green primary action `#0C
 
 ## Implementation choices
 
-Use the store's own bag and hill mark with a yellow tile and green lettering. Retain the existing Inter/system font stack. Adapt quick commerce patterns into original components and copy.
+Use the store's own bag and hill mark with a yellow tile and green lettering. Use locally hosted Lato (400, 700 and 900) under its included SIL Open Font License. It is a close available substitute for the reported Okra family, not an exact font match. An exact Okra match requires the original licensed font assets. Adapt quick commerce patterns into original components and copy.
 
 | Role | Value |
 | --- | --- |
@@ -20,7 +20,7 @@ Use the store's own bag and hill mark with a yellow tile and green lettering. Re
 | Primary text | `#202820` |
 | Muted text | `#737A73` |
 | Fine borders | `#E9ECE7` |
-| Hero surface | `#EEF5DF` |
+| Hero surface | `#2C783A` with full-colour grocery photography |
 | Announcement | `#FFF8D6` |
 | Catalogue surface | `#FBFCF9` |
 | Card radius | 12px |
@@ -41,8 +41,19 @@ The cart uses a native dialog for focus containment, Escape dismissal and focus 
 
 ## Image references
 
-Existing permanent assets in `frontend/public/images/categories/` are reused. Source provenance is in `frontend/src/data/departments.json`, with images originally from DummyJSON. Hero images are decorative illustrations of store departments, not offers or promises of stock. Product photos use API data; existing representative-photo fallbacks remain labelled.
+Realistic promotional artwork in `frontend/public/images/storefront/` is generated with the built-in image generation tool and encoded as WebP. It illustrates departments; actual product photos still come from inventory. Original permanent assets in `frontend/public/images/categories/` remain for clothing, dairy and perfume. Source provenance is in `frontend/src/data/departments.json`, with images originally from DummyJSON. Hero images are decorative illustrations of store departments, not offers or promises of stock. Product photos use API data; existing representative-photo fallbacks remain labelled.
 
 ## Verification and remaining gaps
 
 Desktop and 390px layouts were visually inspected against a real local Django API with disposable sample inventory. Local captures accompany the change. The live site's API routing still needs deployment configuration verification. Delivery times, service PINs, order minimums and fees remain store-configured; this design does not introduce a 10-minute promise. Pack size, clothing size variants, online payments and live courier tracking are not added by this frontend change.
+
+
+## Supplied screenshot typography and photography update
+
+The user-supplied Blinkit screenshot (1488 × 646) was inspected directly on 25 October 2026. It shows a wide green grocery banner, three colourful photo promotions, and image-led category tiles. Banner lettering is baked into the reference imagery, so DOM extraction does not establish its exact font. Firecrawl's fresh capture of blinkit.com again reports Okra for the interface.
+
+Visual estimates implemented at desktop width: 44px/700 hero heading, 26–28px/400 hero copy, 20px/700 hero CTA, 28px/900 promotion headings, 14px promotion copy/buttons and category captions. The interface uses 13px product titles, 12px pack/MRP labels, 14px navigation and 24px shelf headings. Mobile sizes adapt to the narrower viewport; the supplied screenshot does not establish mobile measurements. These are reference-matched visual estimates, not a pixel-exact or proprietary-font claim.
+
+All live storefront typography is scoped to the customer layout. Lato is downloaded from Google Fonts, served locally and accompanied by `frontend/public/fonts/OFL-Lato.txt`. The hero and promotion text remain HTML, so they stay accessible, responsive and editable. No tracking request to a third-party font host is required at runtime.
+
+Four original photorealistic assets replace the former isolated thumbnail hero and muted promotion styling: fresh groceries, fresh vegetables, pantry staples, and personal care. WebP assets total approximately 701 KB. Category illustrations reuse the corresponding photo crops without inventing product stock. Generation briefs and source provenance are recorded in `frontend/public/images/storefront/provenance.json`.

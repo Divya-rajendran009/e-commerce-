@@ -12,6 +12,7 @@ const periods = [
   ['last_7_days', 'Last 7 days'],
   ['last_30_days', 'Last 30 days'],
   ['this_month', 'This month'],
+  ['custom', 'Custom Date Range'],
 ]
 
 export default function Admin() {
@@ -33,27 +34,45 @@ export default function Admin() {
     blogs: '/admin/services/blogs',
   }[module])).find(Boolean)
   const [period, setPeriod] = useState('last_30_days')
+  const [range, setRange] = useState({ start: '', end: '' })
+  const [reportParams, setReportParams] = useState({ period: 'last_30_days' })
+  const [rangeError, setRangeError] = useState('')
+  const [refreshing, setRefreshing] = useState(false)
   const [data, setData] = useState(null)
   const [today, setToday] = useState(null)
   const [allTime, setAllTime] = useState(null)
   const [error, setError] = useState('')
   useEffect(() => {
     if (!['admin', 'super_admin'].includes(user?.role)) return
+    let active = true
     setError('')
+    setRefreshing(true)
     Promise.all([
-      api.get('/admin/dashboard/', { params: { period } }),
+      api.get('/admin/dashboard/', { params: reportParams }),
       api.get('/admin/dashboard/', { params: { period: 'today' } }),
       api.get('/admin/dashboard/', { params: { period: 'all_time' } }),
     ])
       .then(([current, todayResponse, allTimeResponse]) => {
+        if (!active) return
         setData(current.data)
         setToday(todayResponse.data)
         setAllTime(allTimeResponse.data)
       })
-      .catch((e) => setError(errorMessage(e)))
-  }, [period, user?.role])
+      .catch((e) => { if (active) setError(errorMessage(e)) })
+      .finally(() => { if (active) setRefreshing(false) })
+    return () => { active = false }
+  }, [reportParams, user?.role])
+  const applyRange = (event) => {
+    event.preventDefault()
+    if (!range.start || !range.end || range.start > range.end) {
+      setRangeError('Choose a start date and an end date on or after the start date.')
+      return
+    }
+    setRangeError('')
+    setReportParams({ period: 'custom', ...range })
+  }
   if (!['admin', 'super_admin'].includes(user?.role)) return managerHome ? <Navigate to={managerHome} replace /> : <Navigate to="/" replace />
-  if (error) return <section className="wrap section"><ErrorState message={error} /></section>
+  if (error && !data) return <section className="wrap section"><ErrorState message={error} /></section>
   if (!data) return <Loading label="Loading store dashboard…" />
 
   const metrics = [
@@ -80,7 +99,9 @@ export default function Admin() {
     return null
   }
   const greeting = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening'
-  const periodLabel = periods.find(([value]) => value === period)?.[1] || 'Last 30 days'
+  const periodLabel = data.period === 'custom'
+    ? `${new Date(data.range.start).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })} – ${new Date(new Date(data.range.end).getTime() - 1).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}`
+    : periods.find(([value]) => value === data.period)?.[1] || 'Last 30 days'
   const quickActions = [
     ...(canAccessAdminModule(user, 'orders') ? [['/admin/orders', 'Manage orders', ArrowRight]] : []),
     ...(canAccessAdminModule(user, 'products') ? [['/admin/products', 'Add a product', Plus]] : []),
@@ -96,10 +117,19 @@ export default function Admin() {
       </div>
       <div className="admin-dashboard-period">
         <span>REPORTING PERIOD</span>
-        <label className="field admin-period"><select aria-label="Reporting period" value={period} onChange={(event) => { setData(null); setPeriod(event.target.value) }}>{periods.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
+        <label className="field admin-period"><select aria-label="Reporting period" value={period} onChange={(event) => { const value = event.target.value; setPeriod(value); setRangeError(''); if (value !== 'custom') setReportParams({ period: value }) }}>{periods.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
+        {period === 'custom' && <form className="admin-custom-range" onSubmit={applyRange}>
+          <label className="field"><span>Start date</span><input type="date" required max={range.end || undefined} value={range.start} onChange={(event) => { setRange({ ...range, start: event.target.value }); setRangeError('') }} /></label>
+          <label className="field"><span>End date</span><input type="date" required min={range.start || undefined} value={range.end} onChange={(event) => { setRange({ ...range, end: event.target.value }); setRangeError('') }} /></label>
+          <small>Includes both start and end dates.</small>
+          {rangeError && <p role="alert">{rangeError}</p>}
+          <button className="button primary" disabled={refreshing}>Apply date range</button>
+        </form>}
+        <span role="status" aria-live="polite">{refreshing ? 'Updating report…' : `Showing: ${periodLabel}`}</span>
         <small>{new Intl.DateTimeFormat('en-IN', { dateStyle: 'full' }).format(new Date())}</small>
       </div>
     </div>
+    {error && <ErrorState message={error} />}
     <div className="admin-metrics">{metrics.map(([label, value, Icon, key]) => {
       const target = metricLink(key)
       const card = <><span className="admin-metric-icon"><Icon size={18} /></span><span>{label}</span><strong>{value}</strong><small>{key === 'today' ? 'Today' : key === 'revenue' ? 'All time' : 'View details'} <ArrowUpRight size={13} /></small></>
@@ -120,7 +150,7 @@ export default function Admin() {
     </div></section>
     {data.financials_available && <section className="admin-dashboard-panel"><div className="admin-panel-heading"><div><span className="eyebrow">BEST SELLERS</span><h2>Top products</h2></div><Link to="/admin/products">Products <ArrowUpRight size={14} /></Link></div>{data.top_products.length ? <div className="admin-compact-list">{data.top_products.map((item, index) => <article key={item.product_name}><span className="admin-rank">{index + 1}</span><span className="admin-compact-main"><strong>{item.product_name}</strong><small>{item.quantity} units sold</small></span>{item.revenue !== undefined && <strong>₹{Number(item.revenue).toFixed(2)}</strong>}</article>)}</div> : <p className="muted">No product sales in this period.</p>}</section>}
     <section className="admin-dashboard-panel admin-recent-orders"><div className="admin-panel-heading"><div><span className="eyebrow">LATEST ACTIVITY</span><h2>Recent orders</h2></div><Link to="/admin/orders">View all <ArrowUpRight size={14} /></Link></div>{data.recent_orders.length ? <div className="admin-compact-list">{data.recent_orders.map((order) => <article key={order.id}><span className="admin-compact-main"><strong>{order.order_number}</strong><small>{new Date(order.created_at).toLocaleDateString()}</small></span><span className={`status status-${order.status}`}>{order.status.replaceAll('_', ' ')}</span>{order.total !== undefined && <strong>₹{Number(order.total).toFixed(2)}</strong>}</article>)}</div> : <p className="muted">No orders have been placed in this period.</p>}</section>
-    {data.financials_available && <section className="admin-dashboard-panel admin-sales-summary"><div className="admin-panel-heading"><div><span className="eyebrow">SALES SUMMARY</span><h2>{data.period.replaceAll('_', ' ')}</h2></div></div><div className="admin-sales-numbers"><article><span>Order value (includes uncollected COD)</span><strong>₹{Number(data.gross_sales).toFixed(2)}</strong></article><article><span>Order value less refunds</span><strong>₹{Number(data.net_sales).toFixed(2)}</strong></article><article><span>Recorded refunds</span><strong>₹{Number(data.refund_total).toFixed(2)}</strong></article><article><span>Average order</span><strong>₹{Number(data.average_order_value).toFixed(2)}</strong></article></div></section>}
+    {data.financials_available && <section className="admin-dashboard-panel admin-sales-summary"><div className="admin-panel-heading"><div><span className="eyebrow">SALES SUMMARY</span><h2>{periodLabel}</h2></div></div><div className="admin-sales-numbers"><article><span>Order value (includes uncollected COD)</span><strong>₹{Number(data.gross_sales).toFixed(2)}</strong></article><article><span>Order value less refunds</span><strong>₹{Number(data.net_sales).toFixed(2)}</strong></article><article><span>Recorded refunds</span><strong>₹{Number(data.refund_total).toFixed(2)}</strong></article><article><span>Average order</span><strong>₹{Number(data.average_order_value).toFixed(2)}</strong></article></div></section>}
     </div>
     {['admin', 'super_admin'].includes(user?.role) && <nav className="admin-dashboard-tools" aria-label="Developer tools"><a href="http://localhost:8000/django-admin/" target="_blank" rel="noreferrer">Django administration <ArrowUpRight size={13} /></a><a href="http://localhost:8000/api/schema/swagger-ui/" target="_blank" rel="noreferrer">API documentation <ArrowUpRight size={13} /></a></nav>}
   </section>

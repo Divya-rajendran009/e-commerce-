@@ -1,3 +1,4 @@
+from datetime import timedelta
 from decimal import Decimal, ROUND_HALF_UP
 
 from django.db import transaction
@@ -46,6 +47,7 @@ def _create_reward(
     program,
     rule,
     applied_rules=None,
+    pending=False,
 ):
     amount = amount.quantize(CENT, rounding=ROUND_HALF_UP)
     if program.max_reward_per_referral is not None:
@@ -59,6 +61,9 @@ def _create_reward(
         "reward_type": rule.reward_type if rule else "fixed",
         "configured_amount": str(rule.amount if rule else amount),
         "qualification_threshold": str(program.qualification_threshold),
+        "qualification_period": program.qualification_period,
+        "qualification_period_days": program.qualification_period_days,
+        "qualification_window": [value.isoformat() for value in qualification_window(program)],
         "max_depth": min(program.max_depth, 5),
         "category_scope": program.category_scope,
         "category_overrides_enabled": program.category_overrides_enabled,
@@ -82,7 +87,8 @@ def _create_reward(
             "level": level,
             "reward_type": program.reward_type,
             "amount": amount,
-            "status": ReferralReward.Status.CREDITED,
+            "status": ReferralReward.Status.PENDING if pending else ReferralReward.Status.CREDITED,
+            "pending_expires_at": (timezone.now() + timedelta(days=program.qualification_period_days) if program.qualification_period == "rolling_days" else qualification_window(program)[1]) if pending else None,
             "eligible_order_amount": eligible_amount,
             "configuration_version": program.configuration_version,
             "configuration_snapshot": snapshot,
@@ -90,26 +96,75 @@ def _create_reward(
     )
     if not created:
         return False
-    WalletLedger.objects.create(
-        reward=reward,
-        customer=recipient,
-        amount=amount,
-        description=f"Referral level {level} reward for order {order.order_number}",
-        transaction_type=WalletLedger.TransactionType.CREDIT,
-        currency="INR",
-        order=order,
-        referral=referral,
-        level=level,
-        configuration_version=program.configuration_version,
-        idempotency_key=f"wallet:{reward_key}",
-    )
+    if pending:
+        return False
+    _credit_reward(reward)
     return True
 
 
-def qualifying_self_purchase_total(customer, program=None):
+def _credit_reward(reward):
+    WalletLedger.objects.get_or_create(
+        idempotency_key=f"wallet:{reward.idempotency_key}",
+        defaults={
+            "reward": reward, "customer": reward.recipient, "amount": reward.amount,
+            "description": f"Referral level {reward.level} reward for order {reward.order.order_number}",
+            "transaction_type": WalletLedger.TransactionType.CREDIT,
+            "currency": "INR", "order": reward.order, "referral": reward.referral,
+            "level": reward.level, "configuration_version": reward.configuration_version,
+        },
+    )
+
+
+@transaction.atomic
+def settle_pending_commissions(customer, at=None):
+    program = ReferralProgram.objects.select_for_update().filter(pk=1).first()
+    if not program:
+        return
+    User.objects.select_for_update().get(pk=customer.pk)
+    at = at or timezone.now()
+    pending = ReferralReward.objects.select_for_update().filter(recipient=customer, status=ReferralReward.Status.PENDING).select_related("order", "referral")
+    qualified = program.active and qualifying_self_purchase_total(customer, program, at) >= program.qualification_threshold
+    credited = 0
+    for reward in pending:
+        if reward.pending_expires_at is None or reward.pending_expires_at <= at:
+            reward.status = ReferralReward.Status.EXPIRED
+        elif not reward.order or reward.order.status != Order.Status.DELIVERED or reward.order.return_requests.filter(status=ReturnRequest.Status.COMPLETED).exists():
+            reward.status = ReferralReward.Status.REVERSED
+        elif qualified:
+            _credit_reward(reward)
+            credited += 1
+            reward.status = ReferralReward.Status.CREDITED
+            Referral.objects.filter(pk=reward.referral_id).update(status=Referral.Status.COMPLETED, completed_at=at)
+        else:
+            continue
+        reward.save(update_fields=["status"])
+    return credited
+
+
+def pending_commission_summary(customer):
+    from django.db.models import Min
+    return ReferralReward.objects.filter(recipient=customer, status=ReferralReward.Status.PENDING, pending_expires_at__gt=timezone.now()).aggregate(amount=Sum("amount"), next_expiry=Min("pending_expires_at"))
+
+
+
+def qualification_window(program, at=None):
+    now = timezone.localtime(at or timezone.now())
+    if program.qualification_period == "rolling_days":
+        return now - timedelta(days=program.qualification_period_days), now
+    start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    end = (start.replace(day=28) + timedelta(days=4)).replace(day=1)
+    return start, end
+
+
+def qualifying_self_purchase_total(customer, program=None, at=None):
     program = program or ReferralProgram.current()
+    at = at or timezone.now()
+    start, end = qualification_window(program, at)
     orders = Order.objects.filter(
         customer=customer,
+        created_at__gte=start,
+        created_at__lt=end,
+        created_at__lte=at,
         status=Order.Status.DELIVERED,
     ).exclude(
         return_requests__status=ReturnRequest.Status.COMPLETED,
@@ -223,14 +278,15 @@ def award_referral_for_order(order):
     purchaser = User.objects.select_for_update().filter(pk=order.customer_id).first()
     if not purchaser:
         return False
+    settle_pending_commissions(purchaser)
     referral = Referral.objects.select_for_update().filter(referred=purchaser).select_related("referrer").first()
     if not referral:
         return False
 
     if program.reward_on_first_qualifying_order_only and ReferralReward.objects.filter(
         referral=referral,
-        status=ReferralReward.Status.CREDITED,
-    ).exists():
+        status__in=[ReferralReward.Status.CREDITED, ReferralReward.Status.PENDING, ReferralReward.Status.EXPIRED],
+    ).exclude(order=order).exists():
         return False
 
     rules = {
@@ -267,10 +323,11 @@ def award_referral_for_order(order):
         if not ancestor or ancestor.pk in seen:
             break
         seen.add(ancestor.pk)
+        issued |= bool(settle_pending_commissions(ancestor))
         global_rule = rules.get((level, None))
         should_reward = program.reward_referrer if level == 1 else program.reward_ancestors
         is_qualified = qualifying_self_purchase_total(ancestor, program) >= program.qualification_threshold
-        if should_reward and is_qualified:
+        if should_reward:
             amount, commission_eligible_amount, applied_rules = _commission_for_level(
                 program=program,
                 level=level,
@@ -279,7 +336,7 @@ def award_referral_for_order(order):
             )
         else:
             amount, commission_eligible_amount, applied_rules = Decimal("0.00"), Decimal("0.00"), []
-        if should_reward and is_qualified and amount > 0:
+        if should_reward and amount > 0:
             used_rule = next(
                 (rule for rule in rules.values() if rule.pk == applied_rules[0]["rule_id"]),
                 global_rule,
@@ -296,6 +353,7 @@ def award_referral_for_order(order):
                 program=program,
                 rule=used_rule,
                 applied_rules=applied_rules,
+                pending=not is_qualified,
             )
         ancestor_referral = Referral.objects.filter(referred=ancestor).select_related("referrer").first()
         ancestor = ancestor_referral.referrer if ancestor_referral else None
@@ -311,7 +369,7 @@ def award_referral_for_order(order):
 
 @transaction.atomic
 def reverse_referral_rewards_for_order(order, *, reason):
-    rewards = ReferralReward.objects.select_for_update().filter(order=order, status=ReferralReward.Status.CREDITED)
+    rewards = ReferralReward.objects.select_for_update().filter(order=order, status__in=[ReferralReward.Status.CREDITED, ReferralReward.Status.PENDING])
     reversed_count = 0
     for reward in rewards:
         entries = WalletLedger.objects.select_for_update().filter(

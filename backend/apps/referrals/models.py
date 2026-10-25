@@ -28,6 +28,8 @@ class ReferralProgram(models.Model):
     customer_reward = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal("50.00"), validators=[MinValueValidator(0)])
     minimum_order_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("500.00"), validators=[MinValueValidator(0)])
     qualification_threshold = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("1000.00"), validators=[MinValueValidator(0)])
+    qualification_period = models.CharField(max_length=20, choices=[("calendar_month", "Calendar month"), ("rolling_days", "Rolling days")], default="rolling_days")
+    qualification_period_days = models.PositiveIntegerField(default=30, validators=[MinValueValidator(1), MaxValueValidator(3650)])
     max_reward_per_referral = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
     max_depth = models.PositiveSmallIntegerField(default=5, validators=[MinValueValidator(1), MaxValueValidator(5)])
     qualifying_order_statuses = models.JSONField(default=default_qualifying_order_statuses)
@@ -128,6 +130,7 @@ class ReferralReward(models.Model):
         CREDITED = "credited", "Credited"
         REVERSED = "reversed", "Reversed"
         INELIGIBLE = "ineligible", "Ineligible"
+        EXPIRED = "expired", "Expired"
 
     referral = models.ForeignKey(Referral, related_name="rewards", on_delete=models.PROTECT)
     recipient = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="referral_rewards", on_delete=models.PROTECT)
@@ -137,6 +140,7 @@ class ReferralReward(models.Model):
     reward_type = models.CharField(max_length=12, default="wallet")
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.CREDITED)
+    pending_expires_at = models.DateTimeField(null=True, blank=True, db_index=True)
     eligible_order_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
     configuration_version = models.PositiveIntegerField(default=1)
     configuration_snapshot = models.JSONField(default=dict, blank=True)

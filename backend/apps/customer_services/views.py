@@ -586,6 +586,55 @@ class AdminRefundViewSet(viewsets.ModelViewSet):
         return Response(self.get_serializer(refund).data)
 
 
+class AdminInventoryStockView(APIView):
+    permission_classes = [IsStoreAdmin]
+
+    def get(self, request):
+        from apps.catalog.models import Category
+        from django.db.models import Count
+        category = request.query_params.get("category")
+        if category is None:
+            categories = list(Category.objects.annotate(product_count=Count("products")).values("id", "name", "is_active", "product_count"))
+            return Response({"count": len(categories), "results": categories})
+        if not category.isdigit() or not Category.objects.filter(pk=category).exists():
+            raise ValidationError({"category": "Choose an existing category."})
+        products = list(Product.objects.filter(category_id=category).values("id", "name", "sku", "stock"))
+        return Response({"count": len(products), "results": products})
+
+    def post(self, request):
+        changes = request.data.get("changes")
+        if not isinstance(changes, list) or not changes:
+            raise ValidationError({"changes": "Provide at least one stock change."})
+        ids = []
+        for item in changes:
+            if not isinstance(item, dict) or any(type(item.get(key)) is not int for key in ("id", "stock", "expected_stock")):
+                raise ValidationError({"changes": "Product IDs and quantities must be integers."})
+            if not 0 <= item["stock"] <= 2147483647 or item["expected_stock"] < 0:
+                raise ValidationError({"changes": "Stock must be a non-negative whole number up to 2147483647."})
+            ids.append(item["id"])
+        if len(set(ids)) != len(ids):
+            raise ValidationError({"changes": "Each product may appear only once."})
+        with transaction.atomic():
+            products = {p.pk: p for p in Product.objects.select_for_update().filter(pk__in=ids).order_by("pk")}
+            if len(products) != len(ids):
+                raise ValidationError({"changes": "One or more products no longer exist."})
+            conflicts = [{"id": p.pk, "stock": p.stock} for item in changes if (p := products[item["id"]]).stock != item["expected_stock"]]
+            if conflicts:
+                return Response({"detail": "Stock changed since you opened this category. Current quantities have been refreshed; review your revised quantities and try again.", "conflicts": conflicts}, status=409)
+            updated = []
+            for item in changes:
+                product = products[item["id"]]
+                delta = item["stock"] - product.stock
+                if delta:
+                    product.stock = item["stock"]
+                    product.save(update_fields=["stock"])
+                    reason = "Category stock update"
+                    adjustment = InventoryAdjustment.objects.create(product=product, actor=request.user, quantity_delta=delta, reason=reason)
+                    audit_admin_change(request, adjustment, "stock_adjustment", {"product": product.sku, "delta": delta, "reason": reason})
+                updated.append({"id": product.pk, "stock": product.stock})
+        return Response({"updated": updated})
+
+
 class AdminInventoryView(APIView):
     permission_classes = [IsStoreAdmin]
 

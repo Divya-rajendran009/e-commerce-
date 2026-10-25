@@ -12,8 +12,7 @@ import { canAccessAdminModule } from '../utils/adminAccess'
 const navigation = [
   [LayoutDashboard, 'Dashboard', '/admin', null, true],
   [ClipboardList, 'Orders', '/admin/orders', 'orders'],
-  [Boxes, 'Products', '/admin/products', 'products'],
-  [Boxes, 'Categories', '/admin/categories', 'products'],
+  [Boxes, 'Products & categories', '/admin/products', 'products'],
   [PackageCheck, 'Inventory', '/admin/services/inventory', 'inventory'],
   [Users, 'Customers', '/admin/customers', 'customers'],
   [CreditCard, 'Payments', '/admin/services/payments', 'payments'],

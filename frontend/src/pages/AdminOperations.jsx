@@ -1,3 +1,4 @@
+import CategoryStockUpdate from '../components/CategoryStockUpdate'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import api, { errorMessage } from '../services/api'
@@ -170,14 +171,8 @@ function DeliveryAdmin() {
 }
 
 function InventoryAdmin() {
-  const [products, setProducts] = useState([])
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
-  useEffect(() => { api.get('/admin/products/').then(({ data }) => setProducts(rows(data))).catch((e) => setError(errorMessage(e))) }, [])
-  const adjust = async (event) => {
-    event.preventDefault()
-    try { const payload = Object.fromEntries(new FormData(event.currentTarget)); const { data } = await api.post('/admin/inventory/adjustments/', payload); setMessage(`${data.sku}: stock is now ${data.stock}.`); event.currentTarget.reset() } catch (e) { setError(errorMessage(e)) }
-  }
   const importCsv = async (event) => {
     event.preventDefault()
     const form = event.currentTarget
@@ -194,11 +189,7 @@ function InventoryAdmin() {
       window.setTimeout(() => URL.revokeObjectURL(url), 1000)
     } catch (e) { setError(errorMessage(e)) }
   }
-  return <><h2>Stock adjustment</h2><form className="account-service-form service-form-grid" onSubmit={adjust}>
-    <label className="field"><span>Product</span><select name="product_id" required>{products.map((item) => <option key={item.id} value={item.id}>{item.sku} · {item.name} (stock {item.stock})</option>)}</select></label>
-    <label className="field"><span>Quantity change (+/-)</span><input name="quantity_delta" type="number" required /></label>
-    <label className="field"><span>Reason</span><input name="reason" required maxLength="500" /></label><button className="button primary">Apply adjustment</button>
-  </form><h2>Import stock movements from CSV</h2><p>CSV columns: <code>sku,stock,reason</code>. The stock column is a signed quantity adjustment, not a replacement count.</p><form className="account-service-form" onSubmit={importCsv} encType="multipart/form-data"><label className="field"><span>CSV file (maximum 5 MB)</span><input name="file" type="file" accept=".csv,text/csv" required /></label><button className="button secondary">Import stock CSV</button></form><button className="button secondary" type="button" onClick={downloadInventory}>Download inventory CSV</button>{message && <p role="status">{message}</p>}{error && <ErrorState message={error} />}</>
+  return <><CategoryStockUpdate /><h2>Import stock movements from CSV</h2><p>CSV columns: <code>sku,stock,reason</code>. The stock column is a signed quantity adjustment, not a replacement count.</p><form className="account-service-form" onSubmit={importCsv} encType="multipart/form-data"><label className="field"><span>CSV file (maximum 5 MB)</span><input name="file" type="file" accept=".csv,text/csv" required /></label><button className="button secondary">Import stock CSV</button></form><button className="button secondary" type="button" onClick={downloadInventory}>Download inventory CSV</button>{message && <p role="status">{message}</p>}{error && <ErrorState message={error} />}</>
 }
 
 function Reports() {

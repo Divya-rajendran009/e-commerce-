@@ -1,3 +1,4 @@
+from django.utils import timezone
 from collections import defaultdict
 from decimal import Decimal
 
@@ -14,7 +15,7 @@ from apps.accounts.models import User
 from apps.catalog.permissions import IsStoreAdmin, allowed_admin_module
 from apps.customer_services.models import AdminAuditEntry
 from .models import Referral, ReferralLevelRule, ReferralProgram, ReferralReward, WalletLedger
-from .services import qualifying_self_purchase_total, effective_commission_rates
+from .services import qualifying_self_purchase_total, effective_commission_rates, qualification_window, settle_pending_commissions, pending_commission_summary
 from .serializers import (
     AdminWalletAdjustmentSerializer,
     AdminWalletLedgerSerializer,
@@ -116,7 +117,11 @@ class ReferralMeView(APIView):
 
     def get(self, request):
         program = ReferralProgram.current()
-        self_purchase_total = qualifying_self_purchase_total(request.user, program)
+        settle_pending_commissions(request.user)
+        pending = pending_commission_summary(request.user)
+        at = timezone.now()
+        start, end = qualification_window(program, at)
+        self_purchase_total = qualifying_self_purchase_total(request.user, program, at=at)
         threshold = program.qualification_threshold
         referral_levels = referral_level_counts(request.user.pk, min(program.max_depth, 5))
         wallet_entries = WalletLedger.objects.filter(customer=request.user).order_by("-created_at")[:100]
@@ -125,6 +130,10 @@ class ReferralMeView(APIView):
             "referral_code": request.user.referral_code,
             "referral_url": f"/register?ref={request.user.referral_code}",
             "qualification_threshold": threshold,
+            "qualification_period": program.qualification_period,
+            "qualification_period_start": start,
+            "qualification_period_end": end,
+            "qualification_remaining": max(Decimal("0.00"), threshold - self_purchase_total),
             "qualifying_self_purchase_total": self_purchase_total,
             "qualification_progress_percent": min(
                 100,
@@ -135,6 +144,8 @@ class ReferralMeView(APIView):
             "commission_rates": effective_commission_rates(program),
             "network_levels": referral_levels,
             "wallet_balance": wallet_balance,
+            "pending_commissions": pending["amount"] or Decimal("0.00"),
+            "pending_next_expiry": pending["next_expiry"],
             "wallet_transactions": wallet_entries,
             "rewards": ReferralReward.objects.filter(recipient=request.user).select_related("order").order_by("-created_at")[:100],
         }
@@ -154,10 +165,14 @@ class ReferralWalletView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
+        settle_pending_commissions(request.user)
+        pending = pending_commission_summary(request.user)
         entries = WalletLedger.objects.filter(customer=request.user).order_by("-created_at")
         balance = entries.aggregate(balance=Sum("amount"))["balance"] or Decimal("0.00")
         return Response({
             "balance": balance,
+            "pending_commissions": pending["amount"] or Decimal("0.00"),
+            "pending_next_expiry": pending["next_expiry"],
             "spending_enabled": ReferralProgram.current().wallet_spending_enabled,
             "currency": "INR",
             "transactions": WalletLedgerSerializer(entries[:100], many=True).data,

@@ -10,11 +10,12 @@ export default function Wallet() {
     <div className="simple-page-title"><Link to="/account" aria-label="Back to profile"><ArrowLeft size={21} /></Link><h1>Wallet</h1></div>
     <div className="wallet-masthead"><span className="wallet-emblem" aria-hidden="true"><WalletCards size={48} strokeWidth={1.5} /></span><small>PANDIYAN STORES</small><h2>Your wallet</h2>
       <p>Referral rewards, in one place.</p>
-      {user ? <div className="wallet-amount"><span>Current balance</span><strong>{wallet ? money(wallet.balance) : '—'}</strong></div> : <Link className="button primary full" to="/login">Sign in to view your balance</Link>}
+      {user ? <div className="wallet-amount"><span>Available wallet balance</span><strong>{wallet ? money(wallet.balance) : '—'}</strong></div> : <Link className="button primary full" to="/login">Sign in to view your balance</Link>}
     </div>
     <div className="wallet-content">
       {user && walletError && <div className="notice error" role="alert"><p>{walletError}</p><button className="button secondary" onClick={refreshWallet}>Try again</button></div>}
       {user && !wallet && !walletError && <p role="status">Loading your wallet…</p>}
+      {user && wallet && <section className="notice"><h2>Pending commissions</h2><strong>{money(wallet.pending_commissions || 0)}</strong><p>Not yet available to spend. Reach the purchase minimum before the deadline to unlock these commissions. Previously credited wallet funds remain separate.</p>{wallet.pending_next_expiry && <p>Next expiry: {new Date(wallet.pending_next_expiry).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} (India time).</p>}<Link to="/referrals">View qualification progress</Link></section>}
       <div className="wallet-features">
         <article><Gift size={24} /><div><h3>Your earned rewards</h3><p>View rewards credited through the store’s referral programme.</p></div></article>
         <article><ReceiptText size={24} /><div><h3>A clear record</h3><p>Check the amount, date and status of every wallet entry.</p></div></article>

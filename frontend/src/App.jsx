@@ -72,7 +72,7 @@ export default function App() {
     <Route path="orders" element={<Guard adminModule="orders"><AdminOrders /></Guard>} />
     <Route path="orders/:id" element={<Guard adminModule="orders"><OrderDetail admin /></Guard>} />
     <Route path="products" element={<Guard adminModule="products"><AdminProducts /></Guard>} />
-    <Route path="categories" element={<Guard adminModule="products"><AdminProducts /></Guard>} />
+    <Route path="categories" element={<Guard adminModule="products"><Navigate to="/admin/products" replace /></Guard>} />
     <Route path="customers" element={<Guard adminModule="customers"><AdminCustomers /></Guard>} />
     <Route path="staff" element={<Guard adminRoles={['admin', 'super_admin']}><AdminStaff /></Guard>} />
     <Route path="referrals" element={<Guard adminModule="referrals"><AdminReferrals /></Guard>} />

@@ -409,7 +409,7 @@ class ReferralNetworkTests(TestCase):
         self.program.save()
         order = self.delivered_order(purchaser, total="2000.00")
         self.assertFalse(award_referral_for_order(order))
-        self.assertFalse(ReferralReward.objects.filter(order=order).exists())
+        self.assertFalse(ReferralReward.objects.filter(order=order, status=ReferralReward.Status.CREDITED).exists())
         self.assertFalse(WalletLedger.objects.filter(order=order).exists())
         self.assertEqual(qualifying_self_purchase_total(ancestors[0], self.program), Decimal("0.00"))
 

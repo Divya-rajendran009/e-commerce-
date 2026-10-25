@@ -34,7 +34,7 @@ class ReferralProgramSerializer(serializers.ModelSerializer):
         model = ReferralProgram
         fields = [
             "active", "reward_type", "customer_reward",
-            "qualification_threshold", "max_reward_per_referral", "max_depth",
+            "qualification_threshold", "qualification_period", "qualification_period_days", "max_reward_per_referral", "max_depth",
             "category_scope", "category_overrides_enabled",
             "referral_rewards_enabled",
             "qualifying_order_statuses", "reward_on_first_qualifying_order_only",
@@ -224,11 +224,17 @@ class ReferralDashboardSerializer(serializers.Serializer):
     referral_url = serializers.CharField()
     qualification_threshold = serializers.DecimalField(max_digits=10, decimal_places=2)
     qualifying_self_purchase_total = serializers.DecimalField(max_digits=10, decimal_places=2)
+    qualification_period = serializers.CharField()
+    qualification_period_start = serializers.DateTimeField()
+    qualification_period_end = serializers.DateTimeField()
+    qualification_remaining = serializers.DecimalField(max_digits=10, decimal_places=2)
     qualification_progress_percent = serializers.IntegerField()
     is_qualified = serializers.BooleanField()
     commission_rates = serializers.ListField(child=serializers.DictField())
     commission_category_scope = serializers.ChoiceField(choices=ReferralProgram.CategoryScope.choices)
     network_levels = serializers.ListField(child=serializers.DictField())
+    pending_commissions = serializers.DecimalField(max_digits=10, decimal_places=2)
+    pending_next_expiry = serializers.DateTimeField(allow_null=True)
     wallet_balance = serializers.DecimalField(max_digits=10, decimal_places=2)
     wallet_transactions = WalletLedgerSerializer(many=True)
     rewards = CustomerReferralRewardSerializer(many=True)

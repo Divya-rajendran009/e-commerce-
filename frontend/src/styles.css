@@ -1000,3 +1000,16 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .wallet-summary .admin-metric-card { display:flex; flex-direction:column; align-items:flex-start; gap:8px; }
 .wallet-summary .admin-metric-card > span { font-size:12px; }
 .wallet-summary .admin-metric-card > strong { margin:0; font-size:22px; }
+
+.admin-custom-range { display: grid; gap: 10px; min-width: 0; }
+.admin-custom-range .field { margin: 0; min-width: 0; }
+.admin-custom-range .field > span, .admin-custom-range > small, .admin-custom-range > p { color: #fff; }
+.admin-custom-range input { width: 100%; min-width: 0; color-scheme: light; }
+
+.stock-category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 20px 0; }
+.stock-category { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; text-align: left; padding: 18px; }
+.stock-product-list { display: grid; gap: 12px; margin: 20px 0; }
+.stock-product-row { display: grid; grid-template-columns: minmax(160px, 2fr) 1fr minmax(160px, 1fr) auto; align-items: center; gap: 16px; padding: 16px; border: 1px solid #dce4df; border-radius: 12px; }
+.stock-product-row .field { margin: 0; }
+.stock-product-row p { overflow-wrap: anywhere; }
+@media (max-width: 700px) { .stock-product-row { grid-template-columns: minmax(0, 1fr); } .category-stock-update .admin-list-heading { flex-wrap: wrap; gap: 12px; } }

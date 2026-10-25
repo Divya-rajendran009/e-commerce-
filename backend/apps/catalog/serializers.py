@@ -52,7 +52,7 @@ class AdminProductSerializer(ProductSerializer):
     image = serializers.FileField(required=False, write_only=True, allow_empty_file=False)
 
     class Meta(ProductSerializer.Meta):
-        fields = ProductSerializer.Meta.fields + ["barcode", "low_stock_threshold", "image"]
+        fields = ProductSerializer.Meta.fields + ["barcode", "low_stock_threshold", "image", "wholesale_price"]
 
     def validate_image(self, image):
         if image.size > MAX_PRODUCT_IMAGE_SIZE:

@@ -206,3 +206,69 @@ class CatalogVisibilityTests(TestCase):
         self.assertEqual(response.status_code, 403)
         self.category.refresh_from_db()
         self.assertIsNone(self.category.referral_rewards_enabled)
+
+
+class WholesalePriceTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.admin = User.objects.create_user(
+            email="wholesale-admin@example.test", password="Test-password-123!",
+            phone="9876500091", role=User.Role.ADMIN, is_staff=True,
+        )
+        self.client.force_authenticate(self.admin)
+        self.category = Category.objects.create(name="Wholesale goods", slug="wholesale-goods")
+
+    def test_create_update_reload_and_clear_wholesale_price(self):
+        response = self.client.post("/api/v1/admin/products/", {
+            "name": "Rice", "slug": "rice", "sku": "RICE-WHOLESALE",
+            "category": self.category.pk, "price": "100.00",
+            "wholesale_price": "80.25", "stock": 10,
+        }, format="multipart")
+        self.assertEqual(response.status_code, 201, response.data)
+        product = Product.objects.get(pk=response.data["id"])
+        self.assertEqual(product.wholesale_price, Decimal("80.25"))
+        url = f"/api/v1/admin/products/{product.pk}/"
+        self.assertEqual(self.client.get(url).data["wholesale_price"], "80.25")
+        for value, expected in [("75.50", Decimal("75.50")), ("0", Decimal("0")), ("", None)]:
+            response = self.client.patch(url, {"wholesale_price": value}, format="multipart")
+            self.assertEqual(response.status_code, 200, response.data)
+            product.refresh_from_db()
+            self.assertEqual(product.wholesale_price, expected)
+            self.assertEqual(product.price, Decimal("100.00"))
+
+    def test_optional_price_and_invalid_values(self):
+        product = Product.objects.create(category=self.category, name="Rice", slug="rice", sku="RICE", price="100.00", stock=10)
+        self.assertIsNone(product.wholesale_price)
+        url = f"/api/v1/admin/products/{product.pk}/"
+        for value in ["-1.00", "1.234", "invalid"]:
+            response = self.client.patch(url, {"wholesale_price": value}, format="multipart")
+            self.assertEqual(response.status_code, 400)
+            self.assertIn("wholesale_price", response.data)
+        self.client.force_authenticate(user=None)
+        self.assertNotIn("wholesale_price", self.client.get(f"/api/v1/products/{product.pk}/").data)
+        self.assertIn(self.client.patch(url, {"wholesale_price": "1.00"}, format="json").status_code, [401, 403])
+
+
+class DashboardCustomRangeTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        admin = User.objects.create_user(email="range-admin@example.test", password="test", phone="9876500080", role=User.Role.ADMIN, is_staff=True)
+        self.client.force_authenticate(admin)
+
+    def test_custom_range_includes_both_dates(self):
+        from datetime import datetime
+        from django.utils import timezone
+        for index, timestamp in enumerate([(2026, 10, 1, 0, 0), (2026, 10, 2, 23, 59), (2026, 10, 3, 0, 0)]):
+            customer = User.objects.create_user(email=f"range-{index}@example.test", phone=f"987650008{index + 1}", password="test")
+            User.objects.filter(pk=customer.pk).update(date_joined=timezone.make_aware(datetime(*timestamp)))
+        response = self.client.get("/api/v1/admin/dashboard/", {"period": "custom", "start": "2026-10-01", "end": "2026-10-02"})
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(response.data["new_customers"], 2)
+        response = self.client.get("/api/v1/admin/dashboard/", {"period": "custom", "start": "2026-10-02", "end": "2026-10-02"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["new_customers"], 1)
+
+    def test_missing_and_reversed_dates_are_rejected(self):
+        for dates in [{}, {"start": "2026-10-01"}, {"start": "2026-10-03", "end": "2026-10-01"}]:
+            response = self.client.get("/api/v1/admin/dashboard/", {"period": "custom", **dates})
+            self.assertEqual(response.status_code, 400)

@@ -1,37 +1,37 @@
 [
   {
     "name": "Clothing",
-    "image_url": "/images/categories/clothing.webp",
-    "source": "https://cdn.dummyjson.com/product-images/mens-shirts/blue-&-black-check-shirt/thumbnail.webp"
+    "image_url": "/images/catalogue/categories/clothing.webp",
+    "source": "Generated category photograph; see /images/catalogue/provenance.json"
   },
   {
     "name": "Toiletries",
-    "image_url": "/images/categories/toiletries.webp",
-    "source": "https://cdn.dummyjson.com/product-images/skin-care/attitude-super-leaves-hand-soap/thumbnail.webp"
+    "image_url": "/images/catalogue/categories/toiletries.webp",
+    "source": "Generated category photograph; see /images/catalogue/provenance.json"
   },
   {
     "name": "Perfumes",
-    "image_url": "/images/categories/perfumes.webp",
-    "source": "https://cdn.dummyjson.com/product-images/fragrances/calvin-klein-ck-one/thumbnail.webp"
+    "image_url": "/images/catalogue/categories/perfumes.webp",
+    "source": "Generated category photograph; see /images/catalogue/provenance.json"
   },
   {
     "name": "Vegetables",
-    "image_url": "/images/categories/vegetables.webp",
-    "source": "https://cdn.dummyjson.com/product-images/groceries/potatoes/thumbnail.webp"
+    "image_url": "/images/catalogue/categories/vegetables.webp",
+    "source": "Generated category photograph; see /images/catalogue/provenance.json"
   },
   {
     "name": "Dairy",
-    "image_url": "/images/categories/dairy.webp",
-    "source": "https://cdn.dummyjson.com/product-images/groceries/milk/thumbnail.webp"
+    "image_url": "/images/catalogue/categories/dairy.webp",
+    "source": "Generated category photograph; see /images/catalogue/provenance.json"
   },
   {
     "name": "Rice & grains",
-    "image_url": "/images/categories/rice-grains.webp",
-    "source": "https://cdn.dummyjson.com/product-images/groceries/rice/thumbnail.webp"
+    "image_url": "/images/catalogue/categories/rice-grains.webp",
+    "source": "Generated category photograph; see /images/catalogue/provenance.json"
   },
   {
     "name": "Pantry",
-    "image_url": "/images/categories/pantry.webp",
-    "source": "https://cdn.dummyjson.com/product-images/groceries/cooking-oil/thumbnail.webp"
+    "image_url": "/images/catalogue/categories/pantry.webp",
+    "source": "Generated category photograph; see /images/catalogue/provenance.json"
   }
 ]

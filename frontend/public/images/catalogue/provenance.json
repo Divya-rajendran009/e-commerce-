@@ -1,0 +1,226 @@
+{
+  "tool": "Built-in image_gen",
+  "note": "AI-created illustrative sample catalogue artwork, edited from the existing sample product references; not manufacturer-supplied photography. Real uploaded product images take precedence.",
+  "categories": [
+    {
+      "id": "clothing",
+      "name": "Clothing",
+      "image_url": "/images/catalogue/categories/clothing.webp",
+      "prompt": "Use case: product-mockup. Asset type: distinct supermarket category thumbnail. Create a brand-new photorealistic professional still-life photograph: Three neatly folded real cotton shirts, one blue checked and one pale linen and one olive, visible fabric weave, on a pale powder blue surface. Square composition, subjects large and central filling 80% of frame, all edges comfortably inside frame, subtle physical shadows, bright soft daylight, vibrant natural materials and textures. Real camera photograph, never illustration or plastic 3D render. No text, no logos, no collage, no UI.",
+      "sha256": "5da97087137fb02cc561816663e928e368a7c58881092773b2527365ed9858ac",
+      "bytes": 78438
+    },
+    {
+      "id": "dairy",
+      "name": "Dairy",
+      "image_url": "/images/catalogue/categories/dairy.webp",
+      "prompt": "Use case: product-mockup. Asset type: distinct supermarket category thumbnail. Create a brand-new photorealistic professional still-life photograph: A fresh glass milk bottle, a small plain yogurt cup, wedge of cheese and two brown eggs, on a soft cream surface. Square composition, subjects large and central filling 80% of frame, all edges comfortably inside frame, subtle physical shadows, bright soft daylight, vibrant natural materials and textures. Real camera photograph, never illustration or plastic 3D render. No text, no logos, no collage, no UI.",
+      "sha256": "e85465c45a18b7ab2714c1db8b2470de25f72693893680024cbbf0183635def2",
+      "bytes": 37594
+    },
+    {
+      "id": "pantry",
+      "name": "Pantry",
+      "image_url": "/images/catalogue/categories/pantry.webp",
+      "prompt": "Use case: product-mockup. Asset type: distinct supermarket category thumbnail. Create a brand-new photorealistic professional still-life photograph: A clear bottle of golden cooking oil, small bowls of red turmeric spices and a jar of honey, on a warm sunny yellow surface. No rice, no grains, no bathroom products. Square composition, subjects large and central filling 80% of frame, all edges comfortably inside frame, subtle physical shadows, bright soft daylight, vibrant natural materials and textures. Real camera photograph, never illustration or plastic 3D render. No text, no logos, no collage, no UI.",
+      "sha256": "fe30d9fa016347a0bd26c78e7d80d25a19a5af00116530cd27fd9f6a62601669",
+      "bytes": 84816
+    },
+    {
+      "id": "rice-grains",
+      "name": "Rice & grains",
+      "image_url": "/images/catalogue/categories/rice-grains.webp",
+      "prompt": "Use case: product-mockup. Asset type: distinct supermarket category thumbnail. Create a brand-new photorealistic professional still-life photograph: Separate shallow wooden bowls of uncooked long-grain white rice, red lentils and golden wheat grains, some loose grains, on a warm beige surface. No oil bottles or toiletries. Square composition, subjects large and central filling 80% of frame, all edges comfortably inside frame, subtle physical shadows, bright soft daylight, vibrant natural materials and textures. Real camera photograph, never illustration or plastic 3D render. No text, no logos, no collage, no UI.",
+      "sha256": "246d5cd74121cd9e440e474f48f1419dfbaa6453ab92195a9d0fe5f15ae2515a",
+      "bytes": 111370
+    },
+    {
+      "id": "toiletries",
+      "name": "Toiletries",
+      "image_url": "/images/catalogue/categories/toiletries.webp",
+      "prompt": "Use case: product-mockup. Asset type: distinct supermarket category thumbnail. Create a brand-new photorealistic professional still-life photograph: A clean pump hand-soap bottle, a toothbrush, a toothpaste tube and folded white hand towel, on a fresh pale mint surface. No food or oil. Square composition, subjects large and central filling 80% of frame, all edges comfortably inside frame, subtle physical shadows, bright soft daylight, vibrant natural materials and textures. Real camera photograph, never illustration or plastic 3D render. No text, no logos, no collage, no UI.",
+      "sha256": "1ac805c8cdc5ec4224f88b48e79a742dda5974b7cf67191e8f5d2d9b55e7f3c7",
+      "bytes": 39368
+    },
+    {
+      "id": "perfumes",
+      "name": "Perfumes",
+      "image_url": "/images/catalogue/categories/perfumes.webp",
+      "prompt": "Use case: product-mockup. Asset type: distinct supermarket category thumbnail. Create a brand-new photorealistic professional still-life photograph: Two elegant unbranded glass perfume bottles, one clear with a silver cap and one pale rose amber, with realistic refraction, on a pale blush surface. Square composition, subjects large and central filling 80% of frame, all edges comfortably inside frame, subtle physical shadows, bright soft daylight, vibrant natural materials and textures. Real camera photograph, never illustration or plastic 3D render. No text, no logos, no collage, no UI.",
+      "sha256": "4fef32ec391c5c782e3ecaef6607b222c42cbe22e00ac24444c2228d1a340a9f",
+      "bytes": 74244
+    },
+    {
+      "id": "vegetables",
+      "name": "Vegetables",
+      "image_url": "/images/catalogue/categories/vegetables.webp",
+      "prompt": "Use case: product-mockup. Asset type: distinct supermarket category thumbnail. Create a brand-new photorealistic professional still-life photograph: Fresh red tomatoes, green bell pepper, carrots, broccoli and leafy greens, rich natural colours and tiny water droplets, on a soft green surface. Square composition, subjects large and central filling 80% of frame, all edges comfortably inside frame, subtle physical shadows, bright soft daylight, vibrant natural materials and textures. Real camera photograph, never illustration or plastic 3D render. No text, no logos, no collage, no UI.",
+      "sha256": "7f6b272a1a312913f8f2a0599e69e913e72cdcd0e969ae1effcf63220105fcee",
+      "bytes": 129178
+    }
+  ],
+  "products": [
+    {
+      "id": "demo-83",
+      "name": "Blue & Black Check Shirt",
+      "source": "https://cdn.dummyjson.com/product-images/mens-shirts/blue-&-black-check-shirt/thumbnail.webp",
+      "image_url": "/images/catalogue/products/demo-83.webp",
+      "prompt": "Use case: style-transfer. Asset type: online supermarket individual product catalogue photograph. Input image is the product identity reference for \"Blue & Black Check Shirt\". Replace its flat computer-rendered appearance with a convincing high-end real camera product photo. Preserve this exact product: original packaging shape, colour, brand label wording and graphics, or garment colour/pattern/sleeves, or food type and quantity. Single product listing only, no unrelated objects, no invented packaging claims or extra captions. Realistic fine material texture, true glass/plastic reflections or natural produce surface or fabric weave. Bright neutral near-white studio background and a subtle soft contact shadow, attractive natural saturation, sharp detail. Square composition with the entire product centered and large, occupying 82 percent of the available frame, comfortable 8 percent margin, no clipping. Do not retain the old thumbnail's excess empty margins. No watermark, UI, price, badge, collage or human model.",
+      "sha256": "1d76e80e8c8dcc0aab25024b327824ad9e5fc8b172cc57e460c5f89e88625b34",
+      "bytes": 75284
+    },
+    {
+      "id": "demo-118",
+      "name": "Attitude Super Leaves Hand Soap",
+      "source": "https://cdn.dummyjson.com/product-images/skin-care/attitude-super-leaves-hand-soap/thumbnail.webp",
+      "image_url": "/images/catalogue/products/demo-118.webp",
+      "prompt": "Use case: style-transfer. Asset type: online supermarket individual product catalogue photograph. Input image is the product identity reference for \"Attitude Super Leaves Hand Soap\". Replace its flat computer-rendered appearance with a convincing high-end real camera product photo. Preserve this exact product: original packaging shape, colour, brand label wording and graphics, or garment colour/pattern/sleeves, or food type and quantity. Single product listing only, no unrelated objects, no invented packaging claims or extra captions. Realistic fine material texture, true glass/plastic reflections or natural produce surface or fabric weave. Bright neutral near-white studio background and a subtle soft contact shadow, attractive natural saturation, sharp detail. Square composition with the entire product centered and large, occupying 82 percent of the available frame, comfortable 8 percent margin, no clipping. Do not retain the old thumbnail's excess empty margins. No watermark, UI, price, badge, collage or human model.",
+      "sha256": "0de87e07d420a8f6be49ac5438dd6107647f5291cdf1fa570389e57dceee1e24",
+      "bytes": 24110
+    },
+    {
+      "id": "demo-6",
+      "name": "Calvin Klein CK One",
+      "source": "https://cdn.dummyjson.com/product-images/fragrances/calvin-klein-ck-one/thumbnail.webp",
+      "image_url": "/images/catalogue/products/demo-6.webp",
+      "prompt": "Use case: style-transfer. Asset type: online supermarket individual product catalogue photograph. Input image is the product identity reference for \"Calvin Klein CK One\". Replace its flat computer-rendered appearance with a convincing high-end real camera product photo. Preserve this exact product: original packaging shape, colour, brand label wording and graphics, or garment colour/pattern/sleeves, or food type and quantity. Single product listing only, no unrelated objects, no invented packaging claims or extra captions. Realistic fine material texture, true glass/plastic reflections or natural produce surface or fabric weave. Bright neutral near-white studio background and a subtle soft contact shadow, attractive natural saturation, sharp detail. Square composition with the entire product centered and large, occupying 82 percent of the available frame, comfortable 8 percent margin, no clipping. Do not retain the old thumbnail's excess empty margins. No watermark, UI, price, badge, collage or human model.",
+      "sha256": "75643aaafdcfabe7fb2657a994f0f6bf66ce495af0c7069d42f072fd12cc228a",
+      "bytes": 11100
+    },
+    {
+      "id": "demo-35",
+      "name": "Potatoes",
+      "source": "https://cdn.dummyjson.com/product-images/groceries/potatoes/thumbnail.webp",
+      "image_url": "/images/catalogue/products/demo-35.webp",
+      "prompt": "Use case: style-transfer. Asset type: online supermarket individual product catalogue photograph. Input image is the product identity reference for \"Potatoes\". Replace its flat computer-rendered appearance with a convincing high-end real camera product photo. Preserve this exact product: original packaging shape, colour, brand label wording and graphics, or garment colour/pattern/sleeves, or food type and quantity. Single product listing only, no unrelated objects, no invented packaging claims or extra captions. Realistic fine material texture, true glass/plastic reflections or natural produce surface or fabric weave. Bright neutral near-white studio background and a subtle soft contact shadow, attractive natural saturation, sharp detail. Square composition with the entire product centered and large, occupying 82 percent of the available frame, comfortable 8 percent margin, no clipping. Do not retain the old thumbnail's excess empty margins. No watermark, UI, price, badge, collage or human model.",
+      "sha256": "55e646577a89ef700dab29109b90ca6d0a0257b24da984ee56d37d509499ec31",
+      "bytes": 52308
+    },
+    {
+      "id": "demo-32",
+      "name": "Milk",
+      "source": "https://cdn.dummyjson.com/product-images/groceries/milk/thumbnail.webp",
+      "image_url": "/images/catalogue/products/demo-32.webp",
+      "prompt": "Use case: style-transfer. Asset type: online supermarket individual product catalogue photograph. Input image is the product identity reference for \"Milk\". Replace its flat computer-rendered appearance with a convincing high-end real camera product photo. Preserve this exact product: original packaging shape, colour, brand label wording and graphics, or garment colour/pattern/sleeves, or food type and quantity. Single product listing only, no unrelated objects, no invented packaging claims or extra captions. Realistic fine material texture, true glass/plastic reflections or natural produce surface or fabric weave. Bright neutral near-white studio background and a subtle soft contact shadow, attractive natural saturation, sharp detail. Square composition with the entire product centered and large, occupying 82 percent of the available frame, comfortable 8 percent margin, no clipping. Do not retain the old thumbnail's excess empty margins. No watermark, UI, price, badge, collage or human model.",
+      "sha256": "439eeebd4a29a317c7c6d386657edc4b02e3ed5bb00904bccba06a6ff8d01296",
+      "bytes": 7342
+    },
+    {
+      "id": "demo-38",
+      "name": "Rice",
+      "source": "https://cdn.dummyjson.com/product-images/groceries/rice/thumbnail.webp",
+      "image_url": "/images/catalogue/products/demo-38.webp",
+      "prompt": "Use case: style-transfer. Asset type: online supermarket individual product catalogue photograph. Input image is the product identity reference for \"Rice\". Replace its flat computer-rendered appearance with a convincing high-end real camera product photo. Preserve this exact product: original packaging shape, colour, brand label wording and graphics, or garment colour/pattern/sleeves, or food type and quantity. Single product listing only, no unrelated objects, no invented packaging claims or extra captions. Realistic fine material texture, true glass/plastic reflections or natural produce surface or fabric weave. Bright neutral near-white studio background and a subtle soft contact shadow, attractive natural saturation, sharp detail. Square composition with the entire product centered and large, occupying 82 percent of the available frame, comfortable 8 percent margin, no clipping. Do not retain the old thumbnail's excess empty margins. No watermark, UI, price, badge, collage or human model.",
+      "sha256": "fa6d8d96ef44d2ef1312f7d9c5f2d32359e7ef6297c54dbc747c9ca1d87ff1b0",
+      "bytes": 38812
+    },
+    {
+      "id": "demo-86",
+      "name": "Man Short Sleeve Shirt",
+      "source": "https://cdn.dummyjson.com/product-images/mens-shirts/man-short-sleeve-shirt/thumbnail.webp",
+      "image_url": "/images/catalogue/products/demo-86.webp",
+      "prompt": "Use case: style-transfer. Asset type: online supermarket individual product catalogue photograph. Input image is the product identity reference for \"Man Short Sleeve Shirt\". Replace its flat computer-rendered appearance with a convincing high-end real camera product photo. Preserve this exact product: original packaging shape, colour, brand label wording and graphics, or garment colour/pattern/sleeves, or food type and quantity. Single product listing only, no unrelated objects, no invented packaging claims or extra captions. Realistic fine material texture, true glass/plastic reflections or natural produce surface or fabric weave. Bright neutral near-white studio background and a subtle soft contact shadow, attractive natural saturation, sharp detail. Square composition with the entire product centered and large, occupying 82 percent of the available frame, comfortable 8 percent margin, no clipping. Do not retain the old thumbnail's excess empty margins. No watermark, UI, price, badge, collage or human model.",
+      "sha256": "406958697f19eb8df3a4515236c166b8f2d2620cff2ff4a481b88f2398af84c4",
+      "bytes": 82908
+    },
+    {
+      "id": "demo-119",
+      "name": "Olay Ultra Moisture Shea Butter Body Wash",
+      "source": "https://cdn.dummyjson.com/product-images/skin-care/olay-ultra-moisture-shea-butter-body-wash/thumbnail.webp",
+      "image_url": "/images/catalogue/products/demo-119.webp",
+      "prompt": "Use case: style-transfer. Asset type: online supermarket individual product catalogue photograph. Input image is the product identity reference for \"Olay Ultra Moisture Shea Butter Body Wash\". Replace its flat computer-rendered appearance with a convincing high-end real camera product photo. Preserve this exact product: original packaging shape, colour, brand label wording and graphics, or garment colour/pattern/sleeves, or food type and quantity. Single product listing only, no unrelated objects, no invented packaging claims or extra captions. Realistic fine material texture, true glass/plastic reflections or natural produce surface or fabric weave. Bright neutral near-white studio background and a subtle soft contact shadow, attractive natural saturation, sharp detail. Square composition with the entire product centered and large, occupying 82 percent of the available frame, comfortable 8 percent margin, no clipping. Do not retain the old thumbnail's excess empty margins. No watermark, UI, price, badge, collage or human model.",
+      "sha256": "4c69c257878c3f0d1498d355908bb5083034afabad1f692b50f396fbb07c3769",
+      "bytes": 18868
+    },
+    {
+      "id": "demo-10",
+      "name": "Gucci Bloom Eau de",
+      "source": "https://cdn.dummyjson.com/product-images/fragrances/gucci-bloom-eau-de/thumbnail.webp",
+      "image_url": "/images/catalogue/products/demo-10.webp",
+      "prompt": "Use case: style-transfer. Asset type: online supermarket individual product catalogue photograph. Input image is the product identity reference for \"Gucci Bloom Eau de\". Replace its flat computer-rendered appearance with a convincing high-end real camera product photo. Preserve this exact product: original packaging shape, colour, brand label wording and graphics, or garment colour/pattern/sleeves, or food type and quantity. Single product listing only, no unrelated objects, no invented packaging claims or extra captions. Realistic fine material texture, true glass/plastic reflections or natural produce surface or fabric weave. Bright neutral near-white studio background and a subtle soft contact shadow, attractive natural saturation, sharp detail. Square composition with the entire product centered and large, occupying 82 percent of the available frame, comfortable 8 percent margin, no clipping. Do not retain the old thumbnail's excess empty margins. No watermark, UI, price, badge, collage or human model.",
+      "sha256": "2b136379321dee5039b4e57f484ae9ba0d5b284838f0c69d8cb51c4412e3a885",
+      "bytes": 11076
+    },
+    {
+      "id": "demo-37",
+      "name": "Red Onions",
+      "source": "https://cdn.dummyjson.com/product-images/groceries/red-onions/thumbnail.webp",
+      "image_url": "/images/catalogue/products/demo-37.webp",
+      "prompt": "Use case: style-transfer. Asset type: online supermarket individual product catalogue photograph. Input image is the product identity reference for \"Red Onions\". Replace its flat computer-rendered appearance with a convincing high-end real camera product photo. Preserve this exact product: original packaging shape, colour, brand label wording and graphics, or garment colour/pattern/sleeves, or food type and quantity. Single product listing only, no unrelated objects, no invented packaging claims or extra captions. Realistic fine material texture, true glass/plastic reflections or natural produce surface or fabric weave. Bright neutral near-white studio background and a subtle soft contact shadow, attractive natural saturation, sharp detail. Square composition with the entire product centered and large, occupying 82 percent of the available frame, comfortable 8 percent margin, no clipping. Do not retain the old thumbnail's excess empty margins. No watermark, UI, price, badge, collage or human model.",
+      "sha256": "7e33d1582dade745e4183f63eccc10cd160ced56082a0dad40bded1a1829278c",
+      "bytes": 41310
+    },
+    {
+      "id": "demo-28",
+      "name": "Ice Cream",
+      "source": "https://cdn.dummyjson.com/product-images/groceries/ice-cream/thumbnail.webp",
+      "image_url": "/images/catalogue/products/demo-28.webp",
+      "prompt": "Use case: style-transfer. Asset type: online supermarket individual product catalogue photograph. Input image is the product identity reference for \"Ice Cream\". Replace its flat computer-rendered appearance with a convincing high-end real camera product photo. Preserve this exact product: original packaging shape, colour, brand label wording and graphics, or garment colour/pattern/sleeves, or food type and quantity. Single product listing only, no unrelated objects, no invented packaging claims or extra captions. Realistic fine material texture, true glass/plastic reflections or natural produce surface or fabric weave. Bright neutral near-white studio background and a subtle soft contact shadow, attractive natural saturation, sharp detail. Square composition with the entire product centered and large, occupying 82 percent of the available frame, comfortable 8 percent margin, no clipping. Do not retain the old thumbnail's excess empty margins. No watermark, UI, price, badge, collage or human model.",
+      "sha256": "f2fe645ae68e7e00bfe3deebb5f77ea7b07f0c54888392e7e853765976a94490",
+      "bytes": 63856
+    },
+    {
+      "id": "demo-20",
+      "name": "Cooking Oil",
+      "source": "https://cdn.dummyjson.com/product-images/groceries/cooking-oil/thumbnail.webp",
+      "image_url": "/images/catalogue/products/demo-20.webp",
+      "prompt": "Use case: style-transfer. Asset type: online supermarket individual product catalogue photograph. Input image is the product identity reference for \"Cooking Oil\". Replace its flat computer-rendered appearance with a convincing high-end real camera product photo. Preserve this exact product: original packaging shape, colour, brand label wording and graphics, or garment colour/pattern/sleeves, or food type and quantity. Single product listing only, no unrelated objects, no invented packaging claims or extra captions. Realistic fine material texture, true glass/plastic reflections or natural produce surface or fabric weave. Bright neutral near-white studio background and a subtle soft contact shadow, attractive natural saturation, sharp detail. Square composition with the entire product centered and large, occupying 82 percent of the available frame, comfortable 8 percent margin, no clipping. Do not retain the old thumbnail's excess empty margins. No watermark, UI, price, badge, collage or human model.",
+      "sha256": "d228ff0e65884b1758313027be2c6accdb967bec4318a750f7bed58bb06525f7",
+      "bytes": 30882
+    },
+    {
+      "id": "demo-85",
+      "name": "Man Plaid Shirt",
+      "source": "https://cdn.dummyjson.com/product-images/mens-shirts/man-plaid-shirt/thumbnail.webp",
+      "image_url": "/images/catalogue/products/demo-85.webp",
+      "prompt": "Use case: style-transfer. Asset type: online supermarket individual product catalogue photograph. Input image is the product identity reference for \"Man Plaid Shirt\". Replace its flat computer-rendered appearance with a convincing high-end real camera product photo. Preserve this exact product: original packaging shape, colour, brand label wording and graphics, or garment colour/pattern/sleeves, or food type and quantity. Single product listing only, no unrelated objects, no invented packaging claims or extra captions. Realistic fine material texture, true glass/plastic reflections or natural produce surface or fabric weave. Bright neutral near-white studio background and a subtle soft contact shadow, attractive natural saturation, sharp detail. Square composition with the entire product centered and large, occupying 82 percent of the available frame, comfortable 8 percent margin, no clipping. Do not retain the old thumbnail's excess empty margins. No watermark, UI, price, badge, collage or human model.",
+      "sha256": "a576fba7cc7d2998c44393eca5784f04cb7e2008a4bed978576966b9467fd4e6",
+      "bytes": 50630
+    },
+    {
+      "id": "demo-120",
+      "name": "Vaseline Men Body and Face Lotion",
+      "source": "https://cdn.dummyjson.com/product-images/skin-care/vaseline-men-body-and-face-lotion/thumbnail.webp",
+      "image_url": "/images/catalogue/products/demo-120.webp",
+      "prompt": "Use case: style-transfer. Asset type: online supermarket individual product catalogue photograph. Input image is the product identity reference for \"Vaseline Men Body and Face Lotion\". Replace its flat computer-rendered appearance with a convincing high-end real camera product photo. Preserve this exact product: original packaging shape, colour, brand label wording and graphics, or garment colour/pattern/sleeves, or food type and quantity. Single product listing only, no unrelated objects, no invented packaging claims or extra captions. Realistic fine material texture, true glass/plastic reflections or natural produce surface or fabric weave. Bright neutral near-white studio background and a subtle soft contact shadow, attractive natural saturation, sharp detail. Square composition with the entire product centered and large, occupying 82 percent of the available frame, comfortable 8 percent margin, no clipping. Do not retain the old thumbnail's excess empty margins. No watermark, UI, price, badge, collage or human model.",
+      "sha256": "c6de9a0e274fce8c194a44d195da08f6a541e8b63a85af478738e6e65b044fbe",
+      "bytes": 25832
+    },
+    {
+      "id": "demo-9",
+      "name": "Dolce Shine Eau de",
+      "source": "https://cdn.dummyjson.com/product-images/fragrances/dolce-shine-eau-de/thumbnail.webp",
+      "image_url": "/images/catalogue/products/demo-9.webp",
+      "prompt": "Use case: style-transfer. Asset type: online supermarket individual product catalogue photograph. Input image is the product identity reference for \"Dolce Shine Eau de\". Replace its flat computer-rendered appearance with a convincing high-end real camera product photo. Preserve this exact product: original packaging shape, colour, brand label wording and graphics, or garment colour/pattern/sleeves, or food type and quantity. Single product listing only, no unrelated objects, no invented packaging claims or extra captions. Realistic fine material texture, true glass/plastic reflections or natural produce surface or fabric weave. Bright neutral near-white studio background and a subtle soft contact shadow, attractive natural saturation, sharp detail. Square composition with the entire product centered and large, occupying 82 percent of the available frame, comfortable 8 percent margin, no clipping. Do not retain the old thumbnail's excess empty margins. No watermark, UI, price, badge, collage or human model.",
+      "sha256": "3c55ee10cc7104be7a5c7e2b5bb1f363c5accf87633efb15caf5baa36caf188f",
+      "bytes": 32164
+    },
+    {
+      "id": "demo-25",
+      "name": "Green Bell Pepper",
+      "source": "https://cdn.dummyjson.com/product-images/groceries/green-bell-pepper/thumbnail.webp",
+      "image_url": "/images/catalogue/products/demo-25.webp",
+      "prompt": "Use case: style-transfer. Asset type: online supermarket individual product catalogue photograph. Input image is the product identity reference for \"Green Bell Pepper\". Replace its flat computer-rendered appearance with a convincing high-end real camera product photo. Preserve this exact product: original packaging shape, colour, brand label wording and graphics, or garment colour/pattern/sleeves, or food type and quantity. Single product listing only, no unrelated objects, no invented packaging claims or extra captions. Realistic fine material texture, true glass/plastic reflections or natural produce surface or fabric weave. Bright neutral near-white studio background and a subtle soft contact shadow, attractive natural saturation, sharp detail. Square composition with the entire product centered and large, occupying 82 percent of the available frame, comfortable 8 percent margin, no clipping. Do not retain the old thumbnail's excess empty margins. No watermark, UI, price, badge, collage or human model.",
+      "sha256": "4eeada4abf17349fbad266b61b9fd02052623eef65bd54bed1861ebe225e180d",
+      "bytes": 36272
+    },
+    {
+      "id": "demo-41",
+      "name": "Tissue Paper Box",
+      "source": "https://cdn.dummyjson.com/product-images/groceries/tissue-paper-box/thumbnail.webp",
+      "image_url": "/images/catalogue/products/demo-41.webp",
+      "prompt": "Use case: style-transfer. Asset type: online supermarket individual product catalogue photograph. Input image is the product identity reference for \"Tissue Paper Box\". Replace its flat computer-rendered appearance with a convincing high-end real camera product photo. Preserve this exact product: original packaging shape, colour, brand label wording and graphics, or garment colour/pattern/sleeves, or food type and quantity. Single product listing only, no unrelated objects, no invented packaging claims or extra captions. Realistic fine material texture, true glass/plastic reflections or natural produce surface or fabric weave. Bright neutral near-white studio background and a subtle soft contact shadow, attractive natural saturation, sharp detail. Square composition with the entire product centered and large, occupying 82 percent of the available frame, comfortable 8 percent margin, no clipping. Do not retain the old thumbnail's excess empty margins. No watermark, UI, price, badge, collage or human model.",
+      "sha256": "0f48e7f8fe4fbf1eeff8b7d5fc7f8b99c001d66b8f000d0e7558227896c1c6e6",
+      "bytes": 40830
+    },
+    {
+      "id": "demo-27",
+      "name": "Honey Jar",
+      "source": "https://cdn.dummyjson.com/product-images/groceries/honey-jar/thumbnail.webp",
+      "image_url": "/images/catalogue/products/demo-27.webp",
+      "prompt": "Use case: style-transfer. Asset type: online supermarket individual product catalogue photograph. Input image is the product identity reference for \"Honey Jar\". Replace its flat computer-rendered appearance with a convincing high-end real camera product photo. Preserve this exact product: original packaging shape, colour, brand label wording and graphics, or garment colour/pattern/sleeves, or food type and quantity. Single product listing only, no unrelated objects, no invented packaging claims or extra captions. Realistic fine material texture, true glass/plastic reflections or natural produce surface or fabric weave. Bright neutral near-white studio background and a subtle soft contact shadow, attractive natural saturation, sharp detail. Square composition with the entire product centered and large, occupying 82 percent of the available frame, comfortable 8 percent margin, no clipping. Do not retain the old thumbnail's excess empty margins. No watermark, UI, price, badge, collage or human model.",
+      "sha256": "b97f14e83c6fe48c088dad5438860816e1b3423b6dbed6509d2c9d8643008cb7",
+      "bytes": 42788
+    }
+  ]
+}

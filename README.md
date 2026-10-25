@@ -4,7 +4,7 @@ A mobile-first React/Vite storefront with a Django REST API for an Indian superm
 
 ## Storefront design direction
 
-The Pandiyan Stores storefront uses a mobile-first, product-led Diwali home, compact department navigation, and category-specific themes across groceries, clothing, toiletries, and perfumes. The homepage currently uses a clearly labelled visual demo with a separate demo basket and disabled checkout. Category photos are permanent assets. The existing catalogue and real-cart routes remain separate. See [the release notes](RELEASE_NOTES.md) for shipped changes, verification, migrations, and deployment limits.
+The Pandiyan Stores storefront uses a Blinkit-inspired shopping layout with original store branding: a sticky delivery/search header, visual categories, a category rail, compact product cards, and a cart drawer. Home, categories, catalogue, search and the mobile cart all use the live API and the same persistent basket. The drawer refreshes stock and prices and checks the configured minimum order before checkout. Guests return to their intended page after signing in or registering. Existing legacy demo components remain isolated from the primary shopping flow. See [DESIGN.md](DESIGN.md) for the reference and adaptation choices.
 
 The supplied Blinkit app recording and these sources inform general e-commerce usability; the implementation uses original components, copy, and styling:
 
@@ -146,3 +146,15 @@ Python 3.13 was used with `requirements-lock.txt`; frontend dependencies are pin
 ### Deployment
 
 Install the pinned dependencies, back up the production database and apply Django migrations before routing traffic to the new code. In Vercel, use the frontend pnpm lockfile and enable the Corepack package-manager version setting if required by the build environment. Confirm the persistent MySQL connection, product/category activation and positive stock. Enable wallet spending in referral settings when ready. Test a small authorised order, cancellation and refund against the deployment. No automatic database migrations or cash transfers are performed by this patch. Existing policy drafts and contact inconsistencies still require the owner's approved wording.
+
+
+## Quick commerce storefront verification
+
+Validated locally on 25 October 2026 with Node 24 and Python 3.14:
+
+- Production frontend build and all 32 frontend tests pass, including an API HTML-response regression test.
+- All 89 Django tests pass using isolated SQLite test settings.
+- Browser checks cover live category filtering, ascending price sorting, empty search results, delivery PIN selection, add-to-cart, stock-limited quantity changes, minimum order blocking, fee calculation, cart-to-sign-in-to-checkout navigation, and a 390px mobile layout.
+- Browser preview uses disposable local sample inventory. No production data was seeded or ordered.
+
+The supplied production URL currently returns the frontend HTML for `/api/v1/categories/` instead of JSON. The client now displays a recoverable availability error in this situation. The root Vercel configuration now explicitly builds both services and routes API and Django static/admin requests to the backend. The frontend-only deployment configuration has been removed. See [DEPLOYMENT.md](DEPLOYMENT.md) for repository-root project settings, environment requirements, and the read-only deployment smoke check. Live deployment verification requires access to the Vercel account owning the existing URL.

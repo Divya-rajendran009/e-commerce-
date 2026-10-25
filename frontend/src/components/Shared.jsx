@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Leaf, LoaderCircle, Minus, PackageOpen, Plus } from 'lucide-react'
+import { Leaf, LoaderCircle, Minus, PackageOpen, Plus, ShoppingBag } from 'lucide-react'
 import { useState } from 'react'
 import { useCart } from '../context/CartContext'
 import { money } from './StorefrontTools'
@@ -55,8 +55,9 @@ export function ProductCard({ product }) {
       {discount > 0 && <span className="tag">{discount}% OFF</span>}
     </Link>
     <div className="product-info">
-      <span className="product-category">{product.category_name}</span>
+      <span className="product-category"><ShoppingBag size={10} aria-hidden="true" /> {product.category_name}</span>
       <Link to={`/products/${product.id}`} className="product-title">{product.name}</Link>
+      <span className="product-pack">{product.pack_size || 'Per item'}</span>
       <div className="product-buy"><div className="card-price"><strong>{money(product.price)}</strong>{discount > 0 && <s>{money(product.mrp)}</s>}</div>
         {quantity ? <div className="quantity-control compact cart-stepper"><button type="button" aria-label={`Decrease ${product.name} quantity`} onClick={() => setQuantity(product.id, quantity - 1)}><Minus size={16} /></button><span aria-live="polite">{quantity}</span><button type="button" aria-label={`Increase ${product.name} quantity`} disabled={unavailable || quantity >= Math.min(product.stock, 99)} onClick={() => add(product)}><Plus size={16} /></button></div> : <button className="quick-add" aria-label={`Add ${product.name} to cart`} disabled={unavailable} onClick={() => add(product)}>{unavailable ? 'Sold out' : 'ADD'}</button>}
       </div>

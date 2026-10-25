@@ -1,7 +1,7 @@
 import Categories from './pages/Categories'
 import DemoBasket from './pages/DemoBasket'
 import Wallet from './pages/Wallet'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import { useAuth } from './context/AuthContext'
 import StoreLayout from './layouts/StoreLayout'
@@ -31,8 +31,9 @@ const PolicyPage = lazy(() => import('./pages/PolicyPage'))
 
 function Guard({ admin = false, adminModule, adminRoles, children }) {
   const { user, ready } = useAuth()
+  const location = useLocation()
   if (!ready) return <div className="state-card">Loading your account…</div>
-  if (!user) return <Navigate to="/login" replace />
+  if (!user) return <Navigate to="/login" state={{ from: location.pathname + location.search }} replace />
   if (admin && !hasAdminAccess(user)) return <Navigate to="/" replace />
   if (adminModule && !canAccessAdminModule(user, adminModule)) return <Navigate to="/admin" replace />
   if (adminRoles && !adminRoles.includes(user?.role)) return <Navigate to="/admin" replace />

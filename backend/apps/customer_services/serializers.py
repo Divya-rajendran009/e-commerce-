@@ -41,7 +41,7 @@ class ProductSummarySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ["id", "name", "slug", "price", "mrp", "stock", "image_url", "in_stock"]
+        fields = ["id", "name", "slug", "price", "mrp", "mrp_is_sample", "stock", "image_url", "in_stock"]
 
     def get_in_stock(self, obj):
         return obj.is_active and obj.stock > 0

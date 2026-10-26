@@ -13,6 +13,7 @@ export default function Products() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [totalPages, setTotalPages] = useState(1)
   const [hasNext, setHasNext] = useState(false)
   const [retry, setRetry] = useState(0)
   const activeCategory = categories.find(c => String(c.id) === params.get('category'))
@@ -23,7 +24,7 @@ export default function Products() {
       .then(({ data }) => {
         if (controller.signal.aborted) return
         const results = data.results || data
-        setProducts(results); setTotal(data.count ?? results.length); setHasNext(Boolean(data.next))
+        setTotalPages(data.total_pages || Math.max(1, Math.ceil((data.count ?? results.length) / (data.page_size || 12)))); setProducts(results); setTotal(data.count ?? results.length); setHasNext(Boolean(data.next))
       })
       .catch(e => { if (!controller.signal.aborted) setError(errorMessage(e)) })
       .finally(() => { if (!controller.signal.aborted) setLoading(false) }), params.get('search') ? 250 : 0)
@@ -43,7 +44,7 @@ export default function Products() {
       <div className="catalogue-results"><div className="catalogue-top"><div><span className="section-kicker">YOUR EVERYDAY MARKET</span><h1>{params.get('search') ? `Results for “${params.get('search')}”` : activeCategory?.name || 'All your essentials'}</h1><p aria-live="polite">{loading ? 'Finding your favourites…' : error ? 'Let’s get your shopping back on track.' : `${total} ${total === 1 ? 'product' : 'products'} to make every day a little easier.`}</p></div><label className="quick-sort"><SlidersHorizontal size={16} /><span className="sr-only">Sort products</span><select aria-label="Sort products" value={params.get('ordering') || ''} onChange={e => setParam('ordering', e.target.value)}><option value="">Recommended</option><option value="price">Price: low to high</option><option value="-price">Price: high to low</option><option value="name">Name: A to Z</option></select></label></div>
         <div className="catalogue-collection-row"><div className="collection-chips" aria-label="Product collections">{[['', 'All products'], ['referral', 'Referral rewards'], ['fast-moving', 'Popular purchases']].map(([value, label]) => <button key={value} aria-pressed={(params.get('collection') || '') === value} onClick={() => setParam('collection', value)}>{label}</button>)}</div>{params.get('search') && <button className="clear-query" onClick={() => setParam('search', '')}><X size={14} /> Clear search</button>}</div>
         {error ? <div className="shop-load-error"><ErrorState message={error} /><button className="button secondary" onClick={() => { setRetry(v => v + 1); refreshCategories() }}>Try again</button></div> : loading ? <ProductSkeletons count={12} /> : products.length ? <div className="product-grid">{products.map(product => <ProductCard key={product.id} product={product} />)}</div> : <div className="empty-state"><Search size={35} /><h2>No matches this time</h2><p>Try another search or explore a different category.</p><button className="button primary" onClick={() => setParams({})}>Browse all products <ArrowRight size={16} /></button></div>}
-        {!loading && !error && total > 0 && (page > 1 || hasNext) && <nav className="pagination-controls" aria-label="Product pages"><button className="button secondary" disabled={page <= 1} onClick={() => setParam('page', String(page - 1))}>Previous</button><span>Page {page}</span><button className="button secondary" disabled={!hasNext} onClick={() => setParam('page', String(page + 1))}>Next</button></nav>}
+        {!loading && !error && total > 0 && <nav className="pagination-controls" aria-label="Product pages"><button className="button secondary" disabled={page <= 1} onClick={() => setParam('page', String(page - 1))}>Previous</button><span aria-live="polite">Page {page} of {totalPages}</span><button className="button secondary" disabled={!hasNext} onClick={() => setParam('page', String(page + 1))}>Next</button></nav>}
         <p className="catalogue-footnote">Your neighbourhood favourites, all in one place. Prices and availability are confirmed at checkout.</p>
       </div>
     </div>

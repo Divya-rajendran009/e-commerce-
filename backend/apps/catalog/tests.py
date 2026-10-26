@@ -315,3 +315,26 @@ class DashboardCustomRangeTests(TestCase):
         for dates in [{}, {"start": "2026-10-01"}, {"start": "2026-10-03", "end": "2026-10-01"}]:
             response = self.client.get("/api/v1/admin/dashboard/", {"period": "custom", **dates})
             self.assertEqual(response.status_code, 400)
+
+class SamplePriceTests(TestCase):
+    def test_sample_mrp_is_editable_but_does_not_support_an_offer(self):
+        from .serializers import AdminProductSerializer, ProductSerializer
+        category = Category.objects.create(name='Sample', slug='sample')
+        product = Product.objects.create(name='Sample item', sku='SAMPLE', slug='sample-item', category=category, price=65, mrp=80, mrp_is_sample=True, badge='special_offer')
+        self.assertEqual(ProductSerializer(product).data['display_badge'], '')
+        serializer = AdminProductSerializer(product, data={'badge':'special_offer'}, partial=True)
+        self.assertFalse(serializer.is_valid())
+        serializer = AdminProductSerializer(product, data={'mrp_is_sample':False}, partial=True)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        serializer.save()
+        self.assertEqual(ProductSerializer(product).data['display_badge'], 'Special Offer')
+
+    def test_pagination_exposes_actual_page_count(self):
+        from rest_framework.test import APIClient
+        category = Category.objects.create(name='Pages', slug='pages')
+        for i in range(13):
+            Product.objects.create(name=f'Item {i}', sku=f'P{i}', slug=f'p{i}', category=category, price=10, stock=1)
+        data = APIClient().get('/api/v1/products/?page_size=5&page=3').data
+        self.assertEqual(data['total_pages'], 3)
+        self.assertEqual(data['page_size'], 5)
+        self.assertEqual(len(data['results']), 3)

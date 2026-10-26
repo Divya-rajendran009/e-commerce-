@@ -1,17 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { ProductPrice } from './Shared'
-
-describe('honest price display', () => {
-  it('does not relabel a previous selling price as MRP', () => {
-    const html = renderToStaticMarkup(<ProductPrice product={{price:'95', regular_price:'100', mrp:null}} />)
-    expect(html).toContain('MRP: Not provided')
-    expect(html).toContain('Previous price:')
-    expect(html).toContain('Save ₹5.00 (5%)')
-  })
-  it('does not invent savings for an estimated price', () => {
-    const html = renderToStaticMarkup(<ProductPrice product={{price:'99', mrp:null}} />)
-    expect(html).not.toContain('Save ')
-    expect(html).not.toContain('<s>')
-  })
+const render = product => renderToStaticMarkup(<ProductPrice product={product} />)
+describe('minimal honest price display', () => {
+ it('uses saved MRP and selling price for rounded percentage', () => {
+  const html=render({price:65,mrp:80}); expect(html).toContain('19% OFF'); expect(html).toContain('₹65'); expect(html).toContain('<s ')
+ })
+ it.each([null,65,60])('does not claim savings without a higher MRP (%s)', mrp => {
+  const html=render({price:65,mrp,regular_price:80}); expect(html).not.toContain('OFF'); expect(html).not.toContain('<s '); expect(html).not.toContain('Selling price'); expect(html).not.toContain('Not provided')
+ })
+ it('never publishes demo MRP discounts', () => {
+  const html=render({price:65,mrp:80,mrp_is_sample:true}); expect(html).not.toContain('OFF'); expect(html).not.toContain('₹80')
+ })
 })

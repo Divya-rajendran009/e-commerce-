@@ -17,14 +17,12 @@ export function ErrorState({ message }) {
 export function ProductPrice({ product }) {
   const price = Number(product.price)
   const mrp = Number(product.mrp)
-  const previous = Number(product.regular_price)
-  const reference = previous > price ? previous : mrp > price ? mrp : 0
-  const savings = reference ? reference - price : 0
+  const discount = !product.mrp_is_sample && mrp > price ? Math.round((mrp - price) / mrp * 100) : 0
+  const format = value => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2, minimumFractionDigits: 0 }).format(value)
   return <div className="product-pricing">
-    <span className="product-mrp">MRP: {product.mrp ? (mrp > price ? <s>{money(mrp)}</s> : money(mrp)) : 'Not provided'}</span>
-    {previous > price && <span className="product-mrp">Previous price: <s>{money(previous)}</s></span>}
-    <strong>Selling price: {money(price)}</strong>
-    {savings > 0 && <span className="product-savings">Save {money(savings)} ({Math.round(savings / reference * 100)}%)</span>}
+    <strong>{format(price)}</strong>
+    {!product.mrp_is_sample && mrp > price && <s aria-label={`MRP ${format(mrp)}`}>{format(mrp)}</s>}
+    {discount > 0 && <span className="product-savings">{discount}% OFF</span>}
   </div>
 }
 
@@ -57,7 +55,7 @@ export function ProductCard({ product }) {
     <div className="product-info">
       <span className="product-category"><ShoppingBag size={10} aria-hidden="true" /> {product.category_name}</span>
       <Link to={`/products/${product.id}`} className="product-title">{product.name}</Link>
-      <span className="product-pack">{product.pack_size || 'Per item'}</span>{product.image_is_illustration && <small className="illustration-note">Illustrative image</small>}
+      <span className="product-pack">{product.pack_size || 'Per item'}</span>
       <div className="product-buy"><ProductPrice product={product} />
         {quantity ? <div className="quantity-control compact cart-stepper"><button type="button" aria-label={`Decrease ${product.name} quantity`} onClick={() => setQuantity(product.id, quantity - 1)}><Minus size={16} /></button><span aria-live="polite">{quantity}</span><button type="button" aria-label={`Increase ${product.name} quantity`} disabled={unavailable || quantity >= Math.min(product.stock, 99)} onClick={() => add(product)}><Plus size={16} /></button></div> : <button className="quick-add" aria-label={`Add ${product.name} to cart`} disabled={unavailable} onClick={() => add(product)}>{unavailable ? 'Sold out' : 'ADD'}</button>}
       </div>

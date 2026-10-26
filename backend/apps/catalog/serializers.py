@@ -29,7 +29,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ["id", "name", "slug", "sku", "description", "pack_size", "price", "regular_price", "mrp", "badge", "display_badge", "image_is_illustration", "stock", "in_stock", "image_url", "is_active", "is_featured", "category", "category_name"]
+        fields = ["id", "name", "slug", "sku", "description", "pack_size", "price", "regular_price", "mrp", "mrp_is_sample", "badge", "display_badge", "image_is_illustration", "stock", "in_stock", "image_url", "is_active", "is_featured", "category", "category_name"]
 
     def validate(self, attrs):
         price = attrs.get("price", getattr(self.instance, "price", None))
@@ -45,13 +45,14 @@ class ProductSerializer(serializers.ModelSerializer):
         badge = attrs.get("badge", getattr(self.instance, "badge", ""))
         if "badge" in attrs and not sales_badge_supported(self.instance, badge):
             raise serializers.ValidationError({"badge": "Popular needs 5 delivered units in 30 days. Best Seller needs 10 units and a top-five sales position."})
-        if badge == "special_offer" and not ((mrp is not None and mrp > price) or (regular is not None and regular > price)):
+        sample = attrs.get("mrp_is_sample", getattr(self.instance, "mrp_is_sample", False))
+        if badge == "special_offer" and not ((not sample and mrp is not None and mrp > price) or (regular is not None and regular > price)):
             raise serializers.ValidationError({"badge": "Special Offer requires a saving against genuine MRP or a previous selling price."})
         return attrs
 
     def get_display_badge(self, obj):
         from .badges import sales_badge_supported
-        if obj.badge == "special_offer" and not any(value and value > obj.price for value in (obj.mrp, obj.regular_price)):
+        if obj.badge == "special_offer" and not any(value and value > obj.price for value in (None if obj.mrp_is_sample else obj.mrp, obj.regular_price)):
             return ""
         if obj.badge == "new_arrival":
             from django.utils import timezone

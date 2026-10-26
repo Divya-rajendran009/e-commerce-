@@ -12,6 +12,7 @@ import '../storefront.css'
 import '../video-storefront.css'
 import '../quick-commerce.css'
 import '../reference-storefront.css'
+import '../responsive.css'
 import api, { errorMessage } from '../services/api'
 
 const PolicyPage = lazy(() => import('../pages/PolicyPage'))

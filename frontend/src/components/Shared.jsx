@@ -17,12 +17,13 @@ export function ErrorState({ message }) {
 export function ProductPrice({ product }) {
   const price = Number(product.price)
   const mrp = Number(product.mrp)
-  const discount = !product.mrp_is_sample && mrp > price ? Math.round((mrp - price) / mrp * 100) : 0
+  const discount = mrp > price ? Math.round((mrp - price) / mrp * 100) : 0
   const format = value => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2, minimumFractionDigits: 0 }).format(value)
   return <div className="product-pricing">
     <strong>{format(price)}</strong>
-    {!product.mrp_is_sample && mrp > price && <s aria-label={`MRP ${format(mrp)}`}>{format(mrp)}</s>}
+    {mrp > price && <s aria-label={`MRP ${format(mrp)}`}>{format(mrp)}</s>}
     {discount > 0 && <span className="price-discount"><span aria-hidden="true">·</span><span className="product-savings">{discount}% OFF</span></span>}
+    {product.mrp_is_sample && mrp > price && <small className="sample-price-note">Sample MRP · owner verification pending</small>}
   </div>
 }
 

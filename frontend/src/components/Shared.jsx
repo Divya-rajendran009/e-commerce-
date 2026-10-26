@@ -23,7 +23,6 @@ export function ProductPrice({ product }) {
     <strong>{format(price)}</strong>
     {mrp > price && <s aria-label={`MRP ${format(mrp)}`}>{format(mrp)}</s>}
     {discount > 0 && <span className="price-discount"><span aria-hidden="true">·</span><span className="product-savings">{discount}% OFF</span></span>}
-    {product.mrp_is_sample && mrp > price && <small className="sample-price-note">Sample MRP · owner verification pending</small>}
   </div>
 }
 

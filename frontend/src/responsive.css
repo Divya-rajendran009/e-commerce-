@@ -139,5 +139,4 @@
 
 .quick-store .price-discount { display:inline-flex; align-items:center; gap:7px; white-space:nowrap; }
 
-.quick-store .product-pricing .sample-price-note { flex-basis:100%; font-size:10px; line-height:1.4; color:#6b7369; font-weight:400; }
 .quick-store .product-buy .product-pricing > strong { font-size:18px; font-weight:800; }

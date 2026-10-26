@@ -28,7 +28,7 @@ export default function Home() {
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
   }, [retry])
-  const deals = products.filter(p => Number(p.mrp) > Number(p.price)).sort((a, b) => (Number(b.mrp) - Number(b.price)) / Number(b.mrp) - (Number(a.mrp) - Number(a.price)) / Number(a.mrp))
+  const deals = products.filter(p => !p.mrp_is_sample && Number(p.mrp) > Number(p.price)).sort((a, b) => (Number(b.mrp) - Number(b.price)) / Number(b.mrp) - (Number(a.mrp) - Number(a.price)) / Number(a.mrp))
   const featured = products.filter(p => p.is_featured)
   const shelves = [
     { title: 'Your everyday picks', caption: 'Little things that keep your day going.', items: (featured.length ? featured : products).slice(0, 6) },

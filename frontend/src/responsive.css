@@ -136,3 +136,5 @@
  .quick-store .product-buy .quick-add, .quick-store .product-buy .cart-stepper { width:100%; min-height:44px; }
  .quick-store .product-buy .cart-stepper { justify-content:space-between; }
 }
+
+.quick-store .price-discount { display:inline-flex; align-items:center; gap:7px; white-space:nowrap; }

@@ -9,7 +9,7 @@ describe('minimal honest price display', () => {
  it.each([null,65,60])('does not claim savings without a higher MRP (%s)', mrp => {
   const html=render({price:65,mrp,regular_price:80}); expect(html).not.toContain('OFF'); expect(html).not.toContain('<s '); expect(html).not.toContain('Selling price'); expect(html).not.toContain('Not provided')
  })
- it('never publishes demo MRP discounts', () => {
-  const html=render({price:65,mrp:80,mrp_is_sample:true}); expect(html).not.toContain('OFF'); expect(html).not.toContain('₹80')
+ it('clearly identifies chosen sample MRPs when showing demo savings', () => {
+  const html=render({price:65,mrp:80,mrp_is_sample:true}); expect(html).toContain('19% OFF'); expect(html).toContain('₹80'); expect(html).toContain('Sample MRP')
  })
 })

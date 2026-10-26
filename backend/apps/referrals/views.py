@@ -15,7 +15,7 @@ from apps.accounts.models import User
 from apps.catalog.permissions import IsStoreAdmin, allowed_admin_module
 from apps.customer_services.models import AdminAuditEntry
 from .models import Referral, ReferralLevelRule, ReferralProgram, ReferralReward, WalletLedger
-from .services import qualifying_self_purchase_total, effective_commission_rates, qualification_window, settle_pending_commissions, pending_commission_summary
+from .services import qualifying_self_purchase_total, effective_commission_rates, qualification_window, settle_pending_commissions, pending_commission_summary, expire_pending_commissions
 from .serializers import (
     AdminWalletAdjustmentSerializer,
     AdminWalletLedgerSerializer,
@@ -157,6 +157,7 @@ class ReferralRewardsView(APIView):
     serializer_class = CustomerReferralRewardSerializer
 
     def get(self, request):
+        settle_pending_commissions(request.user)
         rewards = ReferralReward.objects.filter(recipient=request.user).select_related("order").order_by("-created_at")
         return Response(CustomerReferralRewardSerializer(rewards, many=True).data)
 
@@ -216,6 +217,7 @@ class AdminReferralsView(APIView):
     serializer_class = ReferralSerializer
 
     def get(self, request):
+        expire_pending_commissions()
         referrals = Referral.objects.select_related(
             "referrer", "referred", "qualifying_order",
         ).prefetch_related("rewards").order_by("-created_at")
@@ -340,6 +342,7 @@ class AdminReferralNetworkDetailView(APIView):
     permission_classes = [ReferralAdminPermission]
 
     def get(self, request, customer_id):
+        expire_pending_commissions()
         customer = User.objects.filter(pk=customer_id, role=User.Role.CUSTOMER).first()
         if not customer:
             raise NotFound("Customer not found.")
@@ -399,6 +402,7 @@ class AdminReferralStatsView(APIView):
 
     def get(self, request):
         program = ReferralProgram.current()
+        expire_pending_commissions()
         referrals = list(Referral.objects.values_list("referrer_id", "referred_id", "status"))
         parent = {referred_id: referrer_id for referrer_id, referred_id, _ in referrals}
         level_counts = defaultdict(int)
@@ -429,7 +433,7 @@ class AdminReferralStatsView(APIView):
             "members_by_level": [{"level": level, "count": level_counts[level]} for level in range(1, min(program.max_depth, 5) + 1)],
             "active_referrals": active_referrals,
             "inactive_referrals": inactive_referrals,
-            "pending_rewards": reward_counts.get(ReferralReward.Status.PENDING, 0) + Referral.objects.filter(status=Referral.Status.PENDING).count(),
+            "pending_rewards": reward_counts.get(ReferralReward.Status.PENDING, 0),
             "credited_rewards": reward_counts.get(ReferralReward.Status.CREDITED, 0),
             "reversed_rewards": reward_counts.get(ReferralReward.Status.REVERSED, 0),
             "ineligible_rewards": reward_counts.get(ReferralReward.Status.INELIGIBLE, 0),

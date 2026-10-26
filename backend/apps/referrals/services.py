@@ -2,7 +2,7 @@ from datetime import timedelta
 from decimal import Decimal, ROUND_HALF_UP
 
 from django.db import transaction
-from django.db.models import F, Sum
+from django.db.models import F, Q, Sum
 from django.utils import timezone
 
 from apps.accounts.models import User
@@ -146,6 +146,16 @@ def pending_commission_summary(customer):
     return ReferralReward.objects.filter(recipient=customer, status=ReferralReward.Status.PENDING, pending_expires_at__gt=timezone.now()).aggregate(amount=Sum("amount"), next_expiry=Min("pending_expires_at"))
 
 
+@transaction.atomic
+def expire_pending_commissions(at=None):
+    """Keep administrative liability current even when customers do not log in."""
+    if not ReferralProgram.objects.select_for_update().filter(pk=1).exists():
+        return 0
+    return ReferralReward.objects.filter(status=ReferralReward.Status.PENDING).filter(
+        Q(pending_expires_at__lte=at or timezone.now()) | Q(pending_expires_at__isnull=True)
+    ).update(status=ReferralReward.Status.EXPIRED)
+
+
 
 def qualification_window(program, at=None):
     now = timezone.localtime(at or timezone.now())
@@ -163,12 +173,15 @@ def qualifying_self_purchase_total(customer, program=None, at=None):
     orders = Order.objects.filter(
         customer=customer,
         created_at__gte=start,
-        created_at__lt=end,
         created_at__lte=at,
         status=Order.Status.DELIVERED,
     ).exclude(
         return_requests__status=ReturnRequest.Status.COMPLETED,
     ).distinct()
+    # Rolling windows include the evaluation instant. Calendar windows remain
+    # half-open so a purchase at midnight belongs only to the new month.
+    if program.qualification_period != "rolling_days":
+        orders = orders.filter(created_at__lt=end)
     order_amounts = list(
         orders.values("id").annotate(
             amount=Sum(F("subtotal") - F("discount_amount")),

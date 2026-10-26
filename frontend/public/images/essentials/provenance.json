@@ -1,0 +1,317 @@
+[
+  {
+    "key": "rice",
+    "prompt": "Photo-style illustration of uncooked white rice in a plain bowl on white, no branding.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/rice.webp"
+  },
+  {
+    "key": "wheat",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a bowl of whole golden wheat kernels. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration, no claims about manufacturer packaging.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/wheat.webp"
+  },
+  {
+    "key": "broken-rice",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a bowl of short broken white rice fragments. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration, no claims about manufacturer packaging.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/broken-rice.webp"
+  },
+  {
+    "key": "bajra",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a bowl of round grey pearl millet grains. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration, no claims about manufacturer packaging.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/bajra.webp"
+  },
+  {
+    "key": "jowar",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a bowl of round cream sorghum grains. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration, no claims about manufacturer packaging.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/jowar.webp"
+  },
+  {
+    "key": "ragi",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a bowl of tiny reddish-brown finger millet grains. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration, no claims about manufacturer packaging.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/ragi.webp"
+  },
+  {
+    "key": "chana-dal",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a bowl of yellow split chickpeas. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration, no claims about manufacturer packaging.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/chana-dal.webp"
+  },
+  {
+    "key": "toor-dal",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a bowl of yellow split pigeon peas. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration, no claims about manufacturer packaging.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/toor-dal.webp"
+  },
+  {
+    "key": "urad-dal",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a bowl of ivory split skinned black gram. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration, no claims about manufacturer packaging.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/urad-dal.webp"
+  },
+  {
+    "key": "moong-dal",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a bowl of small pale yellow split mung beans. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/moong-dal.webp"
+  },
+  {
+    "key": "masoor-dal",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a bowl of orange-red split lentils. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/masoor-dal.webp"
+  },
+  {
+    "key": "atta",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a bowl of beige whole wheat flour. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/atta.webp"
+  },
+  {
+    "key": "maida",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a bowl of fine white flour. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/maida.webp"
+  },
+  {
+    "key": "sooji",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a bowl of coarse ivory semolina. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/sooji.webp"
+  },
+  {
+    "key": "besan",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a bowl of pale yellow chickpea flour. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/besan.webp"
+  },
+  {
+    "key": "golden-oil",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of one plain unlabelled clear glass bottle filled with golden cooking oil. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/golden-oil.webp"
+  },
+  {
+    "key": "mustard-oil",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of one plain unlabelled glass bottle of deep amber mustard oil. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/mustard-oil.webp"
+  },
+  {
+    "key": "vanaspati",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a small bowl of white solid vegetable shortening. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/vanaspati.webp"
+  },
+  {
+    "key": "potato",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of three clean brown potatoes. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/potato.webp"
+  },
+  {
+    "key": "onion",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of three red onions, one cut in half. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/onion.webp"
+  },
+  {
+    "key": "tomato",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of three ripe red tomatoes. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/tomato.webp"
+  },
+  {
+    "key": "brinjal",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of two glossy purple aubergines. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/brinjal.webp"
+  },
+  {
+    "key": "banana",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a small bunch of yellow bananas. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/banana.webp"
+  },
+  {
+    "key": "sugar",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a bowl of white granulated sugar. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/sugar.webp"
+  },
+  {
+    "key": "jaggery",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of three golden-brown jaggery blocks. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/jaggery.webp"
+  },
+  {
+    "key": "salt",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a bowl of fine white salt. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/salt.webp"
+  },
+  {
+    "key": "tea",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a bowl of dry loose black tea leaves. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/tea.webp"
+  },
+  {
+    "key": "notebook",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of one plain green ruled notebook open to lined pages. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/notebook.webp"
+  },
+  {
+    "key": "pens",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of three simple blue ballpoint pens with caps. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/pens.webp"
+  },
+  {
+    "key": "pencils",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of five yellow wooden pencils with erasers. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/pencils.webp"
+  },
+  {
+    "key": "floral-perfume",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of one small unbranded clear square perfume bottle with pale pink liquid and a plain silver spray cap. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/floral-perfume.webp"
+  },
+  {
+    "key": "citrus-perfume",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of one small unbranded clear cylindrical fragrance bottle with pale yellow liquid and a plain silver spray cap. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/citrus-perfume.webp"
+  },
+  {
+    "key": "sandal-perfume",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of one small unbranded amber fragrance roll-on glass bottle with a black cap. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/sandal-perfume.webp"
+  },
+  {
+    "key": "soap",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of one ivory oval unbranded bathing soap bar. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/soap.webp"
+  },
+  {
+    "key": "shampoo",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of one plain unlabelled green shampoo bottle with a flip cap. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/shampoo.webp"
+  },
+  {
+    "key": "toothbrush",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of one simple green and white soft-bristle toothbrush. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/toothbrush.webp"
+  },
+  {
+    "key": "dishwash",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of one plain unlabelled translucent green bottle of dishwashing liquid with a flip cap. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/dishwash.webp"
+  },
+  {
+    "key": "detergent",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of a plain unbranded white resealable bag with a small scoop of laundry detergent powder. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/detergent.webp"
+  },
+  {
+    "key": "floor-cleaner",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of one plain unlabelled blue bottle of floor cleaning liquid with screw cap. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/floor-cleaner.webp"
+  },
+  {
+    "key": "tumbler",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of one polished stainless steel drinking tumbler. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/tumbler.webp"
+  },
+  {
+    "key": "lunchbox",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of one rectangular stainless steel lunch box with matching lid beside it. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/lunchbox.webp"
+  },
+  {
+    "key": "scrub-pad",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of three rectangular green kitchen scouring pads. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/scrub-pad.webp"
+  },
+  {
+    "key": "towel",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of one neatly folded pale green cotton hand towel. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/towel.webp"
+  },
+  {
+    "key": "batteries",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of two generic unbranded AA batteries with plain silver casing, no writing. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/batteries.webp"
+  },
+  {
+    "key": "tissues",
+    "prompt": "Use case: product-mockup. One square ecommerce catalogue photo-style illustration of one plain cream tissue box with a white tissue emerging. White seamless background, soft studio daylight, centered full object filling 70% of frame, generous white margin, realistic material texture. No text, logos, watermark or brand. Generic unbranded product illustration.",
+    "tool": "Built-in image_gen",
+    "type": "Original AI-generated illustrative artwork; not manufacturer photography",
+    "image_url": "/images/essentials/tissues.webp"
+  }
+]

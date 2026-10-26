@@ -77,10 +77,19 @@ class AdminProductViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         product = self.get_object()
-        product.is_active = False
-        product.save(update_fields=["is_active"])
         from apps.customer_services.views import audit_admin_change
-        audit_admin_change(request, product, "deactivate", {"sku": product.sku})
+        from django.db.models.deletion import ProtectedError
+        audit_admin_change(request, product, "remove", {"sku": product.sku})
+        from apps.orders.models import OrderItem
+        if OrderItem.objects.filter(product=product).exists():
+            product.is_active = False
+            product.save(update_fields=["is_active"])
+            return Response(status=204)
+        try:
+            product.delete()
+        except ProtectedError:
+            product.is_active = False
+            product.save(update_fields=["is_active"])
         return Response(status=204)
 
     def perform_create(self, serializer):
@@ -98,6 +107,19 @@ class AdminCategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsStoreAdmin]
+
+    def destroy(self, request, *args, **kwargs):
+        category = self.get_object()
+        if category.products.exists():
+            return Response({"detail": "Move or remove this category's products first, or deactivate the category."}, status=400)
+        from apps.customer_services.views import audit_admin_change
+        audit_admin_change(request, category, "remove", {"name": category.name})
+        from django.db.models.deletion import ProtectedError
+        try:
+            category.delete()
+        except ProtectedError:
+            return Response({"detail": "This category is used in order history. Deactivate it instead."}, status=400)
+        return Response(status=204)
 
     def _validate_referral_eligibility_permission(self, serializer):
         if "referral_rewards_enabled" not in serializer.validated_data:

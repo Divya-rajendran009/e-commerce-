@@ -158,11 +158,54 @@ class CatalogVisibilityTests(TestCase):
                 format="multipart",
             )
             self.assertEqual(response.status_code, 200)
-            self.assertIn("/media/products/tomato", response.data["image_url"])
+            self.assertIn(f"/products/{self.product.pk}/image/", response.data["image_url"])
             self.product.refresh_from_db()
-            self.assertTrue(self.product.image.name.startswith("products/tomato"))
+            self.assertTrue(self.product.image_data)
+            self.assertFalse(self.product.image)
             public_image_url = self.client.get(f"/api/v1/products/{self.product.pk}/").data["image_url"]
-            self.assertTrue(public_image_url.endswith(self.product.image.url))
+            self.assertEqual(public_image_url, response.data["image_url"])
+            served = self.client.get(f"/api/v1/products/{self.product.pk}/image/")
+            self.assertEqual(served.content, bytes(self.product.image_data))
+            self.assertEqual(served["Content-Type"], "image/png")
+            self.assertEqual(self.client.get(f"/api/v1/products/{self.product.pk}/image/", HTTP_IF_NONE_MATCH=served["ETag"]).status_code, 304)
+            self.client.patch(f"/api/v1/admin/products/{self.product.pk}/", {"remove_image": True}, format="json")
+            self.assertEqual(self.client.get(f"/api/v1/products/{self.product.pk}/image/").status_code, 404)
+
+    def test_offers_and_sales_badges_are_validated(self):
+        self.client.force_authenticate(self.create_admin())
+        url = f"/api/v1/admin/products/{self.product.pk}/"
+        for badge in ("popular", "best_seller", "special_offer"):
+            self.assertEqual(self.client.patch(url, {"badge": badge}, format="json").status_code, 400)
+        response = self.client.patch(url, {"regular_price": "350.00", "price": "332.50", "badge": "special_offer", "pack_size": "1 kg"}, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["display_badge"], "Special Offer")
+        self.assertIsNone(response.data["mrp"])
+        self.assertEqual(self.client.patch(url, {"price": "400"}, format="json").status_code, 400)
+        self.assertEqual(self.client.patch(url, {"price": "400", "regular_price": None, "badge": ""}, format="json").status_code, 200)
+
+    def test_populated_category_cannot_be_removed(self):
+        self.client.force_authenticate(self.create_admin())
+        self.assertEqual(self.client.delete(f"/api/v1/admin/categories/{self.category.pk}/").status_code, 400)
+
+    def test_sales_badges_expire_when_delivered_sales_age_out(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        from apps.orders.models import Order, OrderItem
+        from .badges import sales_badge_supported
+        user = self.create_admin()
+        order = Order.objects.create(customer=user, status="pending", customer_name="Test", phone="1234567890", address="Test", subtotal=3500, total=3500)
+        OrderItem.objects.create(order=order, product=self.product, product_name=self.product.name, sku=self.product.sku, unit_price=350, quantity=10, line_total=3500)
+        self.assertFalse(sales_badge_supported(self.product, "popular"))
+        order.status="delivered"
+        order.save()
+        self.assertTrue(sales_badge_supported(self.product, "popular"))
+        self.assertTrue(sales_badge_supported(self.product, "best_seller"))
+        Order.objects.filter(pk=order.pk).update(created_at=timezone.now()-timedelta(days=31))
+        self.assertFalse(sales_badge_supported(self.product, "best_seller"))
+        self.client.force_authenticate(user)
+        self.client.delete(f"/api/v1/admin/products/{self.product.pk}/")
+        self.product.refresh_from_db()
+        self.assertFalse(self.product.is_active)
 
     def test_product_image_upload_rejects_invalid_type_and_oversized_files(self):
         self.client.force_authenticate(self.create_admin())

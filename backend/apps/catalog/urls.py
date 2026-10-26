@@ -1,6 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from .views import AdminCategoryViewSet, AdminProductViewSet, CategoryViewSet, ProductViewSet, dashboard
+from .images import product_image
 
 router = DefaultRouter()
 router.register("categories", CategoryViewSet, basename="category")
@@ -10,6 +11,7 @@ admin_router.register("products", AdminProductViewSet, basename="admin-product")
 admin_router.register("categories", AdminCategoryViewSet, basename="admin-category")
 
 urlpatterns = [
+    path("products/<int:pk>/image/", product_image, name="catalogue-image"),
     path("", include(router.urls)),
     path("admin/", include(admin_router.urls)),
     path("admin/dashboard/", dashboard),

@@ -1,6 +1,6 @@
 import StoreLogo from '../components/StoreLogo'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { Leaf, Menu, ShoppingBasket, UserRound, WalletCards, X } from 'lucide-react'
+import { Gift, Leaf, Menu, ShoppingBasket, UserRound, WalletCards, X } from 'lucide-react'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
@@ -80,7 +80,7 @@ export default function StoreLayout() {
     <header className="site-header">
       <div className="header-main wrap">
         <Link to="/" className="brand"><span className="store-emblem"><StoreLogo /></span><span>Pandiyan<span className="brand-store">stores</span><small>YOUR EVERYDAY, DELIVERED</small></span></Link>
-        <DeliveryPicker store={store} unavailable={Boolean(storeSettingsError)} />
+        <Link to="/referrals" className="mobile-referral-cta"><Gift size={17} /><span>Refer & Earn</span></Link><DeliveryPicker store={store} unavailable={Boolean(storeSettingsError)} />
         <StoreSearch />
         <div className="header-actions"><Link to="/wallet" className="header-wallet" aria-label="Open wallet"><WalletCards size={21} /><small>{user ? (wallet ? money(wallet.balance) : '—') : 'Wallet'}</small></Link>
           <Link to="/account" className="account-action" aria-label="Open profile"><UserRound size={20} /><span>{user ? user.first_name || 'Account' : 'Sign in'}</span></Link>
@@ -89,7 +89,7 @@ export default function StoreLayout() {
         <button className="mobile-menu-toggle" type="button" aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={menuOpen} aria-controls="primary-navigation" onClick={() => setMenuOpen((open) => !open)}>{menuOpen ? <X size={21} /> : <Menu size={21} />}<span>{menuOpen ? 'Close' : 'Menu'}</span></button>
       </div>
       <nav id="primary-navigation" className={`main-nav${menuOpen ? ' is-open' : ''}`}><div className="wrap nav-content">
-        <NavLink to="/" end>Home</NavLink><NavLink onClick={() => setMenuOpen(false)} to="/products">Shop all</NavLink><NavLink to="/categories">Categories</NavLink>{categories.slice(0, 4).map((category) => <Link key={category.id} onClick={() => setMenuOpen(false)} to={`/products?category=${category.id}`}>{category.name}</Link>)}<NavLink className="nav-referral" onClick={() => setMenuOpen(false)} to="/referrals">Refer & earn ↗</NavLink>
+        <NavLink to="/" end>Home</NavLink><NavLink onClick={() => setMenuOpen(false)} to="/products">Shop all</NavLink><NavLink to="/categories">Categories</NavLink>{categories.slice(0, 4).map((category) => <Link key={category.id} onClick={() => setMenuOpen(false)} to={`/products?category=${category.id}`}>{category.name}</Link>)}<NavLink className="nav-referral" onClick={() => setMenuOpen(false)} to="/referrals"><Gift size={17} /><span>Refer & Earn</span><span aria-hidden="true">↗</span></NavLink>
         {user && <button className="nav-logout" onClick={() => logout().finally(() => navigate('/'))}>Sign out</button>}
       </div></nav>
     </header>

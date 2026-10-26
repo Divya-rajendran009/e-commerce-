@@ -12,6 +12,13 @@ const categoryAliases = [
 ]
 
 export function categoryImageSource(name = '') {
+  const essentials = {
+    'stationery': 'notebook', 'perfumes & fragrances': 'floral-perfume',
+    'personal care': 'soap', 'household cleaning': 'floor-cleaner',
+    'kitchen essentials': 'tumbler', 'everyday essentials': 'towel',
+    'flours & staples': 'atta',
+  }
+  if (essentials[name.trim().toLowerCase()]) return `/images/essentials/${essentials[name.trim().toLowerCase()]}.webp`
   const category = departments.find(item => item.name.toLowerCase() === name.trim().toLowerCase())
   const alias = categoryAliases.find(([pattern]) => pattern.test(name))?.[1]
   return (category || departments.find(item => item.name === alias))?.image_url || null

@@ -25,22 +25,50 @@ class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source="category.name", read_only=True)
     in_stock = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
+    display_badge = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
-        fields = ["id", "name", "slug", "sku", "description", "price", "mrp", "stock", "in_stock", "image_url", "is_active", "is_featured", "category", "category_name"]
+        fields = ["id", "name", "slug", "sku", "description", "pack_size", "price", "regular_price", "mrp", "badge", "display_badge", "image_is_illustration", "stock", "in_stock", "image_url", "is_active", "is_featured", "category", "category_name"]
 
     def validate(self, attrs):
         price = attrs.get("price", getattr(self.instance, "price", None))
         mrp = attrs.get("mrp", getattr(self.instance, "mrp", None))
         if mrp is not None and price is not None and mrp < price:
             raise serializers.ValidationError({"mrp": "MRP must be greater than or equal to the selling price."})
+        regular = attrs.get("regular_price", getattr(self.instance, "regular_price", None))
+        if regular is not None and price is not None and regular < price:
+            raise serializers.ValidationError({"regular_price": "Previous selling price must be at least the current price; clear it when ending an offer."})
+        if mrp is not None and regular is not None and regular > mrp:
+            raise serializers.ValidationError({"regular_price": "Previous selling price cannot exceed MRP."})
+        from .badges import sales_badge_supported
+        badge = attrs.get("badge", getattr(self.instance, "badge", ""))
+        if "badge" in attrs and not sales_badge_supported(self.instance, badge):
+            raise serializers.ValidationError({"badge": "Popular needs 5 delivered units in 30 days. Best Seller needs 10 units and a top-five sales position."})
+        if badge == "special_offer" and not ((mrp is not None and mrp > price) or (regular is not None and regular > price)):
+            raise serializers.ValidationError({"badge": "Special Offer requires a saving against genuine MRP or a previous selling price."})
         return attrs
+
+    def get_display_badge(self, obj):
+        from .badges import sales_badge_supported
+        if obj.badge == "special_offer" and not any(value and value > obj.price for value in (obj.mrp, obj.regular_price)):
+            return ""
+        if obj.badge == "new_arrival":
+            from django.utils import timezone
+            from datetime import timedelta
+            if obj.created_at < timezone.now() - timedelta(days=30):
+                return ""
+        return obj.get_badge_display() if sales_badge_supported(obj, obj.badge) else ""
 
     def get_in_stock(self, obj) -> bool:
         return obj.stock > 0 and obj.is_active and obj.category.is_active
 
     def get_image_url(self, obj) -> str:
+        if obj.image_data:
+            from django.urls import reverse
+            url = reverse("catalogue-image", args=[obj.pk])
+            request = self.context.get("request")
+            return request.build_absolute_uri(url) if request else url
         if obj.image:
             url = obj.image.url
             request = self.context.get("request")
@@ -50,9 +78,35 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class AdminProductSerializer(ProductSerializer):
     image = serializers.FileField(required=False, write_only=True, allow_empty_file=False)
+    image_url = serializers.URLField(required=False, allow_blank=True)
+    remove_image = serializers.BooleanField(required=False, write_only=True)
 
     class Meta(ProductSerializer.Meta):
-        fields = ProductSerializer.Meta.fields + ["barcode", "low_stock_threshold", "image", "wholesale_price"]
+        fields = ProductSerializer.Meta.fields + ["barcode", "low_stock_threshold", "image", "remove_image", "wholesale_price"]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["image_url"] = self.get_image_url(instance)
+        return data
+
+    def _image_values(self, values):
+        image = values.pop("image", None)
+        remove = values.pop("remove_image", False)
+        if remove:
+            values.update(image_data=None, image_content_type="", image="", image_url="")
+        if image:
+            values.update(image_data=image.read(), image_content_type=image.content_type, image="", image_url="")
+        elif values.get("image_url") and self.instance and values["image_url"] != self.get_image_url(self.instance):
+            values.update(image_data=None, image_content_type="", image="")
+        elif self.instance and values.get("image_url") == self.get_image_url(self.instance):
+            values.pop("image_url", None)
+        return values
+
+    def create(self, validated_data):
+        return super().create(self._image_values(validated_data))
+
+    def update(self, instance, validated_data):
+        return super().update(instance, self._image_values(validated_data))
 
     def validate_image(self, image):
         if image.size > MAX_PRODUCT_IMAGE_SIZE:

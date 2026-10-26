@@ -17,13 +17,14 @@ export function ErrorState({ message }) {
 export function ProductPrice({ product }) {
   const price = Number(product.price)
   const mrp = Number(product.mrp)
-  const hasDiscount = Number.isFinite(mrp) && mrp > price
-  const savings = hasDiscount ? mrp - price : 0
-  const savingsPercent = hasDiscount ? Math.round((savings / mrp) * 100) : 0
+  const previous = Number(product.regular_price)
+  const reference = previous > price ? previous : mrp > price ? mrp : 0
+  const savings = reference ? reference - price : 0
   return <div className="product-pricing">
-    {hasDiscount && <span className="product-mrp">MRP: <s>₹{mrp.toFixed(2)}</s></span>}
-    <strong>Selling price: ₹{price.toFixed(2)}</strong>
-    {hasDiscount && <span className="product-savings">You save ₹{savings.toFixed(2)} ({savingsPercent}%)</span>}
+    <span className="product-mrp">MRP: {product.mrp ? (mrp > price ? <s>{money(mrp)}</s> : money(mrp)) : 'Not provided'}</span>
+    {previous > price && <span className="product-mrp">Previous price: <s>{money(previous)}</s></span>}
+    <strong>Selling price: {money(price)}</strong>
+    {savings > 0 && <span className="product-savings">Save {money(savings)} ({Math.round(savings / reference * 100)}%)</span>}
   </div>
 }
 
@@ -48,17 +49,16 @@ export function ProductCard({ product }) {
   const { items, add, setQuantity } = useCart()
   const quantity = items.find(item => item.id === product.id)?.quantity || 0
   const unavailable = !product.in_stock || product.stock < 1
-  const discount = Number(product.mrp) > Number(product.price) ? Math.round((1 - Number(product.price) / Number(product.mrp)) * 100) : 0
   return <article className="product-card">
     <Link to={`/products/${product.id}`} className="product-image" aria-label={`View ${product.name}`}>
       <ProductImage product={product} />
-      {discount > 0 && <span className="tag">{discount}% OFF</span>}
+      {product.display_badge && <span className={`catalogue-badge badge-${product.badge}`}>{product.display_badge}</span>}
     </Link>
     <div className="product-info">
       <span className="product-category"><ShoppingBag size={10} aria-hidden="true" /> {product.category_name}</span>
       <Link to={`/products/${product.id}`} className="product-title">{product.name}</Link>
-      <span className="product-pack">{product.pack_size || 'Per item'}</span>
-      <div className="product-buy"><div className="card-price"><strong>{money(product.price)}</strong>{discount > 0 && <s>{money(product.mrp)}</s>}</div>
+      <span className="product-pack">{product.pack_size || 'Per item'}</span>{product.image_is_illustration && <small className="illustration-note">Illustrative image</small>}
+      <div className="product-buy"><ProductPrice product={product} />
         {quantity ? <div className="quantity-control compact cart-stepper"><button type="button" aria-label={`Decrease ${product.name} quantity`} onClick={() => setQuantity(product.id, quantity - 1)}><Minus size={16} /></button><span aria-live="polite">{quantity}</span><button type="button" aria-label={`Increase ${product.name} quantity`} disabled={unavailable || quantity >= Math.min(product.stock, 99)} onClick={() => add(product)}><Plus size={16} /></button></div> : <button className="quick-add" aria-label={`Add ${product.name} to cart`} disabled={unavailable} onClick={() => add(product)}>{unavailable ? 'Sold out' : 'ADD'}</button>}
       </div>
     </div>

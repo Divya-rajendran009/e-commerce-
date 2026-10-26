@@ -9,7 +9,7 @@ import { categoryImageSource, productImageSource } from './catalogueArtwork'
 describe('distinct catalogue photographs', () => {
   it('never classifies Toiletries as oil or pantry', () => {
     expect(categoryImageSource('Toiletries')).toBe('/images/catalogue/categories/toiletries.webp')
-    expect(categoryImageSource('Personal care')).toBe(categoryImageSource('Toiletries'))
+    expect(categoryImageSource('Personal care')).toBe('/images/essentials/soap.webp')
     expect(categoryImageSource('Cooking oil')).toBe(categoryImageSource('Pantry'))
     expect(categoryImageSource('  RICE & GRAINS ')).toBe('/images/catalogue/categories/rice-grains.webp')
     expect(categoryImageSource('Spoilers')).toBeNull()

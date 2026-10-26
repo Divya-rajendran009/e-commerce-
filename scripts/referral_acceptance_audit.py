@@ -25,7 +25,7 @@ assert settings.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3'
 assert Path(settings.DATABASES['default']['NAME']).name == 'referral-qa.sqlite3'
 call_command('migrate', verbosity=0)
 assert not User.objects.exists(), 'Use a fresh QA database; existing records are never deleted by this script.'
-OUT = ROOT / '.local' / 'referral-audit'
+OUT = ROOT / '.local' / 'referral-audit-real-catalog'
 OUT.mkdir(parents=True, exist_ok=True)
 rows, accounts, snapshots = [], {}, {}
 now = datetime(2026,10,15,12,tzinfo=tz.utc)
@@ -48,19 +48,28 @@ def configure(**kw):
     req(admin_client,'patch','admin/referral-settings/',kw)
 
 def order(i, amount, cancel=False):
-    p = Product.objects.create(category=category,name=f'QA ONLY basket {amount}',slug=f'qa-{uuid4().hex}',sku=f'QA-{uuid4().hex[:12]}',price=amount,stock=100)
+    # Existing catalogue products at their saved prices; quantities exercise exact thresholds.
+    baskets={
+        500:{40:1,42:1,31:2,32:1,33:4,37:2,39:1},
+        600:{40:1,42:1,41:2,37:2,39:1,47:1,48:1},
+        1000:{40:2,42:2,41:2,31:2,32:1,33:4,37:2,39:1,47:1,48:1},
+    }
+    baskets[1500]={pid:baskets[1000].get(pid,0)+baskets[500].get(pid,0) for pid in set(baskets[1000])|set(baskets[500])}
+    quantities=baskets[int(amount)]
+    before={pid:Product.objects.get(pk=pid).stock for pid in quantities}
+    check(f'Actual product basket totals {amount}',Decimal(amount),sum((Product.objects.get(pk=pid).price*q for pid,q in quantities.items()),Decimal(0)))
     client.force_authenticate(accounts[i])
-    data = dict(customer_name=accounts[i].first_name,phone=accounts[i].phone,address='ISOLATED QA - DO NOT DISPATCH',delivery_pin_code='625531',payment_method='cod',items=[{'product_id':p.pk,'quantity':1}],checkout_key=str(uuid4()))
+    data = dict(customer_name=accounts[i].first_name,phone=accounts[i].phone,address='ISOLATED QA - DO NOT DISPATCH',delivery_pin_code='625531',payment_method='cod',items=[{'product_id':pid,'quantity':q} for pid,q in quantities.items()],checkout_key=str(uuid4()))
     r = req(client,'post','orders/',data,201)
     retry = req(client,'post','orders/',data,201)
     check(f'Checkout retry customer {i}',r['id'],retry['id'])
     o = Order.objects.get(pk=r['id'])
-    p.refresh_from_db(); check(f'Stock deducted once {o.order_number}',99,p.stock)
+    check(f'Stock deducted once {o.order_number}',{pid:before[pid]-q for pid,q in quantities.items()},{pid:Product.objects.get(pk=pid).stock for pid in quantities})
     if cancel:
         req(client,'post',f'orders/{o.pk}/cancel/',{},200)
         repeated = client.post(f'/api/v1/orders/{o.pk}/cancel/',{},format='json')
         check('Repeated cancellation rejected',400,repeated.status_code)
-        p.refresh_from_db(); check('Cancelled inventory restored once',100,p.stock)
+        check('Cancelled inventory restored once',before,{pid:Product.objects.get(pk=pid).stock for pid in quantities})
         check('Cancelled order has no rewards',0,o.referral_rewards.count())
         return o
     payment = o.payment_transactions.get()
@@ -93,7 +102,16 @@ with patch('socket.socket.connect', side_effect=AssertionError('External network
     admin_client.force_authenticate(admin)
     program=ReferralProgram.current()
     configure(qualification_threshold='1000.00',qualification_period='calendar_month',qualification_period_days=30,reward_referred_customer=False,reward_on_first_qualifying_order_only=False,max_depth=5)
-    category=Category.objects.create(name='QA ONLY groceries',slug='qa-only')
+    catalog=json.loads((ROOT/'scripts'/'fixtures'/'referral_catalog.json').read_text(encoding='utf-8'))
+    for item in catalog['categories']:
+        Category.objects.create(**item)
+    fields={'id','name','slug','sku','description','pack_size','price','regular_price','mrp','mrp_is_sample','badge','image_is_illustration','image_url','is_active','is_featured'}
+    for item in catalog['products']:
+        Product.objects.create(**{key:value for key,value in item.items() if key in fields},category_id=item['category'],stock=100)
+    check('Copied original categories',12,Category.objects.count())
+    check('Copied original products',48,Product.objects.count())
+    check('No invented QA products',0,Product.objects.filter(name__startswith='QA').count())
+    check('Saved product prices unchanged',True,all(Product.objects.get(pk=p['id']).price==Decimal(p['price']) for p in catalog['products']))
     parents={1:None,2:1,3:2,4:3,5:4,6:5,7:1,8:7,9:1,10:9,11:None,12:11,13:None,14:13}
     labels={1:'Exactly threshold',2:'Below threshold',3:'Above threshold',4:'No purchases',5:'Expired purchases',6:'Fifth level buyer',7:'Cancelled buyer',8:'Refunded buyer',9:'Pending then qualified',10:'Direct buyer',11:'Expired pending',12:'Prior period buyer',13:'Existing wallet pending',14:'Pending source buyer'}
     for i,parent in parents.items():

@@ -9,6 +9,10 @@ import './styles.css'
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
+    {import.meta.env.DEV && import.meta.env.VITE_QA_MODE === 'true' && <aside role="status" style={{ padding: '10px 16px', background: '#fff3cd', color: '#503b00', textAlign: 'center', font: '600 14px/1.5 system-ui' }}>
+      TEST COPY · Original product catalogue · No real payments or deliveries.{' '}
+      <a href="https://pandiyan-stores.vercel.app/products" style={{ color: 'inherit', textDecoration: 'underline' }}>Open the live store</a>
+    </aside>}
     <BrowserRouter>
       <AuthProvider>
         <CartProvider><DemoBasketProvider><App /></DemoBasketProvider></CartProvider>
